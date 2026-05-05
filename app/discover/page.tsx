@@ -13,7 +13,6 @@ import {
   Music,
   ArrowRight,
   Sparkles,
-  Loader2,
   X,
   ChevronLeft,
 } from "lucide-react";
@@ -26,6 +25,26 @@ import Footer from "@/components/layout/Footer";
 
 const ITEMS_PER_PAGE = 6;
 const USER_LOCATION = { lat: 4.819, lng: 7.038 };
+
+// --- SKELETON COMPONENT ---
+const DiscoverSkeleton = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 mb-20 items-stretch">
+    {[...Array(6)].map((_, i) => (
+      <div key={i} className="flex flex-col space-y-5">
+        <div className="relative aspect-[4/5] w-full bg-gray-100 rounded-[40px] overflow-hidden">
+          <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+        </div>
+        <div className="space-y-3 px-2">
+          <div className="h-6 bg-gray-100 rounded-xl w-3/4 animate-pulse" />
+          <div className="flex justify-between items-center">
+            <div className="h-4 bg-gray-50 rounded-lg w-1/3 animate-pulse" />
+            <div className="h-10 bg-gray-100 rounded-2xl w-24 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 // HELPER: Calculate Distance
 const getKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -445,12 +464,7 @@ export default function DiscoverPage() {
         </AnimatePresence>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-32">
-            <Loader2 className="animate-spin text-[#715800] mb-4" size={40} />
-            <p className="font-bold text-gray-400 uppercase text-[10px] tracking-widest">
-              Syncing the city...
-            </p>
-          </div>
+          <DiscoverSkeleton />
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 mb-20 items-stretch">

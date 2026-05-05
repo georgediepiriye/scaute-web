@@ -58,11 +58,12 @@ export const StepLogistics = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <label className="text-[10px] font-black uppercase text-gray-400">
-            Start
+            Start <span className="text-red-500">*</span>
           </label>
           <div className="flex gap-2">
             <input
               type="date"
+              required
               value={formData.startDate}
               onChange={(e) => updateForm("startDate", e.target.value)}
               className="flex-1 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm"
@@ -70,6 +71,7 @@ export const StepLogistics = ({
             <input
               type="time"
               value={formData.startTime}
+              required
               onChange={(e) => updateForm("startTime", e.target.value)}
               className="w-1/3 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm"
             />
@@ -78,17 +80,19 @@ export const StepLogistics = ({
 
         <div className="space-y-2">
           <label className="text-[10px] font-black uppercase text-gray-400">
-            End
+            End <span className="text-red-500">*</span>
           </label>
           <div className="flex gap-2">
             <input
               type="date"
+              required
               value={formData.endDate}
               onChange={(e) => updateForm("endDate", e.target.value)}
               className="flex-1 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm"
             />
             <input
               type="time"
+              required
               value={formData.endTime}
               onChange={(e) => updateForm("endTime", e.target.value)}
               className="w-1/3 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm"

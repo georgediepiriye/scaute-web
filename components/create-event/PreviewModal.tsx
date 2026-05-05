@@ -21,9 +21,34 @@ export const PreviewModal = ({
 }: any) => {
   if (!isOpen) return null;
 
+  // --- NIGERIAN FRIENDLY FORMATTERS ---
+
+  const formatNGRDate = (dateString: string) => {
+    if (!dateString) return "TBD";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const formatNGRTime = (timeString: string) => {
+    if (!timeString) return "00:00";
+    // Supporting both HH:mm and ISO strings
+    const [hours, minutes] = timeString.split(":");
+    const date = new Date();
+    date.setHours(parseInt(hours), parseInt(minutes));
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
-      {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -31,7 +56,6 @@ export const PreviewModal = ({
         className="absolute inset-0 bg-black/90 backdrop-blur-md"
       />
 
-      {/* Modal Content */}
       <motion.div
         initial={{ scale: 0.9, y: 20, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
@@ -73,19 +97,16 @@ export const PreviewModal = ({
               <p className="text-[9px] font-black uppercase text-gray-400 flex items-center gap-1.5">
                 <Calendar size={12} className="text-[#715800]" /> Date & Time
               </p>
-              <div className="text-xs font-bold text-gray-900">
-                <p>
-                  {data.startDate
-                    ? new Date(data.startDate).toDateString()
-                    : "TBD"}
-                </p>
-                <p className="text-[#715800] mt-0.5">
-                  {data.startTime || "00:00"}
+              <div className="text-xs font-bold text-gray-900 leading-snug">
+                {/* Applied formatters here */}
+                <p>{formatNGRDate(data.startDate)}</p>
+                <p className="text-[#715800] mt-0.5 uppercase">
+                  {formatNGRTime(data.startTime)}
                 </p>
               </div>
             </div>
 
-            {/* Venue Info - IMPROVED LOCATION DISPLAY */}
+            {/* Venue Info */}
             <div className="space-y-2">
               <p className="text-[9px] font-black uppercase text-gray-400 flex items-center gap-1.5">
                 <MapPin size={12} className="text-[#715800]" /> Venue

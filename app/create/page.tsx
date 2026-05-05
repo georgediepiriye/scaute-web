@@ -219,12 +219,38 @@ export default function CreateEventPage() {
     if (step === 1 && (!formData.title || !formData.category)) {
       return toast.error("Title and Category are required.");
     }
+
+    if (step === 2) {
+      if (
+        !formData.startDate ||
+        !formData.startTime ||
+        !formData.endDate ||
+        !formData.endTime
+      ) {
+        return toast.error("Please set both start and end dates/times.");
+      }
+
+      const start = new Date(`${formData.startDate}T${formData.startTime}`);
+      const end = new Date(`${formData.endDate}T${formData.endTime}`);
+
+      if (end <= start) {
+        return toast.error(
+          "The move must end AFTER it starts. Check your dates/times!",
+        );
+      }
+    }
+
     setStep((s) => s + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSubmit = async () => {
     if (!isLoggedIn) return setShowAuthGuard(true);
+    if (!formData.imageFile) {
+      toast.error("Please upload an image before broadcasting.");
+      setShowPreview(false);
+      return;
+    }
     setSubmitting(true);
 
     try {
@@ -402,7 +428,14 @@ export default function CreateEventPage() {
                 </button>
               ) : (
                 <button
-                  onClick={() => setShowPreview(true)}
+                  onClick={() => {
+                    if (!formData.imageFile) {
+                      return toast.error(
+                        "Please upload an image before broadcasting.",
+                      );
+                    }
+                    setShowPreview(true);
+                  }}
                   className="flex-1 md:flex-none px-12 py-4 bg-[#715800] text-white rounded-2xl font-black text-[10px] uppercase shadow-xl"
                 >
                   Preview & Broadcast

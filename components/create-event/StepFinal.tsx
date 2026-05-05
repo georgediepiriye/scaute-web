@@ -38,7 +38,7 @@ export const StepFinal = ({
       <div className="lg:col-span-8">
         <div className="bg-white p-6 md:p-10 rounded-[40px] border border-gray-100 shadow-sm">
           <h3 className="text-[10px] font-black uppercase text-gray-400 mb-6 tracking-widest">
-            Event Banner
+            Event Banner <span className="text-red-500">*</span>
           </h3>
           <label className="block h-80 bg-gray-50 rounded-[32px] border-4 border-dashed border-gray-100 cursor-pointer overflow-hidden relative group transition-colors hover:border-[#715800]/20">
             {previewImage ? (
@@ -59,6 +59,7 @@ export const StepFinal = ({
             <input
               type="file"
               className="hidden"
+              required
               accept="image/*"
               onChange={handleImageChange}
             />
