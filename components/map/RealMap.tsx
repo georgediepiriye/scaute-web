@@ -97,7 +97,7 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
       flyTo: (coords: { lat: number; lng: number }) => {
         mapRef.current?.flyTo({
           center: [coords.lng, coords.lat],
-          zoom: 12,
+          zoom: 15.5,
           speed: 1.2,
         });
       },
@@ -110,7 +110,7 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/light-v11",
         center: [7.035, 4.815],
-        zoom: 12,
+        zoom: 11.5,
       });
 
       const geolocate = new mapboxgl.GeolocateControl({
