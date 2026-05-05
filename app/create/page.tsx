@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ShieldCheck, ArrowRight } from "lucide-react";
+import imageCompression from "browser-image-compression";
 
 // Components
 import Navbar from "@/components/layout/NavBar";
@@ -110,6 +111,7 @@ export default function CreateEventPage() {
     recurrenceFrequency: "none",
     recurrenceInterval: 1,
     recurrenceEndDate: "",
+    imageFile: null as File | null,
   });
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -231,17 +233,21 @@ export default function CreateEventPage() {
           (k) => (EVENT_CATEGORIES as any)[k].label === formData.category,
         ) || formData.category;
 
-      const tagsArray = formData.tags
-        ? formData.tags
-            .split(",")
-            .map((t: string) => t.trim())
-            .filter(Boolean)
-        : [];
+      // 1. Create FormData object
+      const data = new FormData();
 
+      // 2. Append the image file if it exists
+      if (formData.imageFile) {
+        data.append("image", formData.imageFile);
+      }
+
+      // 3. Prepare the payload (similar to your existing logic)
       const payload = {
         ...formData,
         category: categoryKey,
-        tags: tagsArray,
+        tags: formData.tags
+          ? formData.tags.split(",").map((t: string) => t.trim())
+          : [],
         startDate: new Date(
           `${formData.startDate}T${formData.startTime}`,
         ).toISOString(),
@@ -262,20 +268,54 @@ export default function CreateEventPage() {
             : null,
       };
 
+      // 4. Remove the raw file from the text payload before appending
+      delete (payload as any).image;
+      delete (payload as any).imageFile;
+
+      // 5. Append the rest of the fields as a stringified object or individual fields
+      // Most Express setups prefer individual fields or a "data" field
+      data.append("eventData", JSON.stringify(payload));
+      for (const [key, value] of data.entries()) {
+        console.log(`${key}:`, value);
+      }
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/events`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        // IMPORTANT: Remove 'Content-Type' header.
+        // The browser will automatically set it to 'multipart/form-data' with the boundary.
         credentials: "include",
-        body: JSON.stringify(payload),
+        body: data,
       });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Broadcast failed.");
+      }
 
-      if (!res.ok) throw new Error("Broadcast failed.");
       toast.success("Move Broadcasted!");
       router.push("/discover");
     } catch (e: any) {
       toast.error(e.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleImageChange = async (event: any) => {
+    const imageFile = event.target.files[0];
+
+    const options = {
+      maxSizeMB: 0.8, // Keep it under 1MB
+      maxWidthOrHeight: 1200, // Good enough for event banners
+      useWebWorker: true,
+    };
+
+    try {
+      const compressedFile = await imageCompression(imageFile, options);
+      // 1. Create preview for the UI
+      setPreviewImage(URL.createObjectURL(compressedFile));
+      // 2. Store the compressed file in your formData to upload later
+      updateForm("imageFile", compressedFile);
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -336,6 +376,8 @@ export default function CreateEventPage() {
             <StepFinal
               formData={formData}
               updateForm={updateForm}
+              previewImage={previewImage}
+              handleImageChange={handleImageChange}
               onPreview={() => setShowPreview(true)}
             />
           )}

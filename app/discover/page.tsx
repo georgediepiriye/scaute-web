@@ -490,7 +490,7 @@ export default function DiscoverPage() {
                         location={
                           e.isOnline
                             ? "Online"
-                            : `${getKm(USER_LOCATION.lat, USER_LOCATION.lng, e.lat, e.lng)}km • ${e.location?.neighborhood || "PH"}`
+                            : `${getKm(USER_LOCATION.lat, USER_LOCATION.lng, e.lat, e.lng)}km • ${e.location?.address || "PH"}`
                         }
                         time={formatEventTime(e.startDate)}
                         buttonText={displayPrice}
@@ -566,7 +566,7 @@ export default function DiscoverPage() {
                 <EventCard
                   {...e}
                   time={formatEventTime(e.startDate)}
-                  location={e.location?.neighborhood || "Port Harcourt"}
+                  location={e.location?.address || "Port Harcourt"}
                   buttonText="View"
                   isOnline={e.isOnline}
                 />

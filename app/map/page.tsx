@@ -780,7 +780,9 @@ export default function MapPage() {
                     <p className="text-xs font-bold text-gray-900 truncate">
                       {selected.isOnline
                         ? "Worldwide"
-                        : selected.location?.neighborhood || "Port Harcourt"}
+                        : selected.location?.address ||
+                          selected.location?.neighborhood ||
+                          "Port Harcourt"}
                     </p>
                   </div>
                 </div>

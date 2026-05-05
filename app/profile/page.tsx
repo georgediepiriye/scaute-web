@@ -320,16 +320,22 @@ export default function ProfilePage() {
                           </div>
 
                           <div className="flex items-center gap-3 mt-4 sm:mt-0 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-50 pt-3 sm:pt-0">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(`/manage/scanner/${event._id}`);
-                              }}
-                              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-[#121212] text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] hover:bg-[#715800] active:scale-95 transition-all shadow-md shadow-black/10"
-                            >
-                              <Camera size={14} className="text-[#f8d472]" />
-                              <span>Scan</span>
-                            </button>
+                            {event.ticketTiers &&
+                              event.ticketTiers.length > 0 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(`/manage/scanner/${event._id}`);
+                                  }}
+                                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-[#121212] text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] hover:bg-[#715800] active:scale-95 transition-all shadow-md shadow-black/10"
+                                >
+                                  <Camera
+                                    size={14}
+                                    className="text-[#f8d472]"
+                                  />
+                                  <span>Scan</span>
+                                </button>
+                              )}
 
                             <div className="flex items-center gap-1">
                               <ChevronRight
