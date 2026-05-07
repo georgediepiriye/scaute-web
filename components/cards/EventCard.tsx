@@ -47,7 +47,7 @@ export default function EventCard({
 
   return (
     <div
-      className={`group flex flex-col h-full rounded-[40px] overflow-hidden bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_20px_50px_rgba(113,88,0,0.08)] transition-all duration-500 ${className}`}
+      className={`group flex flex-col h-full rounded-[40px] overflow-hidden bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_20px_50px_rgba(37,99,235,0.1)] transition-all duration-500 ${className}`}
     >
       {/* IMAGE SECTION */}
       <div className="relative h-64 overflow-hidden shrink-0">
@@ -98,7 +98,7 @@ export default function EventCard({
 
         <div className="flex flex-col gap-2 mb-8">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-[#715800]">
+            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-blue-600">
               <Clock size={14} />
             </div>
             <span className="font-bold text-xs text-gray-500 uppercase tracking-wide">
@@ -106,12 +106,12 @@ export default function EventCard({
             </span>
           </div>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-[#715800]">
+            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-blue-600">
               <MapPin size={14} />
             </div>
             <span className="font-bold text-xs text-gray-500 line-clamp-1">
               {isOnline ? "Link provided after join" : location}
-              {!isOnline && distance && ` (${distance})`}
+              {!isOnline && distance && ` (${distance}km)`}
             </span>
           </div>
         </div>
@@ -157,7 +157,7 @@ export default function EventCard({
             </div>
           </div>
 
-          <button className="bg-gray-900 group-hover:bg-[#715800] text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] transition-all active:scale-95 flex items-center gap-2">
+          <button className="bg-black group-hover:bg-blue-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] transition-all active:scale-95 flex items-center gap-2 shadow-xl shadow-blue-600/10">
             {buttonText}
             <ChevronRight
               size={14}

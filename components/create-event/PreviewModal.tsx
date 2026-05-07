@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
   Loader2,
@@ -8,8 +8,13 @@ import {
   Tag,
   X,
   Navigation,
+  Send,
 } from "lucide-react";
 import Image from "next/image";
+
+// BRAND COLOR CONSTANTS
+const KIVO_BLUE = "#0052FF";
+const KIVO_YELLOW = "#FFD700";
 
 export const PreviewModal = ({
   isOpen,
@@ -20,8 +25,6 @@ export const PreviewModal = ({
   onConfirm,
 }: any) => {
   if (!isOpen) return null;
-
-  // --- NIGERIAN FRIENDLY FORMATTERS ---
 
   const formatNGRDate = (dateString: string) => {
     if (!dateString) return "TBD";
@@ -36,7 +39,6 @@ export const PreviewModal = ({
 
   const formatNGRTime = (timeString: string) => {
     if (!timeString) return "00:00";
-    // Supporting both HH:mm and ISO strings
     const [hours, minutes] = timeString.split(":");
     const date = new Date();
     date.setHours(parseInt(hours), parseInt(minutes));
@@ -55,6 +57,37 @@ export const PreviewModal = ({
         onClick={onClose}
         className="absolute inset-0 bg-black/90 backdrop-blur-md"
       />
+
+      {/* --- ANIMATED SUBMISSION LOADER OVERLAY --- */}
+      <AnimatePresence>
+        {submitting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[510] bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-[40px]"
+          >
+            <div className="relative">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                className="w-20 h-20 border-4 border-gray-100 border-t-blue-600 rounded-full"
+                style={{ borderTopColor: KIVO_BLUE }}
+              />
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <Send size={24} style={{ color: KIVO_BLUE }} />
+              </motion.div>
+            </div>
+            <p className="mt-6 text-[10px] font-black uppercase tracking-[0.3em] text-gray-900 animate-pulse">
+              Broadcasting your move...
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.div
         initial={{ scale: 0.9, y: 20, opacity: 0 }}
@@ -80,10 +113,13 @@ export const PreviewModal = ({
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute bottom-6 left-6 right-6">
-            <span className="px-3 py-1 bg-[#715800] text-white text-[9px] font-black uppercase rounded-full tracking-wider">
+            <span
+              className="px-3 py-1 text-gray-900 text-[9px] font-black uppercase rounded-full tracking-wider"
+              style={{ backgroundColor: KIVO_YELLOW }}
+            >
               {data.category || "General"}
             </span>
-            <h2 className="text-white text-2xl font-black uppercase mt-2 line-clamp-2">
+            <h2 className="text-white text-2xl font-black uppercase mt-2 line-clamp-2 leading-none tracking-tighter">
               {data.title || "Untitled Move"}
             </h2>
           </div>
@@ -92,31 +128,34 @@ export const PreviewModal = ({
         {/* 2. Details Section */}
         <div className="p-8 space-y-6">
           <div className="grid grid-cols-2 gap-8">
-            {/* Date Info */}
             <div className="space-y-2">
-              <p className="text-[9px] font-black uppercase text-gray-400 flex items-center gap-1.5">
-                <Calendar size={12} className="text-[#715800]" /> Date & Time
+              <p className="text-[9px] font-black uppercase text-gray-400 flex items-center gap-1.5 tracking-widest">
+                <Calendar size={12} style={{ color: KIVO_BLUE }} /> Date & Time
               </p>
               <div className="text-xs font-bold text-gray-900 leading-snug">
-                {/* Applied formatters here */}
                 <p>{formatNGRDate(data.startDate)}</p>
-                <p className="text-[#715800] mt-0.5 uppercase">
+                <p
+                  className="mt-0.5 uppercase font-black"
+                  style={{ color: KIVO_BLUE }}
+                >
                   {formatNGRTime(data.startTime)}
                 </p>
               </div>
             </div>
 
-            {/* Venue Info */}
             <div className="space-y-2">
-              <p className="text-[9px] font-black uppercase text-gray-400 flex items-center gap-1.5">
-                <MapPin size={12} className="text-[#715800]" /> Venue
+              <p className="text-[9px] font-black uppercase text-gray-400 flex items-center gap-1.5 tracking-widest">
+                <MapPin size={12} style={{ color: KIVO_BLUE }} /> Venue
               </p>
               <div className="text-xs font-bold text-gray-900">
                 <p className="line-clamp-2 leading-tight">
                   {data.location || "Location not set"}
                 </p>
                 {data.neighborhood && (
-                  <p className="text-[9px] text-[#715800] uppercase font-black mt-1 flex items-center gap-1">
+                  <p
+                    className="text-[9px] uppercase font-black mt-1 flex items-center gap-1"
+                    style={{ color: KIVO_BLUE }}
+                  >
                     <Navigation size={8} /> {data.neighborhood}
                   </p>
                 )}
@@ -126,8 +165,8 @@ export const PreviewModal = ({
 
           {/* Tags */}
           <div className="space-y-2">
-            <p className="text-[9px] font-black uppercase text-gray-400 flex items-center gap-1.5">
-              <Tag size={12} className="text-[#715800]" /> Tags
+            <p className="text-[9px] font-black uppercase text-gray-400 flex items-center gap-1.5 tracking-widest">
+              <Tag size={12} style={{ color: KIVO_BLUE }} /> Tags
             </p>
             <div className="flex flex-wrap gap-2">
               {data.tags &&
@@ -161,7 +200,11 @@ export const PreviewModal = ({
           <button
             onClick={onConfirm}
             disabled={submitting}
-            className="flex-1 py-5 bg-[#715800] hover:bg-[#8b6d00] text-white rounded-[24px] font-black text-[10px] uppercase shadow-lg shadow-[#715800]/20 transition-all active:scale-[0.98] disabled:opacity-50"
+            className="flex-1 py-5 text-white rounded-[24px] font-black text-[10px] uppercase transition-all active:scale-[0.98] disabled:opacity-50"
+            style={{
+              backgroundColor: KIVO_BLUE,
+              boxShadow: `0 10px 15px -3px ${KIVO_BLUE}30`,
+            }}
           >
             {submitting ? (
               <div className="flex items-center justify-center gap-2">

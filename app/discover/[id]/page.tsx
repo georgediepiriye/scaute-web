@@ -147,7 +147,7 @@ export default function EventDetailsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="animate-spin text-[#715800]" size={40} />
+          <Loader2 className="animate-spin text-blue-600" size={40} />
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
             Syncing Details...
           </p>
@@ -203,7 +203,7 @@ export default function EventDetailsPage() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="relative w-full max-w-md bg-white rounded-[40px] p-10 text-center shadow-2xl"
             >
-              <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
                 <ExternalLink size={32} />
               </div>
               <h3 className="text-2xl font-black tracking-tight mb-2 uppercase italic">
@@ -216,7 +216,7 @@ export default function EventDetailsPage() {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={confirmExternalRedirect}
-                  className="w-full py-5 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all"
+                  className="w-full py-5 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-blue-600/10"
                 >
                   Continue to Booking
                 </button>
@@ -246,7 +246,7 @@ export default function EventDetailsPage() {
               Back to City
             </button>
             <div className="flex gap-2">
-              <button className="p-3 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-[#715800] transition-all">
+              <button className="p-3 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-blue-600 transition-all">
                 <Share2 size={18} />
               </button>
             </div>
@@ -270,7 +270,7 @@ export default function EventDetailsPage() {
                     {event.category}
                   </span>
                   <span
-                    className={`px-5 py-2.5 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase flex items-center gap-2 text-white ${
+                    className={`px-5 py-2.5 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase flex items-center gap-2 text-white shadow-xl ${
                       timeStatus === "ongoing"
                         ? "bg-green-500/90"
                         : "bg-gray-900/80"
@@ -315,7 +315,7 @@ export default function EventDetailsPage() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setIsFollowing(!isFollowing)}
-                      className={`flex-1 sm:flex-none px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${isFollowing ? "bg-white border-2 border-gray-100 text-green-600" : "bg-[#715800] text-white hover:bg-black"}`}
+                      className={`flex-1 sm:flex-none px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${isFollowing ? "bg-white border-2 border-gray-100 text-green-600" : "bg-black text-white hover:bg-blue-600 shadow-xl shadow-blue-600/10"}`}
                     >
                       {isFollowing ? (
                         <>
@@ -327,7 +327,7 @@ export default function EventDetailsPage() {
                         </>
                       )}
                     </button>
-                    <button className="w-14 h-14 bg-white border-2 border-gray-100 rounded-2xl flex items-center justify-center text-gray-400 hover:text-[#715800] transition-all">
+                    <button className="w-14 h-14 bg-white border-2 border-gray-100 rounded-2xl flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all">
                       <MessageSquare size={20} />
                     </button>
                   </div>
@@ -335,7 +335,7 @@ export default function EventDetailsPage() {
 
                 <div className="flex flex-wrap gap-6 py-8 border-y border-gray-100">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-[#715800] border border-gray-100">
+                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-blue-600 border border-gray-100">
                       <Calendar size={24} />
                     </div>
                     <div>
@@ -348,7 +348,7 @@ export default function EventDetailsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-[#715800] border border-gray-100">
+                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-blue-600 border border-gray-100">
                       {event.isOnline ? (
                         <Globe size={24} />
                       ) : (
@@ -371,7 +371,7 @@ export default function EventDetailsPage() {
 
               <div className="space-y-4">
                 <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
-                  <Info size={20} className="text-[#715800]" /> Overview
+                  <Info size={20} className="text-blue-600" /> Overview
                 </h3>
                 <div className="relative">
                   <p
@@ -386,7 +386,7 @@ export default function EventDetailsPage() {
                 {event.description?.length > 350 && (
                   <button
                     onClick={() => setShowFullDescription(!showFullDescription)}
-                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#715800] hover:scale-105 transition-transform"
+                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 hover:scale-105 transition-transform"
                   >
                     {showFullDescription ? (
                       <>
@@ -405,20 +405,20 @@ export default function EventDetailsPage() {
                 event.ticketTiers?.length > 0 && (
                   <div className="space-y-6 pt-6">
                     <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
-                      <Ticket size={20} className="text-[#715800]" /> Ticket
+                      <Ticket size={20} className="text-blue-600" /> Ticket
                       Tiers
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {event.ticketTiers.map((tier: any) => (
                         <div
                           key={tier._id}
-                          className="p-6 bg-white border border-gray-100 rounded-[32px] shadow-sm hover:border-[#715800]/30 transition-all"
+                          className="p-6 bg-white border border-gray-100 rounded-[32px] shadow-sm hover:border-blue-600/30 transition-all"
                         >
                           <div className="flex justify-between items-start mb-3">
                             <h4 className="font-black text-gray-900 uppercase text-sm tracking-tight">
                               {tier.name}
                             </h4>
-                            <span className="text-lg font-black text-[#715800]">
+                            <span className="text-lg font-black text-blue-600">
                               {tier.price === 0
                                 ? "FREE"
                                 : `₦${tier.price.toLocaleString()}`}
@@ -438,7 +438,7 @@ export default function EventDetailsPage() {
                           </div>
                           <div className="w-full h-1.5 bg-gray-50 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gray-900 transition-all"
+                              className="h-full bg-blue-600 transition-all"
                               style={{
                                 width: `${Math.min(100, ((tier.sold || 0) / tier.capacity) * 100)}%`,
                               }}
@@ -470,7 +470,7 @@ export default function EventDetailsPage() {
                 <button
                   onClick={handleCTA}
                   disabled={event.isCancelled || hasReserved}
-                  className={`w-full py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-lg ${event.isCancelled ? "bg-red-50 text-red-400 cursor-not-allowed" : "bg-gray-900 text-white hover:bg-black active:scale-95 shadow-black/20"}`}
+                  className={`w-full py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-xl ${event.isCancelled ? "bg-red-50 text-red-400 cursor-not-allowed" : "bg-black text-white hover:bg-blue-600 active:scale-95 shadow-blue-600/10"}`}
                 >
                   {getButtonContent()}
                 </button>
@@ -483,7 +483,7 @@ export default function EventDetailsPage() {
                     {!event.isOnline && (
                       <button
                         onClick={handleOpenMap}
-                        className="text-[10px] font-black uppercase text-[#715800] hover:underline"
+                        className="text-[10px] font-black uppercase text-blue-600 hover:underline"
                       >
                         Get Directions
                       </button>
@@ -525,7 +525,7 @@ export default function EventDetailsPage() {
       <div className="lg:hidden fixed bottom-6 left-6 right-6 z-[100]">
         <button
           onClick={handleCTA}
-          className="w-full py-5 bg-gray-900 text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
+          className="w-full py-5 bg-black text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all shadow-blue-600/20"
         >
           {getButtonContent()} — {displayPrice}
         </button>

@@ -2,87 +2,147 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { CheckCircle, Calendar, Mail, ArrowLeft, Loader2 } from "lucide-react";
+import {
+  CheckCircle,
+  Calendar,
+  Ticket,
+  ArrowLeft,
+  Loader2,
+  Download,
+  Share2,
+} from "lucide-react";
 import Navbar from "@/components/layout/NavBar";
 import { Suspense } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
-// 1. Create a separate component for the content that needs searchParams
+// BRAND CONSTANT
+const KIVO_BLUE = "#0052FF";
+
 function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const ref = searchParams.get("ref");
+
+  // Retrieving reference and event info from searchParams
+  const ref = searchParams.get("ref") || "KIVO-PASS";
+  const eventName = searchParams.get("event") || "Your Move";
+
+  const handleSavePass = () => {
+    window.print();
+  };
 
   return (
     <motion.div
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      className="bg-white rounded-[40px] p-10 shadow-sm border border-slate-100"
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className="space-y-8"
     >
-      <div className="w-20 h-20 bg-green-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8">
-        <CheckCircle size={40} className="text-green-500" />
+      <div className="text-center space-y-4">
+        <div
+          className="w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-xl shadow-green-100/50"
+          style={{ backgroundColor: "#ECFDF5" }}
+        >
+          <CheckCircle size={40} className="text-emerald-500" />
+        </div>
+
+        <h1 className="text-5xl font-black uppercase tracking-tighter italic leading-none">
+          Move Secured.
+        </h1>
+        <p className="text-gray-500 font-medium max-w-xs mx-auto">
+          You&apos;re all set for{" "}
+          <span className="text-black font-bold uppercase">{eventName}</span>.
+          Check your email for full details.
+        </p>
       </div>
 
-      <h1 className="text-4xl font-black uppercase tracking-tighter mb-4 italic">
-        You&apos;re In!
-      </h1>
+      {/* TICKET UI SECTION */}
+      <div className="relative max-w-sm mx-auto">
+        <div className="bg-white border-2 border-black rounded-[40px] overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+          <div className="p-8 space-y-6 flex flex-col items-center">
+            {/* Ticket Header */}
+            <div className="w-full flex justify-between items-center pb-4 border-b border-dashed border-gray-200">
+              <div className="text-left">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  Kivo Entry Pass
+                </p>
+                <p className="font-black uppercase italic text-sm">
+                  Valid Entry
+                </p>
+              </div>
+              <Ticket style={{ color: KIVO_BLUE }} size={24} />
+            </div>
 
-      <p className="text-gray-500 font-medium mb-8">
-        Your spot has been secured. We&apos;ve sent your digital ticket and
-        entry details to your email address.
-      </p>
+            {/* QR Code */}
+            <div className="bg-white p-4 border-2 border-black rounded-3xl">
+              <QRCodeSVG
+                value={ref}
+                size={160}
+                level="H"
+                includeMargin={false}
+              />
+            </div>
 
-      <div className="bg-gray-50 rounded-3xl p-6 mb-8 text-left space-y-4">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-            <Mail size={18} className="text-gray-400" />
+            {/* Ticket ID */}
+            <div className="space-y-1 text-center">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                Order Reference
+              </p>
+              <p className="text-xl font-mono font-black tracking-widest text-black uppercase">
+                {ref}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-[10px] font-black uppercase text-gray-400">
-              Order Reference
-            </p>
-            <p className="font-mono font-bold text-sm">
-              {ref || "KIVO-TICKET"}
+
+          {/* Ticket Footer */}
+          <div className="bg-black p-4 text-center">
+            <p className="text-[9px] font-black text-white uppercase tracking-[0.4em]">
+              Scan at the gate
             </p>
           </div>
         </div>
+      </div>
 
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-            <Calendar size={18} className="text-gray-400" />
-          </div>
-          <div>
-            <p className="text-[10px] font-black uppercase text-gray-400">
-              Next Step
-            </p>
-            <p className="font-bold text-sm text-slate-700">
-              Add this to your calendar from the email.
-            </p>
-          </div>
-        </div>
+      {/* Action Buttons */}
+      <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
+        <button
+          onClick={handleSavePass}
+          className="flex items-center justify-center gap-2 py-4 bg-gray-100 rounded-2xl font-black text-[10px] uppercase hover:bg-gray-200 transition-colors"
+        >
+          <Download size={16} /> Save
+        </button>
+        <button className="flex items-center justify-center gap-2 py-4 bg-gray-100 rounded-2xl font-black text-[10px] uppercase hover:bg-gray-200 transition-colors">
+          <Share2 size={16} /> Share
+        </button>
       </div>
 
       <button
         onClick={() => router.push("/discover")}
-        className="w-full py-5 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
+        className="w-full max-w-sm mx-auto py-6 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+        style={{
+          backgroundColor: KIVO_BLUE,
+          boxShadow: `0 20px 25px -5px ${KIVO_BLUE}33`,
+        }}
       >
-        <ArrowLeft size={14} /> Explore More Moves
+        <ArrowLeft size={16} /> Back to Discover
       </button>
     </motion.div>
   );
 }
 
-// 2. Wrap the whole thing in Suspense
 export default function BookingSuccessPage() {
   return (
-    <div className="min-h-screen bg-[#FDFCF9]">
+    <div className="min-h-screen bg-[#FDFDFD]">
       <Navbar />
-      <main className="max-w-2xl mx-auto px-4 pt-32 pb-20 text-center">
+      <main className="max-w-2xl mx-auto px-4 pt-32 pb-20">
         <Suspense
           fallback={
-            <div className="flex flex-col items-center justify-center p-20 bg-white rounded-[40px] border border-slate-100">
-              <Loader2 className="animate-spin text-slate-200" size={32} />
-              <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Finalizing your move...
+            <div className="flex flex-col items-center justify-center p-20">
+              <Loader2
+                className="animate-spin"
+                style={{ color: KIVO_BLUE }}
+                size={32}
+              />
+              <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                Generating your pass...
               </p>
             </div>
           }

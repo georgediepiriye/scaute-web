@@ -44,8 +44,8 @@ const AuthGuardModal = ({
         animate={{ scale: 1, y: 0, opacity: 1 }}
         className="relative w-full max-w-sm bg-white rounded-[40px] p-10 text-center shadow-2xl"
       >
-        <div className="w-20 h-20 bg-[#715800]/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
-          <ShieldCheck size={40} className="text-[#715800]" />
+        <div className="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
+          <ShieldCheck size={40} className="text-blue-600" />
         </div>
         <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">
           Kivo ID Required
@@ -57,13 +57,13 @@ const AuthGuardModal = ({
         <div className="space-y-3">
           <button
             onClick={() => router.push("/auth/signin")}
-            className="w-full py-5 bg-[#715800] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="w-full py-5 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-600/10 active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-blue-600"
           >
             Sign In Now <ArrowRight size={14} />
           </button>
           <button
             onClick={onClose}
-            className="w-full py-4 text-gray-400 font-black text-[10px] uppercase"
+            className="w-full py-4 text-gray-400 font-black text-[10px] uppercase hover:text-black transition-colors"
           >
             Maybe Later
           </button>
@@ -348,7 +348,7 @@ export default function CreateEventPage() {
   const totalSteps = 4;
 
   return (
-    <div className="min-h-screen bg-[#FDFCF9] text-slate-900 pb-32">
+    <div className="min-h-screen bg-[#FDFDFD] text-gray-900 pb-32">
       <Toaster position="bottom-center" />
       <Navbar />
 
@@ -415,14 +415,14 @@ export default function CreateEventPage() {
             <div className="max-w-4xl mx-auto flex justify-between gap-4">
               <button
                 onClick={() => setStep(step - 1)}
-                className="px-8 py-4 rounded-2xl font-black text-[10px] uppercase text-gray-400 bg-white border"
+                className="px-8 py-4 rounded-2xl font-black text-[10px] uppercase text-gray-400 bg-white border border-gray-100 hover:text-black transition-colors"
               >
                 Back
               </button>
               {step < 4 ? (
                 <button
                   onClick={nextStep}
-                  className="flex-1 md:flex-none px-12 py-4 bg-black text-white rounded-2xl font-black text-[10px] uppercase shadow-xl"
+                  className="flex-1 md:flex-none px-12 py-4 bg-black text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-blue-600 transition-all"
                 >
                   Continue
                 </button>
@@ -436,7 +436,7 @@ export default function CreateEventPage() {
                     }
                     setShowPreview(true);
                   }}
-                  className="flex-1 md:flex-none px-12 py-4 bg-[#715800] text-white rounded-2xl font-black text-[10px] uppercase shadow-xl"
+                  className="flex-1 md:flex-none px-12 py-4 bg-black text-white rounded-2xl font-black text-[10px] uppercase shadow-xl shadow-blue-600/10 hover:bg-blue-600 transition-all"
                 >
                   Preview & Broadcast
                 </button>
@@ -452,8 +452,8 @@ export default function CreateEventPage() {
         <div className="fixed inset-0 z-[700] bg-white flex flex-col">
           {/* Header with Close Button */}
           <div className="absolute top-6 left-6 right-6 z-[710] flex justify-between items-center pointer-events-none">
-            <div className="bg-white/90 backdrop-blur px-6 py-3 rounded-2xl border border-slate-100 shadow-xl pointer-events-auto">
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#715800]">
+            <div className="bg-white/90 backdrop-blur px-6 py-3 rounded-2xl border border-gray-100 shadow-xl pointer-events-auto">
+              <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">
                 {formData.locationCoords
                   ? "Location Pinned"
                   : "Tap Map to Drop Pin"}
@@ -461,7 +461,7 @@ export default function CreateEventPage() {
             </div>
             <button
               onClick={() => setShowMapPicker(false)}
-              className="p-4 bg-black text-white rounded-full shadow-2xl hover:scale-110 transition pointer-events-auto"
+              className="p-4 bg-black text-white rounded-full shadow-2xl hover:bg-blue-600 transition pointer-events-auto"
             >
               <X size={20} />
             </button>
@@ -484,7 +484,7 @@ export default function CreateEventPage() {
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[710] w-full max-w-xs px-4">
             <button
               onClick={() => setShowMapPicker(false)}
-              className="w-full py-5 bg-[#715800] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
+              className="w-full py-5 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-blue-600/20 active:scale-95 transition-all hover:bg-blue-600"
             >
               Confirm Location
             </button>

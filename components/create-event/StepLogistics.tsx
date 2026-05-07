@@ -1,14 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Navigation, MapPin, Repeat, CalendarDays } from "lucide-react";
+import { Navigation, MapPin, Repeat } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
+
+// BRAND COLOR CONSTANTS
+const KIVO_BLUE = "#0052FF";
+const KIVO_YELLOW = "#FFD700";
 
 const SearchBox = dynamic(
   () => import("@mapbox/search-js-react").then((m) => m.SearchBox),
   {
     ssr: false,
     loading: () => (
-      <div className="h-14 w-full bg-gray-100 animate-pulse rounded-[24px]" />
+      <div className="h-14 w-full bg-gray-50 animate-pulse rounded-[24px]" />
     ),
   },
 );
@@ -38,16 +42,17 @@ export const StepLogistics = ({
       className="bg-white p-6 md:p-10 rounded-[32px] md:rounded-[40px] border border-gray-100 shadow-sm space-y-8"
     >
       {/* 1. Format Toggle */}
-      <div className="flex p-1 bg-gray-50 rounded-2xl w-fit">
+      <div className="flex p-1 bg-gray-50 rounded-2xl w-fit border border-gray-100">
         {["physical", "online", "hybrid"].map((f) => (
           <button
             key={f}
             onClick={() => updateForm("eventFormat", f)}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${
               formData.eventFormat === f
-                ? "bg-white text-black shadow-sm"
+                ? "bg-white shadow-sm border border-gray-200"
                 : "text-gray-400"
             }`}
+            style={{ color: formData.eventFormat === f ? KIVO_BLUE : "" }}
           >
             {f}
           </button>
@@ -57,7 +62,7 @@ export const StepLogistics = ({
       {/* 2. Date & Time Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase text-gray-400">
+          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
             Start <span className="text-red-500">*</span>
           </label>
           <div className="flex gap-2">
@@ -66,20 +71,22 @@ export const StepLogistics = ({
               required
               value={formData.startDate}
               onChange={(e) => updateForm("startDate", e.target.value)}
-              className="flex-1 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm"
+              className="flex-1 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2 transition-all"
+              style={{ "--tw-ring-color": `${KIVO_BLUE}20` } as any}
             />
             <input
               type="time"
               value={formData.startTime}
               required
               onChange={(e) => updateForm("startTime", e.target.value)}
-              className="w-1/3 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm"
+              className="w-1/3 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2 transition-all"
+              style={{ "--tw-ring-color": `${KIVO_BLUE}20` } as any}
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase text-gray-400">
+          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
             End <span className="text-red-500">*</span>
           </label>
           <div className="flex gap-2">
@@ -88,14 +95,16 @@ export const StepLogistics = ({
               required
               value={formData.endDate}
               onChange={(e) => updateForm("endDate", e.target.value)}
-              className="flex-1 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm"
+              className="flex-1 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2 transition-all"
+              style={{ "--tw-ring-color": `${KIVO_BLUE}20` } as any}
             />
             <input
               type="time"
               required
               value={formData.endTime}
               onChange={(e) => updateForm("endTime", e.target.value)}
-              className="w-1/3 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm"
+              className="w-1/3 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2 transition-all"
+              style={{ "--tw-ring-color": `${KIVO_BLUE}20` } as any}
             />
           </div>
         </div>
@@ -106,19 +115,20 @@ export const StepLogistics = ({
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-sm font-black uppercase flex items-center gap-2">
-              <Repeat size={16} className="text-[#715800]" /> Recurring Move?
+              <Repeat size={16} style={{ color: KIVO_BLUE }} /> Recurring Move?
             </p>
-            <p className="text-[10px] text-gray-400 font-bold uppercase">
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
               Does this happen more than once?
             </p>
           </div>
           <button
             onClick={() => updateForm("isRecurring", !formData.isRecurring)}
-            className={`w-14 h-8 rounded-full transition-all relative ${formData.isRecurring ? "bg-[#715800]" : "bg-gray-200"}`}
+            className={`w-14 h-8 rounded-full transition-all relative ${formData.isRecurring ? "" : "bg-gray-200"}`}
+            style={{ backgroundColor: formData.isRecurring ? KIVO_BLUE : "" }}
           >
             <motion.div
               animate={{ x: formData.isRecurring ? 24 : 4 }}
-              className="absolute top-1 w-6 h-6 bg-white rounded-full transition-all"
+              className="absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm"
             />
           </button>
         </div>
@@ -141,7 +151,7 @@ export const StepLogistics = ({
                     onChange={(e) =>
                       updateForm("recurrenceFrequency", e.target.value)
                     }
-                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm"
+                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white border-none"
                   >
                     <option value="none">Select...</option>
                     <option value="daily">Daily</option>
@@ -155,20 +165,19 @@ export const StepLogistics = ({
                   </label>
                   <input
                     type="number"
-                    min="1" // Prevents using the arrow buttons to go below 1
+                    min="1"
                     placeholder="1"
                     value={formData.recurrenceInterval ?? ""}
                     onChange={(e) => {
                       const val = parseInt(e.target.value);
-                      // Logic: If the value is less than 1, force it to 1;
-                      // if it's empty (deleted), set it to an empty string so they can type
                       if (val < 1) {
                         updateForm("recurrenceInterval", 1);
                       } else {
                         updateForm("recurrenceInterval", e.target.value);
                       }
                     }}
-                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:ring-2 ring-[#715800]/20"
+                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:ring-2"
+                    style={{ "--tw-ring-color": `${KIVO_BLUE}20` } as any}
                   />
                 </div>
                 <div className="space-y-2">
@@ -181,7 +190,7 @@ export const StepLogistics = ({
                     onChange={(e) =>
                       updateForm("recurrenceEndDate", e.target.value)
                     }
-                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm"
+                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white"
                   />
                 </div>
               </div>
@@ -198,9 +207,17 @@ export const StepLogistics = ({
                         onClick={() => toggleDay(day)}
                         className={`w-12 h-12 rounded-xl text-[10px] font-black uppercase border-2 transition-all ${
                           formData.selectedDays?.includes(day)
-                            ? "border-[#715800] bg-[#715800] text-white"
+                            ? "text-white shadow-lg shadow-blue-600/20"
                             : "border-gray-100 bg-gray-50 text-gray-400"
                         }`}
+                        style={{
+                          backgroundColor: formData.selectedDays?.includes(day)
+                            ? KIVO_BLUE
+                            : "",
+                          borderColor: formData.selectedDays?.includes(day)
+                            ? KIVO_BLUE
+                            : "",
+                        }}
                       >
                         {day[0]}
                       </button>
@@ -217,13 +234,14 @@ export const StepLogistics = ({
       {formData.eventFormat !== "online" && (
         <div className="space-y-4 pt-6 border-t border-gray-100">
           <div className="flex justify-between items-center">
-            <label className="text-[10px] font-black uppercase text-gray-400">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
               Venue
             </label>
             <button
               type="button"
               onClick={useCurrentLocation}
-              className="text-[10px] font-black text-[#715800] flex items-center gap-1 hover:opacity-80 transition-opacity"
+              className="text-[10px] font-black flex items-center gap-1 hover:opacity-70 transition-opacity"
+              style={{ color: KIVO_BLUE }}
             >
               <Navigation
                 size={12}
@@ -233,7 +251,6 @@ export const StepLogistics = ({
             </button>
           </div>
 
-          {/* The Mapbox Search Input */}
           <SearchBox
             accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN!}
             value={formData.location}
@@ -244,14 +261,20 @@ export const StepLogistics = ({
             }}
           />
 
-          {/* --- NEW: LOCATION DETAILS DISPLAY --- */}
           {(formData.location || formData.neighborhood) && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-1"
+              className="p-4 rounded-2xl border space-y-1"
+              style={{
+                backgroundColor: `${KIVO_BLUE}05`,
+                borderColor: `${KIVO_BLUE}20`,
+              }}
             >
-              <p className="text-[10px] font-black uppercase text-gray-400">
+              <p
+                className="text-[10px] font-black uppercase tracking-tighter opacity-70"
+                style={{ color: KIVO_BLUE }}
+              >
                 Selected Address
               </p>
               <p className="text-sm font-bold text-gray-900 leading-tight">
@@ -259,24 +282,29 @@ export const StepLogistics = ({
               </p>
               {formData.neighborhood && (
                 <div className="flex items-center gap-1.5 mt-1">
-                  <MapPin size={10} className="text-[#715800]" />
-                  <p className="text-[10px] text-[#715800] font-black uppercase">
+                  <MapPin size={10} style={{ color: KIVO_BLUE }} />
+                  <p
+                    className="text-[10px] font-black uppercase"
+                    style={{ color: KIVO_BLUE }}
+                  >
                     Area: {formData.neighborhood}
                   </p>
                 </div>
               )}
             </motion.div>
           )}
-          {/* --- END OF NEW DISPLAY --- */}
 
           <button
             type="button"
             onClick={() => setShowMapPicker(true)}
-            className={`w-full py-5 font-black text-[10px] uppercase rounded-2xl flex items-center justify-center gap-2 transition-all ${
-              formData.locationCoords
-                ? "bg-[#715800] text-white"
-                : "bg-gray-900 text-white hover:bg-black"
-            }`}
+            className="w-full py-5 font-black text-[10px] uppercase rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg"
+            style={{
+              backgroundColor: formData.locationCoords ? KIVO_BLUE : "#000000",
+              color: "#FFFFFF",
+              boxShadow: formData.locationCoords
+                ? `0 10px 15px -3px ${KIVO_BLUE}40`
+                : "",
+            }}
           >
             <MapPin size={16} />{" "}
             {formData.locationCoords ? "Location Pinned ✓" : "Drop Map Pin"}

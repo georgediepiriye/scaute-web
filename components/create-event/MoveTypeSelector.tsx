@@ -11,12 +11,15 @@ export const MoveTypeSelector = ({
     animate={{ opacity: 1, y: 0 }}
     className="text-center max-w-2xl mx-auto py-10"
   >
-    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#715800]/5 text-[#715800] text-[10px] font-black uppercase mb-6">
-      <Sparkles size={12} /> Start Something
+    {/* Badge using Kivo Yellow for high-visibility entry point */}
+    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-400 text-slate-950 text-[10px] font-black uppercase mb-6 shadow-sm border border-slate-950">
+      <Sparkles size={12} fill="currentColor" /> Start Something
     </div>
-    <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-4 uppercase">
-      What&apos;s the <span className="text-[#715800]">Move?</span>
+
+    <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-4 uppercase text-slate-950">
+      What&apos;s the <span className="text-blue-600">Move?</span>
     </h1>
+
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mt-12">
       <SelectionCard
         title="Activity"
@@ -38,12 +41,19 @@ export const MoveTypeSelector = ({
 const SelectionCard = ({ title, icon, desc, onClick }: any) => (
   <button
     onClick={onClick}
-    className="p-8 bg-white rounded-[40px] border-2 border-gray-100 hover:border-[#715800] text-left transition-all group"
+    className="p-8 bg-white rounded-[40px] border-[3px] border-slate-100 hover:border-blue-600 text-left transition-all group shadow-sm hover:shadow-[0_12px_0_0_#020617] hover:-translate-y-1 active:translate-y-0 active:shadow-none"
   >
-    <div className="w-14 h-14 rounded-2xl bg-[#715800]/5 flex items-center justify-center text-[#715800] mb-6 group-hover:scale-110">
+    {/* Icons utilize Blue for brand consistency */}
+    <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
       {icon}
     </div>
-    <h3 className="text-xl font-black uppercase mb-2">{title}</h3>
-    <p className="text-sm text-gray-400">{desc}</p>
+
+    <h3 className="text-xl font-black uppercase mb-2 text-slate-950 tracking-tight">
+      {title}
+    </h3>
+
+    <p className="text-xs text-slate-400 font-bold uppercase tracking-tight">
+      {desc}
+    </p>
   </button>
 );

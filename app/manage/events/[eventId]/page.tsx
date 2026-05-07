@@ -11,7 +11,6 @@ import {
   Plus,
   X,
   Shield,
-  Download,
   Settings,
   ArrowLeft,
   Search,
@@ -27,7 +26,6 @@ import Navbar from "@/components/layout/NavBar";
 import MobileNav from "@/components/layout/MobileNav";
 import AuthGuard from "@/components/auth/AuthGuard";
 
-// Perceived Performance Utility
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 interface Attendee {
@@ -44,7 +42,7 @@ export interface EventData {
   event: {
     id: string;
     title: string;
-    organizer: string; // The ID of the event creator
+    organizer: string;
     coOrganizers?: Array<{
       email: string;
       _id: string;
@@ -60,15 +58,11 @@ export interface EventData {
   };
 }
 
-/**
- * Main Dashboard Component
- */
 export default function ManageEventDashboard() {
   const params = useParams();
   const router = useRouter();
   const id = params.eventId;
 
-  // --- State Management ---
   const [data, setData] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [addingCoOrg, setAddingCoOrg] = useState(false);
@@ -79,24 +73,20 @@ export default function ManageEventDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  // NEW: State for current logged-in user ID
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
 
-  // --- Initialize User ID from LocalStorage ---
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        setLoggedInUserId(user._id || user.id); // Check both common patterns
+        setLoggedInUserId(user._id || user.id);
       } catch (e) {
         console.error("Error parsing user from localStorage");
       }
     }
   }, []);
 
-  // --- Data Fetching ---
   const fetchDashboardData = useCallback(async () => {
     try {
       const response = await fetch(
@@ -124,14 +114,11 @@ export default function ManageEventDashboard() {
     if (id) fetchDashboardData();
   }, [id, fetchDashboardData]);
 
-  // --- Permission Check ---
-  // Compares the creator ID from the event with the ID from localStorage
   const isOrganizer = useMemo(() => {
     if (!data || !loggedInUserId) return false;
     return data.event.organizer === loggedInUserId;
   }, [data, loggedInUserId]);
 
-  // --- Handlers ---
   const handleAddCoOrg = async () => {
     if (!coOrgEmail) return toast.error("Please enter an email");
 
@@ -219,14 +206,14 @@ export default function ManageEventDashboard() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-[200] bg-[#FDFDFD] flex items-center justify-center">
+      <div className="fixed inset-0 z-[200] bg-[#020817] flex items-center justify-center">
         <div className="flex flex-col items-center gap-6">
           <div className="relative w-16 h-16">
-            <div className="absolute inset-0 border-4 border-[#715800]/10 rounded-3xl" />
-            <div className="absolute inset-0 border-4 border-t-[#715800] rounded-3xl animate-spin" />
+            <div className="absolute inset-0 border-4 border-blue-500/10 rounded-3xl" />
+            <div className="absolute inset-0 border-4 border-t-blue-600 rounded-3xl animate-spin" />
           </div>
-          <p className="text-[#715800] font-black text-[10px] uppercase tracking-[0.3em] animate-pulse">
-            Loading Analytics
+          <p className="text-blue-500 font-black text-[10px] uppercase tracking-[0.3em] animate-pulse">
+            Syncing Analytics
           </p>
         </div>
       </div>
@@ -257,13 +244,13 @@ export default function ManageEventDashboard() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#FDFDFD] text-slate-900 font-sans relative">
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans relative selection:bg-blue-600/20">
         <Toaster position="top-right" reverseOrder={false} />
 
         {confirmDeleteId && (
           <div className="fixed inset-0 z-[500] flex items-center justify-center px-6">
             <div
-              className="absolute inset-0 bg-white/60 backdrop-blur-md"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
               onClick={() => setConfirmDeleteId(null)}
             />
             <div className="bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-2xl w-full max-w-sm relative z-10 animate-in fade-in zoom-in duration-200">
@@ -301,12 +288,11 @@ export default function ManageEventDashboard() {
         <main
           className={`max-w-7xl mx-auto px-4 md:px-8 pt-32 pb-24 transition-all duration-500 ${confirmDeleteId ? "blur-sm scale-[0.99] opacity-50 pointer-events-none" : ""}`}
         >
-          {/* Header Section */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div>
               <button
                 onClick={() => router.back()}
-                className="flex items-center gap-2 text-slate-400 hover:text-[#715800] transition-colors mb-4"
+                className="flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors mb-4"
               >
                 <ArrowLeft size={16} />
                 <span className="text-[10px] font-black uppercase tracking-widest">
@@ -317,7 +303,7 @@ export default function ManageEventDashboard() {
                 {event?.title}
               </h1>
               <div className="flex items-center gap-3 mt-4">
-                <span className="px-3 py-1 bg-[#715800]/10 text-[#715800] rounded-full text-[10px] font-black uppercase tracking-widest">
+                <span className="px-3 py-1 bg-blue-600/10 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest">
                   {isOrganizer ? "Main Organizer" : "Partner Access"}
                 </span>
                 <span className="text-slate-300">•</span>
@@ -327,7 +313,6 @@ export default function ManageEventDashboard() {
               </div>
             </div>
 
-            {/* Edit Button: Hidden if user is a Co-Organizer */}
             {isOrganizer && (
               <div className="flex gap-3">
                 <button
@@ -335,7 +320,7 @@ export default function ManageEventDashboard() {
                     e.stopPropagation();
                     router.push(`/manage/events/settings/${event?.id}`);
                   }}
-                  className="flex-1 md:flex-none px-6 py-4 bg-white border border-slate-200 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 md:flex-none px-6 py-4 bg-white border border-slate-200 rounded-2xl font-black text-xs uppercase tracking-widest hover:border-blue-500/30 transition-all flex items-center justify-center gap-2"
                 >
                   <Settings size={14} /> Edit Move
                 </button>
@@ -344,33 +329,31 @@ export default function ManageEventDashboard() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Column: Analytics & Guests */}
             <div className="lg:col-span-8 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <MetricCard
                   label="Total Revenue"
                   value={`₦${metrics.totalRevenue.toLocaleString()}`}
-                  icon={<Wallet className="text-[#715800]" size={18} />}
+                  icon={<Wallet className="text-blue-600" size={18} />}
                   trend="Kivo Balance"
                 />
                 <MetricCard
                   label="Tickets Sold"
                   value={metrics.totalTicketsSold.toString()}
-                  icon={<TicketIcon className="text-blue-500" size={18} />}
+                  icon={<TicketIcon className="text-blue-600" size={18} />}
                 />
                 <MetricCard
                   label="Check-In Rate"
                   value={`${Math.round((metrics.checkInCount / (metrics.totalTicketsSold || 1)) * 100)}%`}
-                  icon={<Users className="text-purple-500" size={18} />}
+                  icon={<Users className="text-blue-600" size={18} />}
                   trend={`${metrics.checkInCount} scanned`}
                 />
               </div>
 
-              {/* Guest List Container */}
               <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden flex flex-col">
                 <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                    <Users size={16} className="text-[#715800]" /> Guest List
+                    <Users size={16} className="text-blue-600" /> Guest List
                   </h3>
                   <div className="flex items-center gap-3">
                     <div className="relative">
@@ -383,7 +366,7 @@ export default function ManageEventDashboard() {
                         placeholder="Search guests..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-3 bg-slate-50 border border-transparent focus:border-[#715800]/20 focus:bg-white rounded-xl text-xs font-bold transition-all outline-none w-full md:w-64"
+                        className="pl-10 pr-4 py-3 bg-slate-50 border border-transparent focus:border-blue-500/20 focus:bg-white rounded-xl text-xs font-bold transition-all outline-none w-full md:w-64"
                       />
                     </div>
                   </div>
@@ -412,10 +395,10 @@ export default function ManageEventDashboard() {
                             className="hover:bg-slate-50/30 transition-colors group"
                           >
                             <td className="px-8 py-5">
-                              <p className="font-black text-sm uppercase tracking-tight group-hover:text-[#715800] transition-colors">
+                              <p className="font-black text-sm uppercase tracking-tight group-hover:text-blue-600 transition-colors">
                                 {t.buyerInfo.firstName} {t.buyerInfo.lastName}
                               </p>
-                              <p className="text-[10px] font-bold text-slate-400 mt-0.5">
+                              <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase">
                                 {t.buyerInfo.email}
                               </p>
                             </td>
@@ -426,7 +409,7 @@ export default function ManageEventDashboard() {
                             </td>
                             <td className="px-8 py-5 text-right">
                               <span
-                                className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-full ${t.status === "used" ? "bg-purple-50 text-purple-600" : "bg-green-50 text-green-600"}`}
+                                className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-full ${t.status === "used" ? "bg-blue-600/10 text-blue-600" : "bg-green-50 text-green-600"}`}
                               >
                                 {t.status === "used"
                                   ? "Checked-In"
@@ -459,7 +442,7 @@ export default function ManageEventDashboard() {
                           setCurrentPage((p) => Math.max(p - 1, 1))
                         }
                         disabled={currentPage === 1}
-                        className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 disabled:opacity-30 hover:text-[#715800] transition-colors"
+                        className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 disabled:opacity-30 hover:text-blue-600 transition-colors"
                       >
                         <ChevronLeft size={18} />
                       </button>
@@ -468,7 +451,7 @@ export default function ManageEventDashboard() {
                           setCurrentPage((p) => Math.min(p + 1, totalPages))
                         }
                         disabled={currentPage === totalPages}
-                        className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 disabled:opacity-30 hover:text-[#715800] transition-colors"
+                        className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 disabled:opacity-30 hover:text-blue-600 transition-colors"
                       >
                         <ChevronRight size={18} />
                       </button>
@@ -478,11 +461,10 @@ export default function ManageEventDashboard() {
               </div>
             </div>
 
-            {/* Right Column: Access & Growth */}
             <aside className="lg:col-span-4 space-y-6">
               <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                  <Shield size={16} className="text-[#715800]" /> Access Control
+                  <Shield size={16} className="text-blue-600" /> Access Control
                 </h3>
 
                 <div className="space-y-3 mb-8">
@@ -493,7 +475,7 @@ export default function ManageEventDashboard() {
                         className="group flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-100 transition-all"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-100">
                             {co.image ? (
                               <img
                                 src={co.image}
@@ -508,13 +490,12 @@ export default function ManageEventDashboard() {
                             <span className="text-[11px] font-black uppercase tracking-tight text-slate-900 leading-none">
                               {co.name || "Kivo Member"}
                             </span>
-                            <span className="text-[9px] font-bold text-slate-400 mt-1">
+                            <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">
                               {co.email}
                             </span>
                           </div>
                         </div>
 
-                        {/* Remove Action: Only visible if user IS the Organizer */}
                         {isOrganizer && (
                           <button
                             disabled={!!removingId}
@@ -542,7 +523,6 @@ export default function ManageEventDashboard() {
                   )}
                 </div>
 
-                {/* Add Action: Only visible if user IS the Organizer */}
                 {isOrganizer && (
                   <div className="space-y-4">
                     <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
@@ -550,7 +530,7 @@ export default function ManageEventDashboard() {
                     </p>
                     <div className="flex gap-2">
                       <input
-                        className="flex-1 bg-slate-50 p-4 rounded-xl text-xs font-bold outline-none border border-transparent focus:border-[#715800]/20 transition-all"
+                        className="flex-1 bg-slate-50 p-4 rounded-xl text-xs font-bold outline-none border border-transparent focus:border-blue-500/20 transition-all"
                         placeholder="Enter email address"
                         value={coOrgEmail}
                         onChange={(e) => setCoOrgEmail(e.target.value)}
@@ -559,7 +539,7 @@ export default function ManageEventDashboard() {
                       <button
                         disabled={addingCoOrg}
                         onClick={handleAddCoOrg}
-                        className="bg-slate-900 text-white p-4 rounded-xl hover:bg-[#715800] transition-colors active:scale-95 disabled:opacity-50"
+                        className="bg-slate-900 text-white p-4 rounded-xl hover:bg-blue-600 transition-colors active:scale-95 disabled:opacity-50"
                       >
                         {addingCoOrg ? (
                           <Loader2 size={18} className="animate-spin" />
@@ -572,16 +552,16 @@ export default function ManageEventDashboard() {
                 )}
               </div>
 
-              <div className="bg-[#121212] p-8 rounded-[2.5rem] text-white relative overflow-hidden">
-                <TrendingUp className="absolute -right-4 -bottom-4 text-white/10 w-24 h-24" />
+              <div className="bg-[#0F172A] p-8 rounded-[2.5rem] text-white relative overflow-hidden">
+                <TrendingUp className="absolute -right-4 -bottom-4 text-blue-500/10 w-24 h-24" />
                 <h4 className="text-lg font-black uppercase tracking-tight relative z-10">
                   Expand Your Reach
                 </h4>
-                <p className="text-slate-400 text-xs mt-2 font-medium relative z-10 leading-relaxed">
+                <p className="text-slate-400 text-xs mt-2 font-medium relative z-10 leading-relaxed uppercase">
                   Moves with at least one co-organizer see 40% higher ticket
                   sales on average in Port Harcourt.
                 </p>
-                <button className="mt-6 text-[10px] font-black uppercase tracking-widest text-[#715800] relative z-10">
+                <button className="mt-6 text-[10px] font-black uppercase tracking-widest text-blue-400 relative z-10 hover:text-white transition-colors">
                   Learn More
                 </button>
               </div>
@@ -594,9 +574,6 @@ export default function ManageEventDashboard() {
   );
 }
 
-/**
- * Sub-component for individual metric cards
- */
 const MetricCard = ({
   label,
   value,
@@ -608,9 +585,9 @@ const MetricCard = ({
   icon: React.ReactNode;
   trend?: string;
 }) => (
-  <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm group hover:border-[#715800]/20 transition-all">
+  <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm group hover:border-blue-500/20 transition-all">
     <div className="flex items-center justify-between mb-4">
-      <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-white group-hover:scale-110 transition-all duration-500">
+      <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-blue-50 group-hover:scale-110 transition-all duration-500">
         {icon}
       </div>
       {trend && (

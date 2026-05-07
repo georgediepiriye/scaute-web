@@ -21,6 +21,10 @@ import MobileNav from "@/components/layout/MobileNav";
 import toast from "react-hot-toast";
 import { TICKET_STATUS } from "@/lib/constants";
 
+// BRAND COLOR CONSTANTS
+const KIVO_BLUE = "#0052FF";
+const KIVO_YELLOW = "#FFD700";
+
 export default function TicketDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -56,7 +60,10 @@ export default function TicketDetailsPage() {
   if (loading)
     return (
       <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center">
-        <div className="animate-pulse font-black text-[10px] uppercase tracking-widest text-[#715800]">
+        <div
+          className="animate-pulse font-black text-[10px] uppercase tracking-widest"
+          style={{ color: KIVO_BLUE }}
+        >
           Retrieving Digital Pass...
         </div>
       </div>
@@ -64,7 +71,6 @@ export default function TicketDetailsPage() {
 
   if (!ticket) return null;
 
-  // Map the status from DB to your TICKET_STATUS constants
   const statusKey = (ticket.status as keyof typeof TICKET_STATUS) || "valid";
   const statusConfig = TICKET_STATUS[statusKey];
 
@@ -98,7 +104,13 @@ export default function TicketDetailsPage() {
         </button>
 
         <div className="relative group">
-          <div className="absolute -inset-1 bg-gradient-to-b from-[#715800] to-[#f8d472] rounded-[3rem] blur opacity-10" />
+          {/* Subtle Branded Glow */}
+          <div
+            className="absolute -inset-1 rounded-[3rem] blur opacity-10 transition-all duration-500"
+            style={{
+              backgroundImage: `linear-gradient(to bottom, ${KIVO_BLUE}, ${KIVO_YELLOW})`,
+            }}
+          />
 
           <div className="relative bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/50">
             {/* Event Banner */}
@@ -119,7 +131,10 @@ export default function TicketDetailsPage() {
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
               <div className="absolute bottom-6 left-6 right-6">
-                <span className="px-3 py-1 bg-[#715800] text-white text-[9px] font-black uppercase tracking-widest rounded-full">
+                <span
+                  className="px-3 py-1 text-white text-[9px] font-black uppercase tracking-widest rounded-full"
+                  style={{ backgroundColor: KIVO_BLUE }}
+                >
                   {ticket.tierName}
                 </span>
                 <h1 className="text-2xl font-black text-white uppercase mt-2 leading-tight tracking-tighter">
@@ -134,7 +149,7 @@ export default function TicketDetailsPage() {
                 className={`p-4 bg-white border-[6px] rounded-[2rem] shadow-sm mb-6 transition-colors duration-500`}
                 style={{
                   borderColor:
-                    statusKey === "valid" ? "#000000" : statusConfig.color,
+                    statusKey === "valid" ? KIVO_BLUE : statusConfig.color,
                 }}
               >
                 <div
@@ -155,12 +170,15 @@ export default function TicketDetailsPage() {
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
                   Entry Code
                 </p>
-                <h3 className="text-xl font-mono font-black text-[#715800]">
+                <h3
+                  className="text-xl font-mono font-black"
+                  style={{ color: KIVO_BLUE }}
+                >
                   {ticket.checkInCode}
                 </h3>
               </div>
 
-              {/* Status Badge - Dynamically colored by your constants */}
+              {/* Status Badge */}
               <div
                 className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all"
                 style={{
@@ -197,19 +215,19 @@ export default function TicketDetailsPage() {
             <div className="px-8 pb-8 grid grid-cols-2 gap-6 border-t border-dashed border-slate-200 pt-8 mt-2">
               <div className="space-y-1">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Calendar size={10} /> Date
+                  <Calendar size={10} style={{ color: KIVO_BLUE }} /> Date
                 </p>
                 <p className="text-sm font-black uppercase">{eventDate}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Clock size={10} /> Time
+                  <Clock size={10} style={{ color: KIVO_BLUE }} /> Time
                 </p>
                 <p className="text-sm font-black uppercase">{eventTime}</p>
               </div>
               <div className="col-span-2 space-y-1">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <MapPin size={10} /> Venue
+                  <MapPin size={10} style={{ color: KIVO_BLUE }} /> Venue
                 </p>
                 <p className="text-sm font-black uppercase truncate">
                   {ticket.event.location?.address || "Port Harcourt, Nigeria"}
@@ -235,17 +253,19 @@ export default function TicketDetailsPage() {
 
         {/* Actions */}
         <div className="grid grid-cols-2 gap-4 mt-8">
-          <button className="flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition">
-            <Download size={14} /> Save Image
+          <button className="flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:border-blue-200 transition group">
+            <Download size={14} className="group-hover:text-[#0052FF]" /> Save
+            Image
           </button>
-          <button className="flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition">
-            <Share2 size={14} /> Send Pass
+          <button className="flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:border-blue-200 transition group">
+            <Share2 size={14} className="group-hover:text-[#0052FF]" /> Send
+            Pass
           </button>
         </div>
 
-        <div className="mt-8 flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
-          <Info size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
-          <p className="text-[10px] font-bold text-amber-700 leading-relaxed uppercase">
+        <div className="mt-8 flex items-start gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+          <Info size={16} className="text-[#0052FF] flex-shrink-0 mt-0.5" />
+          <p className="text-[10px] font-bold text-[#0052FF] leading-relaxed uppercase">
             {statusKey === "valid"
               ? "Do not share this QR code. It will be scanned at the entrance and can only be used once."
               : `This pass is currently marked as ${statusConfig.label.toLowerCase()}.`}

@@ -15,6 +15,10 @@ import Navbar from "@/components/layout/NavBar";
 import MobileNav from "@/components/layout/MobileNav";
 import Footer from "@/components/layout/Footer";
 
+// BRAND COLOR CONSTANTS
+const KIVO_BLUE = "#0052FF";
+const KIVO_YELLOW = "#FFD700";
+
 export default function ContactPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -24,17 +28,18 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFB] font-sans text-gray-900 selection:bg-[#715800]/20">
+    <div className="min-h-screen bg-[#FDFDFB] font-sans text-gray-900 selection:bg-[#0052FF]/20">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-6 pt-32 lg:pt-48 pb-20">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-24">
-          {/* LEFT COLUMN: BRANDING & INFO (5 Cols) */}
+          {/* LEFT COLUMN: BRANDING & INFO */}
           <div className="lg:col-span-5 space-y-10">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#715800]/10 text-[#715800] rounded-full text-[10px] font-black uppercase tracking-[0.2em]"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]"
+              style={{ backgroundColor: `${KIVO_BLUE}15`, color: KIVO_BLUE }}
             >
               <Cpu size={12} className="animate-pulse" /> Support Hub
             </motion.div>
@@ -46,11 +51,13 @@ export default function ContactPage() {
             >
               <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8">
                 Got questions? <br />
-                <span className="text-[#715800] italic">Ask Kivo.</span>
+                <span style={{ color: KIVO_BLUE }} className="italic">
+                  Ask Kivo.
+                </span>
               </h1>
               <p className="text-gray-500 text-lg leading-relaxed max-w-sm">
-                Our team (and the Scout) is standing by to help you navigate the
-                city or grow your brand.
+                Our team is standing by to help you navigate the city or grow
+                your brand in Port Harcourt.
               </p>
             </motion.div>
 
@@ -97,7 +104,7 @@ export default function ContactPage() {
             </motion.div>
           </div>
 
-          {/* RIGHT COLUMN: THE FORM (7 Cols) */}
+          {/* RIGHT COLUMN: THE FORM */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -131,7 +138,7 @@ export default function ContactPage() {
                     <label className="text-[11px] font-black uppercase text-gray-400 tracking-widest ml-1">
                       Topic
                     </label>
-                    <select className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-[#715800] outline-none transition-all font-medium text-sm appearance-none cursor-pointer">
+                    <select className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-[#0052FF] outline-none transition-all font-medium text-sm appearance-none cursor-pointer">
                       <option>General Support</option>
                       <option>Partner with Kivo</option>
                       <option>Event Hosting Inquiry</option>
@@ -147,13 +154,14 @@ export default function ContactPage() {
                       required
                       rows={5}
                       placeholder="How can we help you see the city better?"
-                      className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-[#715800] outline-none transition-all font-medium text-sm resize-none"
+                      className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-[#0052FF] outline-none transition-all font-medium text-sm resize-none"
                     ></textarea>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-5 bg-black text-white font-black rounded-2xl hover:bg-[#715800] transition-all active:scale-[0.99] flex items-center justify-center gap-3 shadow-xl shadow-black/10"
+                    className="w-full py-5 text-white font-black rounded-2xl transition-all active:scale-[0.99] flex items-center justify-center gap-3 shadow-xl hover:shadow-blue-500/20"
+                    style={{ backgroundColor: KIVO_BLUE }}
                   >
                     Send Message <Send size={18} />
                   </button>
@@ -165,7 +173,10 @@ export default function ContactPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="py-16 text-center space-y-6"
                 >
-                  <div className="w-24 h-24 bg-[#715800] text-white rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-[#715800]/30">
+                  <div
+                    className="w-24 h-24 text-white rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-blue-500/30"
+                    style={{ backgroundColor: KIVO_BLUE }}
+                  >
                     <CheckCircle2 size={40} />
                   </div>
                   <h2 className="text-3xl font-black tracking-tight">
@@ -177,7 +188,8 @@ export default function ContactPage() {
                   </p>
                   <button
                     onClick={() => setIsSubmitted(false)}
-                    className="text-sm font-black uppercase tracking-widest text-[#715800] hover:underline"
+                    className="text-sm font-black uppercase tracking-widest hover:underline"
+                    style={{ color: KIVO_BLUE }}
                   >
                     Send another
                   </button>
@@ -185,8 +197,11 @@ export default function ContactPage() {
               )}
             </AnimatePresence>
 
-            {/* Subtle Abstract Decoration */}
-            <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-[#715800]/5 rounded-full blur-3xl" />
+            {/* Branded Decoration */}
+            <div
+              className="absolute top-[-10%] right-[-10%] w-64 h-64 rounded-full blur-3xl opacity-10"
+              style={{ backgroundColor: KIVO_BLUE }}
+            />
           </motion.div>
         </div>
       </main>
@@ -197,11 +212,18 @@ export default function ContactPage() {
   );
 }
 
-// REUSABLE SUB-COMPONENTS
 function ContactInfoCard({ icon, label, value, isLink }: any) {
   return (
     <div className="flex items-center gap-5 p-4 rounded-3xl hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-gray-100 group">
-      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#715800] shadow-sm group-hover:bg-[#715800] group-hover:text-white transition-all">
+      <div
+        className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:text-white transition-all"
+        style={{ color: KIVO_BLUE }}
+        // Handling group hover styles via inline CSS for brand consistency
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.backgroundColor = KIVO_BLUE)
+        }
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+      >
         {icon}
       </div>
       <div>
@@ -209,7 +231,11 @@ function ContactInfoCard({ icon, label, value, isLink }: any) {
           {label}
         </p>
         <p
-          className={`font-bold ${isLink ? "text-[#715800] cursor-pointer" : "text-gray-900"}`}
+          className="font-bold"
+          style={{
+            color: isLink ? KIVO_BLUE : "inherit",
+            cursor: isLink ? "pointer" : "default",
+          }}
         >
           {value}
         </p>
@@ -222,7 +248,7 @@ function SocialLink({ icon, href }: { icon: React.ReactNode; href: string }) {
   return (
     <a
       href={href}
-      className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-gray-400 hover:text-[#715800] hover:border-[#715800] transition-all shadow-sm"
+      className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-gray-400 transition-all shadow-sm hover:border-[#0052FF] hover:text-[#0052FF]"
     >
       {icon}
     </a>
@@ -239,7 +265,7 @@ function InputField({ label, placeholder, type }: any) {
         required
         type={type}
         placeholder={placeholder}
-        className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-[#715800] outline-none transition-all font-medium text-sm shadow-sm"
+        className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-[#0052FF] outline-none transition-all font-medium text-sm shadow-sm"
       />
     </div>
   );

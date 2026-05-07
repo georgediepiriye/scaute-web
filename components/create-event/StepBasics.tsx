@@ -15,7 +15,7 @@ export const StepBasics = ({ formData, updateForm, categories }: any) => {
             placeholder="Title..."
             value={formData.title}
             onChange={(e) => updateForm("title", e.target.value)} // Use updateForm here
-            className="w-full text-xl md:text-2xl p-6 bg-gray-50 rounded-[24px] outline-none font-black border-2 border-transparent focus:border-[#715800]"
+            className="w-full text-xl md:text-2xl p-6 bg-gray-50 rounded-[24px] outline-none font-black border-2 border-transparent focus:border-blue-600 transition-all"
           />
         </div>
 
@@ -28,7 +28,7 @@ export const StepBasics = ({ formData, updateForm, categories }: any) => {
             placeholder="The vibe..."
             value={formData.description}
             onChange={(e) => updateForm("description", e.target.value)} // Use updateForm here
-            className="w-full p-6 bg-gray-50 rounded-[24px] h-40 outline-none font-medium text-lg resize-none"
+            className="w-full p-6 bg-gray-50 rounded-[24px] h-40 outline-none font-medium text-lg resize-none border-2 border-transparent focus:border-blue-600 transition-all"
           />
         </div>
 
@@ -40,7 +40,7 @@ export const StepBasics = ({ formData, updateForm, categories }: any) => {
             placeholder="music, outdoor, networking (separate with commas)"
             value={formData.tags}
             onChange={(e) => updateForm("tags", e.target.value)}
-            className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-base sm:text-sm border border-transparent focus:border-[#715800] transition-all"
+            className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-base sm:text-sm border border-transparent focus:border-blue-600 transition-all"
           />
         </div>
 
@@ -57,8 +57,8 @@ export const StepBasics = ({ formData, updateForm, categories }: any) => {
                 onClick={() => updateForm("category", cat)} // Use updateForm here
                 className={`px-4 py-2 rounded-2xl text-[10px] font-bold border-2 transition-all ${
                   formData.category === cat
-                    ? "border-[#715800] bg-[#715800]/5 text-[#715800]"
-                    : "border-gray-50 text-gray-400"
+                    ? "border-blue-600 bg-blue-50 text-blue-600"
+                    : "border-gray-50 text-gray-400 hover:border-gray-200"
                 }`}
               >
                 {cat}

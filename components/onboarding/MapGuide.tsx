@@ -29,11 +29,11 @@ const STEPS: GuideStep[] = [
     description:
       "These are fixed popular locations. Icons tell you the vibe: 🎵 for Nightlife, 🍴 for Food, ☕ for Chill spots, and more.",
     icon: (
-      <div className="w-10 h-10 rounded-full bg-white border-2 border-orange-500 flex items-center justify-center shadow-md text-lg">
+      <div className="w-10 h-10 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center shadow-md text-lg">
         🎵
       </div>
     ),
-    color: "bg-orange-50",
+    color: "bg-blue-50",
   },
   {
     title: "Clusters",

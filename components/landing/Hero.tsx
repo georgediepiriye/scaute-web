@@ -1,195 +1,206 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-// Importing consistent icons from Lucide
+import { useRef } from "react";
 import {
-  Zap,
-  PlayCircle,
-  PartyPopper,
-  MapPin,
-  Lightbulb,
-  Bell,
-  MessageCircle,
-} from "lucide-react";
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  Variants,
+} from "framer-motion";
+import { Compass } from "lucide-react";
+import Link from "next/link";
 
-export default function HeroAndAssistant() {
-  const [apiStatus, setApiStatus] = useState<"loading" | "online" | "offline">(
-    "loading",
-  );
+/**
+ * KIVO HERO - ULTRA SMOOTH VERSION
+ * Optimized with Spring physics and custom Bezier curves.
+ */
 
-  useEffect(() => {
-    const checkHealth = async () => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/health`);
-        if (res.ok) {
-          setApiStatus("online");
-        } else {
-          setApiStatus("offline");
-        }
-      } catch (error) {
-        console.error("API Healthcheck failed:", error);
-        setApiStatus("offline");
-      }
-    };
+const KIVO_BLUE = "#0052FF";
 
-    checkHealth();
-  }, []);
+export default function Hero() {
+  const containerRef = useRef(null);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"],
+  });
+
+  // Create smooth spring-based scroll values to eliminate jitter
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
+  // Parallax transformations tied to the smoothed spring
+  const xLeft = useTransform(smoothProgress, [0, 1], ["-2%", "-15%"]);
+  const xRight = useTransform(smoothProgress, [0, 1], ["2%", "15%"]);
+  const opacityFade = useTransform(smoothProgress, [0, 0.6], [0.03, 0]);
+  const scaleEffect = useTransform(smoothProgress, [0, 1], [1, 1.1]);
+
+  // Entrance variants using a "Soft Pop" custom cubic-bezier
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { y: 40, opacity: 0, filter: "blur(10px)" },
+    visible: {
+      y: 0,
+      opacity: 1,
+      filter: "blur(0px)",
+      transition: {
+        duration: 1.2,
+        ease: [0.22, 1, 0.36, 1], // Quartic Out - very smooth deceleration
+      },
+    },
+  };
 
   return (
-    <>
-      {/* ===== HERO SECTION ===== */}
-      <section className="max-w-7xl mx-auto px-6 md:px-8 py-16 md:py-24 flex flex-col md:flex-row items-center gap-12 md:gap-16 pt-32">
-        {/* LEFT SIDE */}
-        <div className="flex-1 space-y-6 md:space-y-8">
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container text-black rounded-full text-xs font-bold tracking-widest uppercase border border-black/5">
-              <Zap size={14} className="fill-current" />
-              Live in port harcourt
-            </div>
+    <section
+      ref={containerRef}
+      className="relative min-h-[98vh] flex flex-col items-center justify-center pt-32 pb-20 px-4 overflow-hidden bg-[#fafafa]"
+    >
+      {/* 1. ULTRA-SMOOTH PARALLAX BACKGROUND */}
+      <motion.div
+        style={{ opacity: opacityFade, scale: scaleEffect }}
+        className="absolute inset-0 pointer-events-none select-none flex flex-col justify-center items-center gap-2"
+      >
+        <motion.h2
+          style={{ x: xLeft }}
+          className="text-[26vw] font-black leading-none uppercase whitespace-nowrap text-slate-900"
+        >
+          PORT HARCOURT
+        </motion.h2>
+        <motion.h2
+          style={{
+            x: xRight,
+            WebkitTextStroke: "1px rgba(0,0,0,0.2)",
+            color: "transparent",
+          }}
+          className="text-[26vw] font-black leading-none uppercase whitespace-nowrap italic"
+        >
+          RIVERS STATE
+        </motion.h2>
+      </motion.div>
+
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="relative z-10 w-full max-w-7xl mx-auto flex flex-col items-center"
+      >
+        {/* 2. STATUS BADGE */}
+        <motion.div
+          variants={itemVariants}
+          className="group flex items-center gap-2 bg-white/80 backdrop-blur-md p-1.5 pr-6 rounded-full shadow-sm border border-slate-100 mb-12 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-500 ease-out"
+        >
+          <div
+            style={{ backgroundColor: KIVO_BLUE }}
+            className="px-5 py-2.5 rounded-full flex items-center gap-2.5"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
+              Live Now
+            </span>
           </div>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+            23 moves active in{" "}
+            <span className="text-slate-950 font-black">PH City</span>
+          </span>
+        </motion.div>
 
-          <h1 className="text-4xl md:text-7xl font-black tracking-tighter leading-[1.05] text-on-surface">
-            See what’s happening{" "}
-            <span className="text-primary italic">near you</span>.
-          </h1>
+        {/* 3. HEADLINE WITH KIVO YELLOW ACCENT */}
+        <div className="text-center mb-16">
+          <motion.h1
+            variants={itemVariants}
+            className="text-7xl md:text-[140px] font-black tracking-[-0.06em] leading-[0.8] uppercase text-slate-950"
+          >
+            What’s <br />
+            <span className="relative inline-block px-4">
+              happening
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{
+                  delay: 1,
+                  duration: 1.5,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="absolute bottom-2 md:bottom-5 left-0 w-full h-[0.25em] bg-amber-400/40 -z-10 origin-left"
+              />
+            </span>{" "}
+            <br />
+            <span style={{ color: KIVO_BLUE }} className="italic font-serif">
+              right now?
+            </span>
+          </motion.h1>
 
-          <p className="text-base md:text-lg text-gray-600 max-w-xl leading-relaxed">
-            Discover local events and activities in{" "}
-            <strong>Port Harcourt</strong>. Meet people in real life, and join
-            or host meetups around you. Explore the map, join in minutes, or
-            create your own event.
-          </p>
-
-          <div className="flex flex-wrap gap-4 pt-4">
-            <Link href="/map">
-              <button className="px-6 md:px-8 py-3 md:py-4 bg-primary text-white font-bold rounded-full text-lg hover:scale-105 transition shadow-lg shadow-primary/20">
-                Get started
-              </button>
-            </Link>
-
-            <button className="px-6 md:px-8 py-3 md:py-4 bg-gray-200 text-black font-bold rounded-full text-lg flex items-center gap-2 hover:bg-gray-300 transition">
-              <PlayCircle size={22} />
-              See how it works
-            </button>
-          </div>
+          <motion.p
+            variants={itemVariants}
+            className="mt-8 text-slate-500 text-base md:text-xl font-medium max-w-xl mx-auto leading-relaxed"
+          >
+            Real-time access to local events, trending spots, and curated moves
+            across the city.
+          </motion.p>
         </div>
 
-        {/* RIGHT SIDE */}
-        <div className="flex-1 relative w-full md:w-auto">
-          <div className="aspect-[4/5] md:aspect-[3/4] rounded-2xl overflow-hidden shadow-lg relative rotate-0 md:rotate-2">
-            <Image
-              src="/images/hero.png"
-              alt="People socializing"
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
-          </div>
-
-          <div className="absolute -bottom-10 -left-10 bg-white/80 backdrop-blur-lg p-5 rounded-2xl shadow-lg max-w-[240px] hidden lg:block -rotate-3 border border-white/20">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-primary">
-                <PartyPopper size={20} />
-              </div>
-
-              <div>
-                <p className="font-bold text-sm">Sunday Brunch</p>
-                <p className="text-xs text-gray-500">Old GRA, Port Harcourt</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-gray-600 italic">
-              “Found this through Kivo — easily one of the best spots this
-              weekend.”
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== AI / SMART ASSISTANT SECTION ===== */}
-      <section className="bg-surface py-20">
-        <div className="max-w-7xl mx-auto px-6 md:px-8 flex flex-col md:flex-row items-center gap-12 md:gap-16">
-          {/* IMAGE */}
-          <div className="md:w-1/2 relative">
-            <Image
-              src="/images/ai_landing.png"
-              alt="Kivo AI Assistant"
-              width={600}
-              height={600}
-              className="rounded-2xl shadow-lg"
-            />
-          </div>
-
-          {/* TEXT */}
-          <div className="md:w-1/2 flex flex-col gap-6">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-on-surface">
-              Your AI Companion for Local Experiences
-            </h2>
-
-            <p className="text-lg text-gray-700">
-              Kivo understands what you love and brings the best local events,
-              activities, and social experiences straight to you—so you’re never
-              left wondering what to do.
-            </p>
-
-            <ul className="flex flex-col gap-5">
-              <li className="flex items-start gap-4">
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                  <MapPin size={24} />
-                </div>
-                <div>
-                  <strong className="block text-gray-900">
-                    Location-aware suggestions
-                  </strong>
-                  <span className="text-gray-600">
-                    Discover nearby events instantly.
-                  </span>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                  <Lightbulb size={24} />
-                </div>
-                <div>
-                  <strong className="block text-gray-900">
-                    Smart recommendations
-                  </strong>
-                  <span className="text-gray-600">
-                    AI learns what you love.
-                  </span>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                  <Bell size={24} />
-                </div>
-                <div>
-                  <strong className="block text-gray-900">
-                    Real-time alerts
-                  </strong>
-                  <span className="text-gray-600">
-                    Never miss spontaneous activities.
-                  </span>
-                </div>
-              </li>
-            </ul>
-
-            {/* WhatsApp Bot Button */}
-            <a
-              href="https://wa.me/2348012345678?text=Hi!%20I%20want%20to%20chat%20with%20Kivo%20AI%20Assistant"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 w-fit bg-[#25D366] hover:bg-[#1DA851] text-white px-8 py-4 rounded-full font-bold flex items-center gap-3 transition shadow-xl shadow-green-500/20"
+        {/* 4. PRIMARY CTA - SPRING SCALE ON HOVER */}
+        <motion.div variants={itemVariants} className="w-full max-w-lg">
+          <Link href="/map" className="group block">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{ backgroundColor: KIVO_BLUE }}
+              className="relative overflow-hidden rounded-[40px] p-1 shadow-2xl shadow-blue-500/20"
             >
-              <MessageCircle size={22} />
-              Chat with Kivo on WhatsApp
-            </a>
-          </div>
-        </div>
-      </section>
-    </>
+              <div className="absolute inset-0 bg-slate-950 translate-y-full group-hover:translate-y-0 transition-transform duration-700 cubic-bezier(0.22, 1, 0.36, 1)" />
+
+              <div className="relative flex items-center justify-between px-10 py-9 text-white">
+                <div className="flex flex-col text-left">
+                  <span className="text-3xl font-black uppercase tracking-tighter">
+                    Open the Map
+                  </span>
+                  <span className="text-[10px] uppercase tracking-[0.2em] opacity-60 font-black">
+                    Explore active zones
+                  </span>
+                </div>
+                <div className="bg-white/10 p-4 rounded-3xl group-hover:rotate-[360deg] transition-transform duration-1000 ease-in-out">
+                  <Compass size={36} strokeWidth={2.5} />
+                </div>
+              </div>
+            </motion.div>
+          </Link>
+        </motion.div>
+
+        {/* 5. FLOW INDICATOR */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+          className="mt-20 flex flex-col items-center gap-4"
+        >
+          <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-slate-400">
+            Scroll
+          </span>
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+            className="w-px h-16 bg-gradient-to-b from-slate-300 to-transparent"
+          />
+        </motion.div>
+      </motion.div>
+    </section>
   );
 }

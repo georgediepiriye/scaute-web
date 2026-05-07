@@ -2,6 +2,10 @@
 import { Users, Ticket, LinkIcon, Trash2, Ban } from "lucide-react";
 import { motion } from "framer-motion";
 
+// BRAND COLOR CONSTANTS
+const KIVO_BLUE = "#0052FF";
+const KIVO_YELLOW = "#FFD700";
+
 export const StepTicketing = ({ formData, updateForm }: any) => {
   const ticketingType = formData.ticketingType || "none";
   const tiers = formData.ticketTiers || [];
@@ -25,7 +29,6 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
     updateForm("ticketTiers", newTiers);
   };
 
-  // Helper for human-readable labels
   const TICKET_OPTIONS = [
     { id: "none", label: "No Tickets", sub: "Open entry", icon: Ban },
     { id: "internal", label: "Kivo Tickets", sub: "Sell on app", icon: Ticket },
@@ -50,13 +53,17 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
               onClick={() => updateForm("ticketingType", opt.id)}
               className={`p-6 rounded-[24px] border-2 flex flex-col items-center text-center gap-3 transition-all ${
                 isActive
-                  ? "border-[#715800] bg-[#715800]/5 text-[#715800]"
+                  ? "bg-blue-50/50"
                   : "border-gray-50 bg-gray-50/50 text-gray-400 hover:border-gray-200"
               }`}
+              style={{
+                borderColor: isActive ? KIVO_BLUE : "",
+                color: isActive ? KIVO_BLUE : "",
+              }}
             >
               <Icon
                 size={24}
-                className={isActive ? "text-[#715800]" : "text-gray-300"}
+                style={{ color: isActive ? KIVO_BLUE : "#D1D5DB" }}
               />
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider">
@@ -78,7 +85,10 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
             <h3 className="text-[10px] font-black uppercase text-gray-400">
               Ticket Tiers
             </h3>
-            <span className="text-[10px] font-bold text-[#715800] bg-[#715800]/10 px-3 py-1 rounded-full">
+            <span
+              className="text-[10px] font-black text-gray-900 px-3 py-1 rounded-full shadow-sm"
+              style={{ backgroundColor: KIVO_YELLOW }}
+            >
               {tiers.length} Active
             </span>
           </div>
@@ -89,7 +99,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 key={idx}
-                className="p-6 bg-gray-50 rounded-[32px] grid md:grid-cols-3 gap-6 relative border border-transparent hover:border-gray-200 transition-colors"
+                className="p-6 bg-gray-50 rounded-[32px] grid md:grid-cols-3 gap-6 relative border border-transparent transition-colors hover:border-blue-100"
               >
                 <div className="space-y-2">
                   <label className="text-[9px] font-black uppercase text-gray-400 ml-1">
@@ -99,7 +109,8 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                     placeholder="e.g. Early Bird"
                     value={tier.name}
                     onChange={(e) => updateTier(idx, "name", e.target.value)}
-                    className="w-full p-4 rounded-2xl bg-white font-bold text-sm outline-none shadow-sm focus:ring-2 ring-[#715800]/20"
+                    className="w-full p-4 rounded-2xl bg-white font-bold text-sm outline-none shadow-sm focus:ring-2 transition-all"
+                    style={{ "--tw-ring-color": `${KIVO_BLUE}15` } as any}
                   />
                 </div>
 
@@ -114,7 +125,8 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                     onChange={(e) =>
                       updateTier(idx, "price", Number(e.target.value))
                     }
-                    className="w-full p-4 rounded-2xl bg-white font-bold text-sm outline-none shadow-sm focus:ring-2 ring-[#715800]/20"
+                    className="w-full p-4 rounded-2xl bg-white font-bold text-sm outline-none shadow-sm focus:ring-2 transition-all"
+                    style={{ "--tw-ring-color": `${KIVO_BLUE}15` } as any}
                   />
                 </div>
 
@@ -130,7 +142,8 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                       onChange={(e) =>
                         updateTier(idx, "capacity", Number(e.target.value))
                       }
-                      className="w-full p-4 rounded-2xl bg-white font-bold text-sm outline-none shadow-sm focus:ring-2 ring-[#715800]/20"
+                      className="w-full p-4 rounded-2xl bg-white font-bold text-sm outline-none shadow-sm focus:ring-2 transition-all"
+                      style={{ "--tw-ring-color": `${KIVO_BLUE}15` } as any}
                     />
                     <Users
                       size={14}
@@ -151,7 +164,13 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
 
           <button
             onClick={addTier}
-            className="w-full py-6 border-2 border-dashed border-gray-200 rounded-[32px] text-[10px] font-black uppercase text-gray-400 hover:text-[#715800] hover:border-[#715800] hover:bg-[#715800]/5 transition-all"
+            className="w-full py-6 border-2 border-dashed border-gray-200 rounded-[32px] text-[10px] font-black uppercase text-gray-400 hover:bg-blue-50/50 transition-all"
+            style={
+              {
+                hoverBorderColor: KIVO_BLUE,
+                hoverColor: KIVO_BLUE,
+              } as any
+            }
           >
             + Add New Ticket Tier
           </button>
@@ -176,7 +195,8 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                 onChange={(e) =>
                   updateForm("externalTicketLink", e.target.value)
                 }
-                className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:border-[#715800] transition-all"
+                className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white transition-all"
+                style={{ focusBorderColor: KIVO_BLUE } as any}
               />
               <LinkIcon
                 size={16}

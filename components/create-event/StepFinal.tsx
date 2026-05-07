@@ -1,21 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ImageIcon, Settings2, Eye, Globe, UserCheck } from "lucide-react";
+import { ImageIcon, Settings2 } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-// ✅ 1. Move Toggle OUTSIDE of the main component
+// BRAND COLOR CONSTANTS
+const KIVO_BLUE = "#0052FF";
+const KIVO_YELLOW = "#FFD700";
+
 const Toggle = ({ label, sub, value, field, updateForm }: any) => (
   <div className="flex items-center justify-between group">
     <div className="space-y-0.5">
       <p className="text-[10px] font-black uppercase text-white">{label}</p>
-      <p className="text-[9px] font-bold text-gray-500 uppercase">{sub}</p>
+      <p className="text-[9px] font-bold text-gray-400 uppercase">{sub}</p>
     </div>
     <button
       type="button"
       onClick={() => updateForm(field, !value)}
-      className={`w-12 h-7 rounded-full transition-all relative ${
-        value ? "bg-[#715800]" : "bg-gray-700"
-      }`}
+      className="w-12 h-7 rounded-full transition-all relative"
+      style={{ backgroundColor: value ? KIVO_BLUE : "#374151" }}
     >
       <motion.div
         animate={{ x: value ? 22 : 4 }}
@@ -30,7 +32,6 @@ export const StepFinal = ({
   updateForm,
   previewImage,
   handleImageChange,
-  onPreview,
 }: any) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -40,7 +41,10 @@ export const StepFinal = ({
           <h3 className="text-[10px] font-black uppercase text-gray-400 mb-6 tracking-widest">
             Event Banner <span className="text-red-500">*</span>
           </h3>
-          <label className="block h-80 bg-gray-50 rounded-[32px] border-4 border-dashed border-gray-100 cursor-pointer overflow-hidden relative group transition-colors hover:border-[#715800]/20">
+          <label
+            className="block h-80 bg-gray-50 rounded-[32px] border-4 border-dashed border-gray-100 cursor-pointer overflow-hidden relative group transition-colors"
+            style={{ "--hover-border": `${KIVO_BLUE}40` } as any}
+          >
             {previewImage ? (
               <Image
                 src={previewImage}
@@ -49,8 +53,12 @@ export const StepFinal = ({
                 className="object-cover"
               />
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-gray-300 group-hover:text-[#715800] transition-colors">
-                <ImageIcon size={48} strokeWidth={1.5} />
+              <div className="h-full flex flex-col items-center justify-center text-gray-300 group-hover:text-blue-500 transition-colors">
+                <ImageIcon
+                  size={48}
+                  strokeWidth={1.5}
+                  style={{ color: "inherit" }}
+                />
                 <span className="text-[10px] font-black uppercase mt-4">
                   Upload High-Res Cover
                 </span>
@@ -70,12 +78,14 @@ export const StepFinal = ({
       {/* RIGHT: Preferences & Action */}
       <div className="lg:col-span-4 space-y-6">
         <div className="bg-gray-900 text-white p-8 rounded-[40px] shadow-xl space-y-8">
-          <div className="flex items-center gap-2 text-[#715800] font-black text-[10px] uppercase tracking-widest">
+          <div
+            className="flex items-center gap-2 font-black text-[10px] uppercase tracking-widest"
+            style={{ color: KIVO_YELLOW }}
+          >
             <Settings2 size={16} /> Advanced Settings
           </div>
 
           <div className="space-y-6">
-            {/* ✅ 2. Pass updateForm to the Toggle component here */}
             <Toggle
               label="Public Visibility"
               sub="Show on Discovery Feed"
@@ -99,7 +109,8 @@ export const StepFinal = ({
               <select
                 value={formData.refundPolicy}
                 onChange={(e) => updateForm("refundPolicy", e.target.value)}
-                className="w-full bg-gray-800 text-white p-4 rounded-2xl font-bold text-xs outline-none border border-gray-700 focus:border-[#715800]"
+                className="w-full bg-gray-800 text-white p-4 rounded-2xl font-bold text-xs outline-none border border-gray-700 transition-all"
+                style={{ focusBorderColor: KIVO_BLUE } as any}
               >
                 <option value="none">No Refunds</option>
                 <option value="24h">24h before event</option>

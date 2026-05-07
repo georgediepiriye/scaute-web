@@ -209,9 +209,9 @@ export default function EventSettingsPage() {
 
   if (loading)
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-white">
-        <Loader2 className="animate-spin text-[#715800] mb-4" size={32} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+      <div className="h-screen flex flex-col items-center justify-center bg-[#020817]">
+        <Loader2 className="animate-spin text-blue-500 mb-4" size={32} />
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
           Syncing with Kivo...
         </p>
       </div>
@@ -219,22 +219,22 @@ export default function EventSettingsPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#FDFDFD] text-slate-900 pb-32">
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-32 selection:bg-blue-500/20">
         <Toaster position="bottom-center" />
         <Navbar />
 
         {/* HEADER */}
-        <div className="pt-24 sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-100">
+        <div className="pt-24 sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200">
           <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.back()}
-                className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 rounded-2xl"
+                className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 rounded-2xl hover:border-blue-500/30 transition-colors"
               >
                 <ChevronLeft size={20} />
               </button>
               <div>
-                <h1 className="text-[10px] font-black uppercase tracking-widest text-[#715800]">
+                <h1 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">
                   Control Center
                 </h1>
                 <p className="text-xl font-black uppercase tracking-tight">
@@ -245,7 +245,7 @@ export default function EventSettingsPage() {
             <button
               onClick={handleUpdate}
               disabled={saving}
-              className="px-10 py-4 bg-[#715800] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2"
+              className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] flex items-center gap-2 hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-600/20"
             >
               {saving ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -262,7 +262,7 @@ export default function EventSettingsPage() {
             {/* 1. BASIC INFO */}
             <section className="bg-white p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-8">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                <Info size={16} /> Basic Details
+                <Info size={16} className="text-blue-600" /> Basic Details
               </h3>
 
               <div className="space-y-6">
@@ -276,7 +276,7 @@ export default function EventSettingsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, title: e.target.value })
                     }
-                    className="w-full p-4 bg-slate-50 border border-transparent focus:border-[#715800]/20 rounded-2xl text-sm font-bold outline-none transition-all"
+                    className="w-full p-5 bg-slate-50 border border-transparent focus:border-blue-500/20 focus:bg-white rounded-2xl text-sm font-bold outline-none transition-all"
                     placeholder="E.g. Port Harcourt Night Run"
                   />
                 </div>
@@ -291,15 +291,15 @@ export default function EventSettingsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
-                    className="w-full p-4 bg-slate-50 border border-transparent focus:border-[#715800]/20 rounded-2xl text-sm font-bold outline-none transition-all resize-none"
+                    className="w-full p-5 bg-slate-50 border border-transparent focus:border-blue-500/20 focus:bg-white rounded-2xl text-sm font-bold outline-none transition-all resize-none"
                     placeholder="Tell them what's happening..."
                   />
                 </div>
 
-                <div className="pt-4 flex items-center justify-between bg-slate-50 p-6 rounded-2xl">
+                <div className="pt-4 flex items-center justify-between bg-slate-50 p-6 rounded-2xl border border-slate-100">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`p-3 rounded-xl ${formData.isPublic ? "bg-green-100 text-green-600" : "bg-slate-200 text-slate-600"}`}
+                      className={`p-3 rounded-xl ${formData.isPublic ? "bg-blue-100 text-blue-600" : "bg-slate-200 text-slate-600"}`}
                     >
                       {formData.isPublic ? (
                         <Eye size={18} />
@@ -322,7 +322,7 @@ export default function EventSettingsPage() {
                     onClick={() =>
                       setFormData({ ...formData, isPublic: !formData.isPublic })
                     }
-                    className={`px-6 py-2 rounded-xl text-[9px] font-black uppercase border transition-all ${formData.isPublic ? "border-green-200 text-green-600 bg-white" : "border-slate-200 text-slate-500 bg-white"}`}
+                    className={`px-6 py-2 rounded-xl text-[9px] font-black uppercase border transition-all ${formData.isPublic ? "border-blue-200 text-blue-600 bg-white" : "border-slate-200 text-slate-500 bg-white"}`}
                   >
                     {formData.isPublic ? "Make Private" : "Make Public"}
                   </button>
@@ -333,7 +333,7 @@ export default function EventSettingsPage() {
             {/* 2. SCHEDULE */}
             <section className="bg-white p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-8">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                <Calendar size={16} /> Schedule
+                <Calendar size={16} className="text-blue-600" /> Schedule
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
@@ -347,7 +347,7 @@ export default function EventSettingsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, startDate: e.target.value })
                     }
-                    className="w-full p-4 bg-slate-50 border border-transparent rounded-2xl text-sm font-bold disabled:opacity-50"
+                    className="w-full p-4 bg-slate-50 border border-transparent focus:border-blue-500/20 rounded-2xl text-sm font-bold disabled:opacity-50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -360,7 +360,7 @@ export default function EventSettingsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, endDate: e.target.value })
                     }
-                    className="w-full p-4 bg-slate-50 border border-transparent rounded-2xl text-sm font-bold"
+                    className="w-full p-4 bg-slate-50 border border-transparent focus:border-blue-500/20 rounded-2xl text-sm font-bold"
                   />
                 </div>
               </div>
@@ -370,12 +370,12 @@ export default function EventSettingsPage() {
             <section className="bg-white p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                  <MapPin size={16} /> Venue
+                  <MapPin size={16} className="text-blue-600" /> Venue
                 </h3>
                 {!hasStarted && (
                   <button
                     onClick={useCurrentLocation}
-                    className="text-[10px] font-black text-[#715800] flex items-center gap-1"
+                    className="text-[10px] font-black text-blue-600 flex items-center gap-1 hover:opacity-70 transition-opacity"
                   >
                     <Navigation
                       size={12}
@@ -410,7 +410,7 @@ export default function EventSettingsPage() {
               <button
                 disabled={hasStarted}
                 onClick={() => setShowMapPicker(true)}
-                className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest"
+                className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/10"
               >
                 {formData.locationCoords ? "Adjust Pin on Map" : "Drop Map Pin"}
               </button>
@@ -420,7 +420,7 @@ export default function EventSettingsPage() {
             <section className="bg-white p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                  <Ticket size={16} /> Tickets
+                  <Ticket size={16} className="text-blue-600" /> Tickets
                 </h3>
                 <button
                   onClick={() =>
@@ -432,7 +432,7 @@ export default function EventSettingsPage() {
                       ],
                     })
                   }
-                  className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-2"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-blue-700 transition-colors"
                 >
                   <Plus size={12} /> Add Tier
                 </button>
@@ -441,42 +441,57 @@ export default function EventSettingsPage() {
                 {formData.ticketTiers.map((tier: any, idx: number) => (
                   <div
                     key={idx}
-                    className="p-6 bg-slate-50 rounded-[2rem] grid grid-cols-1 md:grid-cols-3 gap-6 relative border border-slate-100 group"
+                    className="p-6 bg-slate-50 rounded-[2rem] grid grid-cols-1 md:grid-cols-3 gap-6 relative border border-slate-100 group hover:border-blue-500/20 transition-all"
                   >
-                    <input
-                      value={tier.name}
-                      onChange={(e) => {
-                        const updated = [...formData.ticketTiers];
-                        updated[idx].name = e.target.value;
-                        setFormData({ ...formData, ticketTiers: updated });
-                      }}
-                      className="bg-transparent font-bold text-sm outline-none"
-                      placeholder="Tier Name"
-                    />
+                    <div className="space-y-1">
+                      <p className="text-[8px] font-black uppercase text-slate-400">
+                        Tier Name
+                      </p>
+                      <input
+                        value={tier.name}
+                        onChange={(e) => {
+                          const updated = [...formData.ticketTiers];
+                          updated[idx].name = e.target.value;
+                          setFormData({ ...formData, ticketTiers: updated });
+                        }}
+                        className="bg-transparent font-bold text-sm outline-none w-full"
+                        placeholder="Tier Name"
+                      />
+                    </div>
 
-                    <input
-                      type="number"
-                      value={tier.price}
-                      onChange={(e) => {
-                        const updated = [...formData.ticketTiers];
-                        updated[idx].price = Number(e.target.value);
-                        setFormData({ ...formData, ticketTiers: updated });
-                      }}
-                      className="bg-transparent font-bold text-sm outline-none"
-                      placeholder="Price"
-                    />
+                    <div className="space-y-1">
+                      <p className="text-[8px] font-black uppercase text-slate-400">
+                        Price (₦)
+                      </p>
+                      <input
+                        type="number"
+                        value={tier.price}
+                        onChange={(e) => {
+                          const updated = [...formData.ticketTiers];
+                          updated[idx].price = Number(e.target.value);
+                          setFormData({ ...formData, ticketTiers: updated });
+                        }}
+                        className="bg-transparent font-bold text-sm outline-none w-full"
+                        placeholder="Price"
+                      />
+                    </div>
 
-                    <input
-                      type="number"
-                      value={tier.capacity}
-                      onChange={(e) => {
-                        const updated = [...formData.ticketTiers];
-                        updated[idx].capacity = Number(e.target.value);
-                        setFormData({ ...formData, ticketTiers: updated });
-                      }}
-                      className="bg-transparent font-bold text-sm outline-none"
-                      placeholder="Capacity"
-                    />
+                    <div className="space-y-1">
+                      <p className="text-[8px] font-black uppercase text-slate-400">
+                        Capacity
+                      </p>
+                      <input
+                        type="number"
+                        value={tier.capacity}
+                        onChange={(e) => {
+                          const updated = [...formData.ticketTiers];
+                          updated[idx].capacity = Number(e.target.value);
+                          setFormData({ ...formData, ticketTiers: updated });
+                        }}
+                        className="bg-transparent font-bold text-sm outline-none w-full"
+                        placeholder="Capacity"
+                      />
+                    </div>
 
                     <button
                       onClick={() =>
@@ -487,7 +502,7 @@ export default function EventSettingsPage() {
                           ),
                         })
                       }
-                      className="absolute -top-2 -right-2 bg-white p-2 rounded-full text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 bg-white p-2 rounded-full text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm border border-slate-200"
                     >
                       <Trash2 size={12} />
                     </button>
@@ -499,11 +514,14 @@ export default function EventSettingsPage() {
 
           {/* SIDEBAR */}
           <aside className="lg:col-span-4 space-y-6">
-            <div className="bg-slate-900 rounded-[3rem] p-10 space-y-8 text-white">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+            <div className="bg-[#0F172A] rounded-[3rem] p-10 space-y-8 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-5">
+                <CreditCard size={120} className="text-blue-500" />
+              </div>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2 relative z-10">
                 <CreditCard size={14} /> Stats
               </h3>
-              <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
+              <div className="p-6 bg-white/5 rounded-3xl border border-white/10 relative z-10">
                 <p className="text-[10px] font-black uppercase text-slate-400">
                   Tickets Sold
                 </p>
@@ -514,7 +532,7 @@ export default function EventSettingsPage() {
                   )}
                 </p>
               </div>
-              <button className="w-full py-5 bg-[#715800] rounded-2xl font-black text-[10px] uppercase tracking-widest">
+              <button className="w-full py-5 bg-blue-600 hover:bg-blue-700 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 relative z-10 shadow-xl shadow-blue-900/20">
                 Request Payout
               </button>
             </div>
@@ -523,9 +541,19 @@ export default function EventSettingsPage() {
               <h3 className="text-[10px] font-black uppercase text-red-500 mb-4 flex items-center gap-2">
                 <ShieldAlert size={14} /> Danger Zone
               </h3>
-              <button className="w-full py-4 bg-white border border-red-200 text-red-500 rounded-2xl font-black text-[10px] uppercase hover:bg-red-500 hover:text-white transition-all">
+              <p className="text-[9px] font-bold text-slate-400 uppercase mb-6 leading-relaxed">
+                Canceling will notify all attendees and trigger automatic
+                Paystack refunds.
+              </p>
+              <button className="w-full py-4 bg-white border border-red-200 text-red-500 rounded-2xl font-black text-[10px] uppercase hover:bg-red-500 hover:text-white transition-all active:scale-95">
                 Cancel Move
               </button>
+
+              <div className="mt-8 pt-8 border-t border-red-100 flex flex-col items-center">
+                <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">
+                  Built in Port Harcourt
+                </p>
+              </div>
             </div>
           </aside>
         </main>
@@ -543,7 +571,7 @@ export default function EventSettingsPage() {
             <div className="absolute top-6 right-6 z-[110]">
               <button
                 onClick={() => setShowMapPicker(false)}
-                className="p-4 bg-black text-white rounded-full"
+                className="p-4 bg-slate-900 text-white rounded-full hover:bg-blue-600 transition-colors shadow-2xl"
               >
                 <X size={20} />
               </button>
@@ -563,7 +591,7 @@ export default function EventSettingsPage() {
             <div className="p-10 bg-white border-t border-slate-100 flex justify-center">
               <button
                 onClick={() => setShowMapPicker(false)}
-                className="px-12 py-5 bg-[#715800] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl"
+                className="px-12 py-5 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl hover:bg-blue-700 active:scale-95 transition-all"
               >
                 Confirm Pin
               </button>

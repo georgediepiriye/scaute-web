@@ -323,7 +323,7 @@ export default function MapPage() {
               className="fixed right-0 top-0 h-full w-[300px] bg-white z-[160] md:hidden shadow-2xl flex flex-col"
             >
               <div className="p-8 pb-4 flex justify-between items-center">
-                <span className="font-black italic text-xl tracking-tighter text-[#715800]">
+                <span className="font-black italic text-xl tracking-tighter text-blue-600 uppercase">
                   KIVO
                 </span>
                 <button
@@ -581,10 +581,7 @@ export default function MapPage() {
               <div className="bg-white rounded-[32px] shadow-2xl border border-gray-100 overflow-hidden relative">
                 <div className="relative h-44 w-full">
                   <Image
-                    src={
-                      selectedHotspot.image ||
-                      "https://picsum.photos/seed/kivo/800/600"
-                    }
+                    src={selectedHotspot.image}
                     alt="Hotspot"
                     fill
                     className="object-cover"
@@ -780,9 +777,7 @@ export default function MapPage() {
                     <p className="text-xs font-bold text-gray-900 truncate">
                       {selected.isOnline
                         ? "Worldwide"
-                        : selected.location?.address ||
-                          selected.location?.neighborhood ||
-                          "Port Harcourt"}
+                        : selected.location?.neighborhood || "Port Harcourt"}
                     </p>
                   </div>
                 </div>

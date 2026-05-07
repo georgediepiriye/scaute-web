@@ -77,7 +77,7 @@ export default function SignInPage() {
           fontWeight: "bold",
         },
         success: {
-          iconTheme: { primary: "#22c55e", secondary: "#fff" },
+          iconTheme: { primary: "#2563eb", secondary: "#fff" },
         },
       },
     );
@@ -91,9 +91,9 @@ export default function SignInPage() {
         <Navbar />
 
         {/* LEFT SIDE: BRAND/VISUAL */}
-        <div className="hidden lg:flex lg:w-1/2 relative bg-[#F9F7F2] items-center justify-center p-12 overflow-hidden">
-          <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-[#715800]/5 blur-3xl" />
-          <div className="absolute bottom-[5%] right-[-5%] w-[300px] h-[300px] rounded-full bg-[#8b5cf6]/5 blur-3xl" />
+        <div className="hidden lg:flex lg:w-1/2 relative bg-[#F8FAFC] items-center justify-center p-12 overflow-hidden">
+          <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-blue-600/5 blur-3xl" />
+          <div className="absolute bottom-[5%] right-[-5%] w-[300px] h-[300px] rounded-full bg-blue-400/5 blur-3xl" />
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -101,16 +101,16 @@ export default function SignInPage() {
             className="relative z-10 text-center max-w-md"
           >
             <Image
-              src="/images/signin.jpeg"
+              src="https://res.cloudinary.com/dzhfiblg7/image/upload/f_auto,q_auto,w_800/v1778054500/kivo_events/inhouse/tower.png"
               alt="Kivo World"
               width={500}
               height={500}
-              className="drop-shadow-2xl mb-10 rounded-[40px] object-contain"
+              className="drop-shadow-2xl mb-10 rounded-[40px] object-contain border-4 border-white shadow-blue-600/10"
               priority
             />
-            <h1 className="text-4xl font-black tracking-tighter text-gray-900 mb-4">
+            <h1 className="text-4xl font-black tracking-tighter text-gray-900 mb-4 uppercase">
               See the city <br />{" "}
-              <span className="text-[#715800]">in Real-Time.</span>
+              <span className="text-blue-600">in Real-Time.</span>
             </h1>
             <p className="text-gray-500 font-medium leading-relaxed">
               Join thousands of locals discovering the best events, lounges, and
@@ -121,22 +121,15 @@ export default function SignInPage() {
 
         {/* RIGHT SIDE: LOGIN FORM */}
         <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 md:p-20 relative pt-24 lg:pt-20">
-          <div className="hidden lg:block lg:static lg:mb-12 self-start">
-            <Link
-              href="/"
-              className="text-2xl font-black text-[#715800] tracking-tighter"
-            >
-              KIVO
-            </Link>
-          </div>
+          <div className="hidden lg:block lg:static lg:mb-12 self-start"></div>
 
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="w-full max-w-sm mb-20 lg:mb-0"
           >
-            <div className="mb-10">
-              <h2 className="text-3xl font-black tracking-tight mb-2">
+            <div className="mb-10 text-center lg:text-left">
+              <h2 className="text-3xl font-black tracking-tight mb-2 uppercase">
                 Welcome Back
               </h2>
               <p className="text-gray-400 text-sm font-medium">
@@ -149,7 +142,7 @@ export default function SignInPage() {
               onClick={() =>
                 (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/google`)
               }
-              className="w-full py-4 px-6 border-2 border-gray-100 rounded-2xl flex items-center justify-center gap-4 font-bold text-gray-700 hover:bg-gray-50 transition-all active:scale-[0.98] mb-8"
+              className="w-full py-4 px-6 border-2 border-gray-100 rounded-2xl flex items-center justify-center gap-4 font-black text-[10px] uppercase tracking-widest text-gray-700 hover:bg-gray-50 hover:border-blue-600 transition-all active:scale-[0.98] mb-8"
             >
               <Image
                 src="/images/google_icon.png"
@@ -172,7 +165,7 @@ export default function SignInPage() {
 
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div>
-                <label className="text-[11px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
                   Email Address
                 </label>
                 <input
@@ -183,18 +176,18 @@ export default function SignInPage() {
                     setFormData({ ...formData, email: e.target.value })
                   }
                   placeholder="name@example.com"
-                  className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-[#715800] focus:ring-4 focus:ring-[#715800]/5 outline-none transition-all font-medium text-base"
+                  className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base"
                 />
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="text-[11px] font-black uppercase text-gray-400 tracking-wider ml-1 block">
+                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 block">
                     Password
                   </label>
                   <Link
                     href="/auth/forgot"
-                    className="text-[11px] font-black text-[#715800] uppercase hover:underline"
+                    className="text-[10px] font-black text-blue-600 uppercase hover:underline"
                   >
                     Forgot?
                   </Link>
@@ -208,12 +201,12 @@ export default function SignInPage() {
                       setFormData({ ...formData, password: e.target.value })
                     }
                     placeholder="••••••••"
-                    className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-[#715800] focus:ring-4 focus:ring-[#715800]/5 outline-none transition-all font-medium text-base pr-12"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base pr-12"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#715800] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -223,7 +216,7 @@ export default function SignInPage() {
               <button
                 disabled={isLoading}
                 type="submit"
-                className="w-full py-4 bg-gray-900 text-white font-black rounded-2xl shadow-xl shadow-black/10 hover:bg-black transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full py-5 bg-black text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-600/10 hover:bg-blue-600 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>
@@ -240,7 +233,7 @@ export default function SignInPage() {
               Don&apos;t have an account?{" "}
               <Link
                 href="/auth/signup"
-                className="text-[#715800] font-black hover:underline underline-offset-4"
+                className="text-blue-600 font-black hover:underline underline-offset-4 uppercase text-[10px]"
               >
                 Create an account
               </Link>
@@ -248,7 +241,7 @@ export default function SignInPage() {
           </motion.div>
 
           <div className="hidden sm:block absolute bottom-8 text-center">
-            <p className="text-[10px] text-gray-300 font-medium">
+            <p className="text-[10px] text-gray-300 font-black uppercase tracking-tighter">
               © 2026 Kivo Social. All rights reserved.
             </p>
           </div>

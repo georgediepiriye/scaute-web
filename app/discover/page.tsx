@@ -23,6 +23,11 @@ import Navbar from "@/components/layout/NavBar";
 import MobileNav from "@/components/layout/MobileNav";
 import Footer from "@/components/layout/Footer";
 
+// BRAND COLOR CONSTANTS
+const KIVO_BLUE = "#0052FF";
+const KIVO_YELLOW = "#FFD700";
+const DEEP_BLACK = "#000000";
+
 const ITEMS_PER_PAGE = 6;
 const USER_LOCATION = { lat: 4.819, lng: 7.038 };
 
@@ -320,7 +325,7 @@ export default function DiscoverPage() {
               </motion.div>
               <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-gray-900 leading-[0.85]">
                 Find your next <br />{" "}
-                <span className="text-[#715800]">Move.</span>
+                <span style={{ color: KIVO_BLUE }}>Move.</span>
               </h1>
             </div>
 
@@ -335,7 +340,8 @@ export default function DiscoverPage() {
               </div>
               <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-xl shadow-black/10"
+                className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all active:scale-95 shadow-xl shadow-black/10"
+                style={{ backgroundColor: DEEP_BLACK, color: "white" }}
               >
                 {isFilterOpen ? (
                   <X size={16} />
@@ -356,7 +362,7 @@ export default function DiscoverPage() {
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-2 px-2">
             <button
               onClick={() => setActiveCat("all")}
-              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border ${activeCat === "all" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-400 border-gray-100"}`}
+              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border ${activeCat === "all" ? "bg-black text-white border-black" : "bg-white text-gray-400 border-gray-100"}`}
             >
               All Vibes
             </button>
@@ -364,7 +370,11 @@ export default function DiscoverPage() {
               <button
                 key={k}
                 onClick={() => setActiveCat(k)}
-                className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border ${activeCat === k ? "bg-[#715800] text-white border-[#715800]" : "bg-white text-gray-400 border-gray-100"}`}
+                className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border ${activeCat === k ? "text-white border-transparent" : "bg-white text-gray-400 border-gray-100"}`}
+                style={{
+                  backgroundColor: activeCat === k ? KIVO_BLUE : "transparent",
+                  borderColor: activeCat === k ? KIVO_BLUE : "",
+                }}
               >
                 {v.label}
               </button>
@@ -396,7 +406,7 @@ export default function DiscoverPage() {
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       placeholder="Concerts, parties, lounges..."
-                      className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-[#715800]/20 font-bold"
+                      className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-blue-100 font-bold"
                     />
                   </div>
                 </div>
@@ -427,10 +437,12 @@ export default function DiscoverPage() {
                       max="100"
                       value={dist}
                       onChange={(e) => setDist(Number(e.target.value))}
-                      className="w-full accent-[#715800] h-1 bg-gray-100 rounded-full appearance-none cursor-pointer"
+                      className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer"
+                      style={{ accentColor: KIVO_BLUE }}
                     />
                   </div>
                 </div>
+
                 <div className="sm:col-span-2 lg:col-span-4 flex flex-wrap gap-3 pt-6 border-t border-gray-200 mt-2">
                   <select
                     value={priceFilter}
@@ -486,8 +498,6 @@ export default function DiscoverPage() {
                     return "Free";
                   };
 
-                  const displayPrice = getDisplayPrice();
-
                   return (
                     <motion.div
                       key={e.id}
@@ -504,10 +514,10 @@ export default function DiscoverPage() {
                         location={
                           e.isOnline
                             ? "Online"
-                            : `${getKm(USER_LOCATION.lat, USER_LOCATION.lng, e.lat, e.lng)}km • ${e.location?.address || "PH"}`
+                            : `${getKm(USER_LOCATION.lat, USER_LOCATION.lng, e.lat, e.lng)}km • ${e.location?.address || "Port Harcourt"}`
                         }
                         time={formatEventTime(e.startDate)}
-                        buttonText={displayPrice}
+                        buttonText={getDisplayPrice()}
                         isOnline={e.isOnline}
                         participantImages={e.participantImages}
                         attendeeCount={e.attendees}
@@ -539,7 +549,7 @@ export default function DiscoverPage() {
                           setPage(i + 1);
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
-                        className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-2xl text-[10px] sm:text-xs font-black transition-all shadow-sm ${page === i + 1 ? "bg-gray-900 text-white" : "bg-white text-gray-400 border border-gray-100"}`}
+                        className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-2xl text-[10px] sm:text-xs font-black transition-all shadow-sm ${page === i + 1 ? "bg-black text-white" : "bg-white text-gray-400 border border-gray-100"}`}
                       >
                         {i + 1}
                       </button>
@@ -563,7 +573,10 @@ export default function DiscoverPage() {
 
         <section className="mt-12 mb-24">
           <div className="flex items-center gap-3 mb-10">
-            <div className="w-14 h-14 bg-orange-100 rounded-[22px] flex items-center justify-center text-orange-600 shrink-0 shadow-sm">
+            <div
+              className="w-14 h-14 rounded-[22px] flex items-center justify-center shrink-0 shadow-sm"
+              style={{ backgroundColor: `${KIVO_YELLOW}20`, color: KIVO_BLUE }}
+            >
               <Flame size={28} />
             </div>
             <h2 className="text-4xl font-black tracking-tighter text-gray-900 leading-none">
@@ -581,7 +594,6 @@ export default function DiscoverPage() {
                   {...e}
                   time={formatEventTime(e.startDate)}
                   location={e.location?.address || "Port Harcourt"}
-                  buttonText="View"
                   isOnline={e.isOnline}
                 />
               </div>
@@ -589,10 +601,13 @@ export default function DiscoverPage() {
           </div>
         </section>
 
-        <section className="mb-24 bg-gray-50 -mx-6 px-6 py-20 md:rounded-[80px] border-y md:border border-gray-100 relative overflow-hidden">
+        <section className="mb-24 bg-blue-50/20 -mx-6 px-6 py-20 md:rounded-[80px] border-y md:border border-blue-100/30 relative overflow-hidden">
           <div className="max-w-6xl mx-auto relative z-10">
             <div className="flex items-center gap-4 mb-14">
-              <div className="w-14 h-14 bg-blue-100 rounded-[22px] flex items-center justify-center text-blue-600 shrink-0">
+              <div
+                className="w-14 h-14 rounded-[22px] flex items-center justify-center text-white shrink-0"
+                style={{ backgroundColor: KIVO_BLUE }}
+              >
                 <Briefcase size={28} />
               </div>
               <div>
@@ -623,24 +638,19 @@ export default function DiscoverPage() {
                     <h4 className="font-black text-gray-900 truncate mb-1 text-xl tracking-tight">
                       {e.title}
                     </h4>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-                      {formatEventTime(e.startDate)}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Image
-                        src={e.organizerImage}
-                        width={16}
-                        height={16}
-                        className="rounded-full"
-                        alt=""
-                      />
-                      <span className="text-[9px] font-black text-[#715800] uppercase">
-                        {e.organizerName}
-                      </span>
-                    </div>
+                    <span
+                      className="text-[9px] font-black uppercase"
+                      style={{ color: KIVO_BLUE }}
+                    >
+                      {e.organizerName}
+                    </span>
                   </div>
-                  <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 group-hover:bg-[#715800] group-hover:text-white transition-all">
-                    <ChevronRight size={24} />
+                  <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center transition-all">
+                    <ChevronRight
+                      size={24}
+                      className="group-hover:translate-x-1 transition-transform"
+                      style={{ color: KIVO_BLUE }}
+                    />
                   </div>
                 </div>
               ))}
@@ -649,13 +659,17 @@ export default function DiscoverPage() {
         </section>
 
         <section className="mb-24">
-          <div className="bg-gray-900 rounded-[56px] p-10 md:p-20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#715800] opacity-10 blur-[150px]" />
+          <div className="bg-black rounded-[56px] p-10 md:p-20 relative overflow-hidden">
+            <div
+              className="absolute top-0 right-0 w-[500px] h-[500px] opacity-5 blur-[150px]"
+              style={{ backgroundColor: KIVO_YELLOW }}
+            />
             <div className="relative z-10 flex flex-col lg:flex-row items-center gap-16">
               <div className="lg:w-1/2 text-center lg:text-left">
                 <Music
-                  className="text-[#715800] mb-8 mx-auto lg:mx-0"
+                  className="mb-8 mx-auto lg:mx-0"
                   size={56}
+                  style={{ color: KIVO_YELLOW }}
                 />
                 <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-8 leading-[0.85]">
                   The Rhythm <br /> of the City.
@@ -687,16 +701,12 @@ export default function DiscoverPage() {
                         {e.title}
                       </h4>
                       <div className="flex items-center gap-3">
-                        <Sparkles size={14} className="text-[#715800]" />
+                        <Sparkles size={14} style={{ color: KIVO_YELLOW }} />
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                           {formatEventTime(e.startDate)}
                         </span>
                       </div>
                     </div>
-                    <ArrowRight
-                      className="text-white/20 group-hover:text-[#715800] transition-colors"
-                      size={24}
-                    />
                   </div>
                 ))}
               </div>

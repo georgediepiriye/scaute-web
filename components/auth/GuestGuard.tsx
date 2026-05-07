@@ -36,7 +36,7 @@ export default function GuestGuard({
   if (checking) {
     return (
       <div className="fixed inset-0 bg-[#FDFDFD] flex items-center justify-center">
-        <div className="animate-pulse text-[10px] font-black uppercase tracking-[0.3em] text-[#715800]">
+        <div className="animate-pulse text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">
           Verifying Session...
         </div>
       </div>

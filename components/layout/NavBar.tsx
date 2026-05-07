@@ -8,11 +8,12 @@ import { useRouter } from "next/navigation";
 import { HiMenu, HiX } from "react-icons/hi";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Cpu,
+  Zap,
   Bell,
   ChevronRight,
   LogOut,
   User as UserIcon,
+  MapPin,
 } from "lucide-react";
 
 export default function Navbar() {
@@ -25,7 +26,7 @@ export default function Navbar() {
     user: null as any,
   });
 
-  // CRITICAL: Prevent body scroll when mobile menu is open
+  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -96,36 +97,35 @@ export default function Navbar() {
     }
   };
 
+  // Removed AI Assistant to focus on Events/Tickets/Map
   const navLinks = [
-    { href: "/map", label: "Map" },
+    { href: "/map", label: "Live Map" },
     { href: "/discover", label: "Discover" },
-    { href: "/create", label: "Add Event" },
-    { href: "/chat", label: "AI Assistant" },
-    { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact Us" },
+    { href: "/create", label: "Host Event" },
+    { href: "/about", label: "Our Story" },
+    { href: "/contact", label: "Support" },
   ];
 
   return (
-    <nav className="fixed top-0 w-full z-[500] bg-[#FDFDFB]/90 backdrop-blur-xl border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-6 md:px-8 py-4 flex justify-between items-center relative z-[110]">
-        {/* LOGO */}
-        <Link href="/" className="flex items-center gap-2 cursor-pointer">
-          <div className="relative flex items-center justify-center w-10 h-10">
-            <Cpu size={26} className="text-[#715800] z-10" />
-            <div className="absolute w-8 h-8 bg-[#715800]/10 rounded-full animate-pulse"></div>
+    <nav className="fixed top-0 w-full z-[500] bg-white/80 backdrop-blur-2xl border-b border-slate-100">
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-5 flex justify-between items-center relative z-[110]">
+        {/* LOGO - Updated to Royal Blue */}
+        <Link href="/" className="flex items-center gap-2 cursor-pointer group">
+          <div className="relative flex items-center justify-center w-10 h-10 bg-blue-600 rounded-2xl rotate-3 group-hover:rotate-0 transition-transform duration-300">
+            <Zap size={22} className="text-amber-400 fill-amber-400" />
           </div>
-          <span className="text-2xl font-black text-[#715800] tracking-tighter">
+          <span className="text-2xl font-black text-slate-950 tracking-tighter">
             Kivo
           </span>
         </Link>
 
         {/* DESKTOP NAV */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-10">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-gray-500 font-bold text-xs hover:text-[#715800] transition-all uppercase tracking-[0.15em]"
+              className="text-slate-500 font-black text-[11px] hover:text-blue-600 transition-all uppercase tracking-[0.2em]"
             >
               {link.label}
             </Link>
@@ -133,18 +133,18 @@ export default function Navbar() {
         </div>
 
         {/* ACTIONS */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {authState.isMounted && (
             <>
               {authState.isLoggedIn ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <Bell
-                    size={18}
-                    className="text-gray-400 cursor-pointer hover:text-[#715800] hidden sm:block"
+                    size={20}
+                    className="text-slate-400 cursor-pointer hover:text-blue-600 hidden sm:block"
                   />
                   <Link
                     href="/profile"
-                    className="w-10 h-10 rounded-2xl overflow-hidden relative border-2 border-transparent hover:border-[#715800] transition-all bg-gray-100 flex items-center justify-center"
+                    className="w-11 h-11 rounded-2xl overflow-hidden relative border-2 border-slate-100 hover:border-blue-600 transition-all bg-slate-50 flex items-center justify-center"
                   >
                     {authState.user?.image ? (
                       <Image
@@ -152,46 +152,46 @@ export default function Navbar() {
                         alt="Profile"
                         fill
                         className="object-cover"
-                        sizes="40px"
+                        sizes="44px"
                       />
                     ) : (
-                      <UserIcon size={20} className="text-gray-400" />
+                      <UserIcon size={22} className="text-slate-400" />
                     )}
                   </Link>
 
-                  {/* DESKTOP SIGN OUT ICON */}
                   <button
                     onClick={handleSignOut}
-                    className="hidden md:flex w-10 h-10 items-center justify-center rounded-2xl bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
+                    className="hidden md:flex w-11 h-11 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-100 hover:border-red-100"
                     title="Sign Out"
                   >
                     <LogOut size={18} />
                   </button>
                 </div>
               ) : (
-                <div className="hidden md:flex items-center gap-2 ml-2">
+                <div className="hidden md:flex items-center gap-3">
                   <Link
                     href="/auth/signin"
-                    className="px-5 py-2.5 text-gray-500 font-black text-[10px] uppercase tracking-widest hover:text-[#715800]"
+                    className="px-5 py-3 text-slate-950 font-black text-[11px] uppercase tracking-widest hover:text-blue-600 transition-colors"
                   >
                     Log In
                   </Link>
                   <Link
                     href="/auth/signup"
-                    className="px-6 py-2.5 bg-black text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-lg"
+                    className="px-8 py-3.5 bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-200 hover:bg-slate-950 hover:shadow-none transition-all active:scale-95"
                   >
-                    Sign Up
+                    Join Kivo
                   </Link>
                 </div>
               )}
             </>
           )}
 
+          {/* Mobile Toggle - Styled like a button card */}
           <button
-            className="md:hidden w-11 h-11 flex items-center justify-center bg-gray-50 rounded-2xl text-[#715800] transition-transform active:scale-90"
+            className="md:hidden w-12 h-12 flex items-center justify-center bg-slate-950 rounded-2xl text-white transition-all active:scale-90 shadow-lg"
             onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <HiX size={24} /> : <HiMenu size={24} />}
+            {isMobileMenuOpen ? <HiX size={26} /> : <HiMenu size={26} />}
           </button>
         </div>
       </div>
@@ -200,17 +200,16 @@ export default function Navbar() {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-0 w-full h-screen bg-white z-[100] md:hidden flex flex-col pt-24"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-0 w-full h-screen bg-white z-[100] md:hidden flex flex-col pt-28"
           >
             <div className="flex-1 overflow-y-auto px-8 pb-12 flex flex-col">
               {/* User Section */}
               {authState.isLoggedIn && (
-                <div className="py-6 flex items-center gap-4 border-b border-gray-50 mb-4">
-                  <div className="w-14 h-14 rounded-3xl bg-gray-100 relative overflow-hidden flex-shrink-0">
+                <div className="py-8 flex items-center gap-5 border-b border-slate-100 mb-6">
+                  <div className="w-16 h-16 rounded-[24px] bg-slate-100 relative overflow-hidden flex-shrink-0 border-2 border-slate-50">
                     {authState.user?.image ? (
                       <Image
                         src={authState.user.image}
@@ -219,75 +218,85 @@ export default function Navbar() {
                         className="object-cover"
                       />
                     ) : (
-                      <UserIcon className="m-auto mt-4 text-gray-300" />
+                      <UserIcon
+                        className="m-auto mt-5 text-slate-300"
+                        size={24}
+                      />
                     )}
                   </div>
                   <div>
-                    <p className="font-black text-xl tracking-tight leading-none mb-1">
+                    <p className="font-black text-2xl tracking-tight leading-none mb-1 text-slate-950">
                       {authState.user?.name || "Kivo User"}
                     </p>
                     <Link
                       href="/profile"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="text-[#715800] text-[10px] font-black uppercase tracking-widest"
+                      className="text-blue-600 text-[11px] font-black uppercase tracking-widest"
                     >
-                      View Profile
+                      My Dashboard
                     </Link>
                   </div>
                 </div>
               )}
 
-              {/* Links */}
-              <div className="flex flex-col">
+              {/* Links - Large Mobile Style */}
+              <div className="flex flex-col gap-2">
                 {navLinks.map((link, i) => (
                   <motion.div
                     key={link.href}
-                    initial={{ opacity: 0, x: 20 }}
+                    initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.03 }}
+                    transition={{ delay: i * 0.05 }}
                   >
                     <Link
                       href={link.href}
-                      className="group flex items-center justify-between py-5 border-b border-gray-50/50"
+                      className="group flex items-center justify-between py-6 border-b border-slate-50"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <span className="text-2xl font-black tracking-tighter text-gray-900 group-hover:text-[#715800]">
+                      <span className="text-3xl font-black tracking-tighter text-slate-900 group-hover:text-blue-600 transition-colors">
                         {link.label}
                       </span>
-                      <ChevronRight size={20} className="text-gray-300" />
+                      <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
+                        <ChevronRight size={20} />
+                      </div>
                     </Link>
                   </motion.div>
                 ))}
               </div>
 
               {/* Bottom Actions */}
-              <div className="mt-auto pt-10 space-y-4">
+              <div className="mt-auto pt-12 space-y-4">
                 {authState.isLoggedIn ? (
                   <button
                     onClick={handleSignOut}
-                    className="w-full py-6 rounded-[24px] bg-red-50 text-red-500 font-black text-center text-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
+                    className="w-full py-6 rounded-[32px] bg-red-50 text-red-500 font-black text-center text-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
                   >
                     <LogOut size={20} /> Sign Out
                   </button>
                 ) : (
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-4">
                     <Link
                       href="/auth/signup"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full py-6 rounded-[24px] bg-black text-white font-black text-center text-lg shadow-xl active:scale-95 transition-all"
+                      className="block w-full py-6 rounded-[32px] bg-blue-600 text-white font-black text-center text-xl shadow-2xl shadow-blue-200 active:scale-95 transition-all"
                     >
-                      Create Account
+                      Join the Vibe
                     </Link>
                     <Link
                       href="/auth/signin"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full py-6 rounded-[24px] bg-gray-100 text-gray-900 font-black text-center text-lg active:scale-95 transition-all"
+                      className="block w-full py-6 rounded-[32px] bg-slate-900 text-white font-black text-center text-xl active:scale-95 transition-all"
                     >
                       Sign In
                     </Link>
                   </div>
                 )}
-                <div className="h-6" />
+
+                {/* Location Footer in Mobile Menu */}
+                <div className="flex items-center justify-center gap-2 py-6 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+                  <MapPin size={12} />
+                  Port Harcourt, Nigeria
+                </div>
               </div>
             </div>
           </motion.div>

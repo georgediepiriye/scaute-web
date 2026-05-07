@@ -17,6 +17,14 @@ import { Event } from "@/lib/events";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN as string;
 
+// BRAND THEME CONSTANTS
+const KIVO_THEME = {
+  blue: "#2563eb", // Electric Blue
+  amber: "#fbbf24", // Amber Gold
+  live: "#22c55e", // Signal Green
+  slate: "#1e293b", // Professional Slate
+};
+
 // Helper to get category-specific markers
 const getHotspotMarkerHTML = (category: string, title: string) => {
   const icons: Record<string, string> = {
@@ -33,26 +41,16 @@ const getHotspotMarkerHTML = (category: string, title: string) => {
   const icon = icons[category] || "📍";
 
   return `
-    <div class="group relative cursor-pointer transition-transform active:scale-90 flex items-center justify-center">
-      <div class="absolute inset-0 bg-orange-400/30 rounded-full blur-lg group-hover:bg-orange-400/50 transition-all"></div>
-      
-      <div class="relative w-9 h-9 bg-white border-2 border-orange-500 rounded-full shadow-xl flex items-center justify-center text-lg hover:border-black transition-colors">
+    <div class="group relative cursor-pointer flex items-center justify-center transition-all duration-300 active:scale-90">
+      <div class="absolute inset-0 bg-blue-500/20 rounded-full blur-xl group-hover:bg-blue-400/40 transition-all"></div>
+      <div class="relative w-10 h-10 bg-white border-2 border-blue-600 rounded-2xl shadow-xl flex items-center justify-center text-lg group-hover:border-blue-400 transition-colors">
         ${icon}
       </div>
-
-      <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-[9px] font-black rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap uppercase tracking-tighter shadow-2xl pointer-events-none z-50">
+      <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[10px] font-bold rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg pointer-events-none z-50">
         ${title}
       </div>
-      
-      <div class="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-1.5 bg-orange-500"></div>
     </div>
   `;
-};
-
-const statusColors: Record<string, string> = {
-  upcoming: "#EAB308", // Yellow
-  ongoing: "#059669", // Green
-  default: "#715800",
 };
 
 export interface MapRef {
@@ -88,17 +86,14 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
     }>({});
     const hotspotMarkersRef = useRef<Marker[]>([]);
 
-    const handleFlyToUser = () => {
-      if (geolocateControlRef.current) geolocateControlRef.current.trigger();
-    };
-
     useImperativeHandle(ref, () => ({
-      flyToUser: handleFlyToUser,
+      flyToUser: () => geolocateControlRef.current?.trigger(),
       flyTo: (coords: { lat: number; lng: number }) => {
         mapRef.current?.flyTo({
           center: [coords.lng, coords.lat],
           zoom: 15.5,
           speed: 1.2,
+          essential: true,
         });
       },
     }));
@@ -109,7 +104,7 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
       const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/light-v11",
-        center: [7.035, 4.815],
+        center: [7.035, 4.815], // Port Harcourt
         zoom: 11.5,
       });
 
@@ -138,18 +133,18 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
           source: "events",
           filter: ["has", "point_count"],
           paint: {
-            "circle-color": "#1E293B",
+            "circle-color": KIVO_THEME.slate,
             "circle-radius": [
               "step",
               ["get", "point_count"],
               20,
-              10,
-              30,
-              30,
-              40,
+              5,
+              25,
+              15,
+              35,
             ],
-            "circle-stroke-width": 2,
-            "circle-stroke-color": "#fff",
+            "circle-stroke-width": 3,
+            "circle-stroke-color": "#ffffff",
           },
         });
 
@@ -161,7 +156,7 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
           layout: {
             "text-field": "{point_count}",
             "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
-            "text-size": 12,
+            "text-size": 14,
           },
           paint: { "text-color": "#ffffff" },
         });
@@ -179,16 +174,16 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
         geolocate.trigger();
       });
 
-      return () => map.remove();
+      return () => {
+        map.remove();
+      };
     }, []);
 
-    // --- HOTSPOT MANAGEMENT (Updated with Icon Logic) ---
+    // --- HOTSPOT MANAGEMENT ---
     useEffect(() => {
       if (!isMapReady || !mapRef.current) return;
-
       hotspotMarkersRef.current.forEach((m) => m.remove());
       hotspotMarkersRef.current = [];
-
       if (!showHotspots) return;
 
       const fetchHotspots = async () => {
@@ -199,40 +194,26 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
             `${process.env.NEXT_PUBLIC_API_URL}/v1/hotspots${categoryQuery}`,
           );
           const result = await res.json();
-
           if (result.status === "success") {
             result.data.hotspots.forEach((spot: any) => {
               const el = document.createElement("div");
-
-              // Apply the new category-based HTML
               el.innerHTML = getHotspotMarkerHTML(
                 spot.category,
                 spot.title || spot.name || "Kivo Hotspot",
               );
-
-              el.addEventListener("click", (e) => {
+              el.onclick = (e) => {
                 e.stopPropagation();
                 onSelectHotspot(spot);
-                mapRef.current?.flyTo({
-                  center: [
-                    spot.location.coordinates[0],
-                    spot.location.coordinates[1],
-                  ],
-                  zoom: 14,
-                  speed: 0.8,
-                });
-              });
-
+              };
               const marker = new mapboxgl.Marker({
                 element: el,
-                anchor: "bottom", // Anchor at the bottom of the "stem"
+                anchor: "center",
               })
                 .setLngLat([
                   spot.location.coordinates[0],
                   spot.location.coordinates[1],
                 ])
                 .addTo(mapRef.current!);
-
               hotspotMarkersRef.current.push(marker);
             });
           }
@@ -240,11 +221,10 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
           console.error("Hotspot fetch failed", err);
         }
       };
-
       fetchHotspots();
     }, [isMapReady, showHotspots, hotspotCategory, onSelectHotspot]);
 
-    // --- EVENT MARKER MANAGEMENT ---
+    // --- EVENT MARKER MANAGEMENT (ALIVE & JUMPING) ---
     useEffect(() => {
       if (!isMapReady || !mapRef.current) return;
       const map = mapRef.current;
@@ -273,9 +253,9 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
           activeIds.add(id);
 
           const now = new Date().getTime();
-          const start = new Date(props.startDate).getTime();
-          const end = new Date(props.endDate).getTime();
-          const isLive = now >= start && now <= end;
+          const isLive =
+            now >= new Date(props.startDate).getTime() &&
+            now <= new Date(props.endDate).getTime();
           const currentStatus = isLive ? "live" : "upcoming";
 
           if (
@@ -285,21 +265,35 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
             return;
           if (markersRef.current[id]) markersRef.current[id].marker.remove();
 
+          // Outer container (Mapbox positioning)
           const el = document.createElement("div");
-          el.className = `relative flex flex-col items-center cursor-pointer transition-all duration-300 hover:scale-125`;
+          el.className = "cursor-pointer";
 
-          let labelHtml = "";
-          let dotColor = statusColors.upcoming;
-          let dotPulse = "";
+          // Inner container (Tailwind animations)
+          const inner = document.createElement("div");
+          inner.className = isLive
+            ? "relative flex flex-col items-center animate-bounce duration-1000"
+            : "relative flex flex-col items-center transition-transform hover:scale-125";
 
-          if (isLive) {
-            labelHtml = `<span class="absolute -top-7 bg-green-500 text-[8px] font-black px-2 py-0.5 rounded-full border border-white text-white tracking-tighter animate-bounce">LIVE</span>`;
-            dotColor = statusColors.ongoing;
-            dotPulse = "animate-pulse";
-          }
+          const dotColor = isLive ? KIVO_THEME.live : KIVO_THEME.amber;
+          const pulseColor = isLive
+            ? "rgba(34, 197, 94, 0.6)"
+            : "rgba(251, 191, 36, 0.4)";
 
-          el.innerHTML = `${labelHtml}<div class="w-4 h-4 rounded-full border-2 border-white shadow-md ${dotPulse}" style="background-color: ${dotColor}"></div>`;
-          el.addEventListener("click", () => onSelect(props));
+          const labelHtml = isLive
+            ? `<span class="absolute -top-8 bg-green-500 text-[10px] font-black px-2 py-0.5 rounded-full border border-white text-white shadow-xl whitespace-nowrap z-20">LIVE</span>`
+            : "";
+
+          inner.innerHTML = `
+            ${labelHtml}
+            <div class="relative flex items-center justify-center">
+              <div class="absolute w-10 h-10 rounded-full blur-md animate-ping" style="background-color: ${pulseColor}"></div>
+              <div class="w-5 h-5 rounded-full border-2 border-white shadow-lg relative z-10" style="background-color: ${dotColor}"></div>
+            </div>
+          `;
+
+          el.appendChild(inner);
+          el.onclick = () => onSelect(props);
 
           const marker = new mapboxgl.Marker({ element: el })
             .setLngLat(coords)
@@ -321,7 +315,12 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
       };
     }, [isMapReady, filteredEvents, onSelect]);
 
-    return <div ref={mapContainer} className="w-full h-full" />;
+    return (
+      <div className="w-full h-full relative">
+        <div ref={mapContainer} className="w-full h-full" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-white/30 via-transparent to-transparent" />
+      </div>
+    );
   },
 );
 

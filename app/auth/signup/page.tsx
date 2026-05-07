@@ -98,7 +98,7 @@ export default function SignUpPage() {
           fontWeight: "bold",
         },
         success: {
-          iconTheme: { primary: "#22c55e", secondary: "#fff" },
+          iconTheme: { primary: "#2563eb", secondary: "#fff" },
         },
       },
     );
@@ -111,8 +111,8 @@ export default function SignUpPage() {
         <Navbar />
 
         {/* LEFT SIDE: BRAND/VISUAL - FIXED ON DESKTOP */}
-        <div className="hidden lg:flex lg:w-1/2 relative bg-[#F9F7F2] items-center justify-center p-12 overflow-hidden">
-          <div className="absolute top-[-5%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#715800]/5 blur-3xl" />
+        <div className="hidden lg:flex lg:w-1/2 relative bg-[#F8FAFC] items-center justify-center p-12 overflow-hidden">
+          <div className="absolute top-[-5%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/5 blur-3xl" />
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -120,16 +120,16 @@ export default function SignUpPage() {
           >
             <div className="relative w-full aspect-square mb-10">
               <Image
-                src="/images/signup.jpeg"
+                src="https://res.cloudinary.com/dzhfiblg7/image/upload/f_auto,q_auto,w_800/v1778054500/kivo_events/inhouse/park.png"
                 alt="Join Kivo"
                 fill
-                className="drop-shadow-2xl rounded-[40px] object-cover"
+                className="drop-shadow-2xl rounded-[40px] object-cover border-4 border-white shadow-blue-600/10"
                 priority
               />
             </div>
-            <h1 className="text-4xl font-black tracking-tighter text-gray-900 leading-tight">
+            <h1 className="text-4xl font-black tracking-tighter text-gray-900 leading-tight uppercase">
               Explore the <br />{" "}
-              <span className="text-[#715800]">garden city.</span>
+              <span className="text-blue-600">garden city.</span>
             </h1>
           </motion.div>
         </div>
@@ -141,8 +141,8 @@ export default function SignUpPage() {
             animate={{ opacity: 1, y: 0 }}
             className="w-full max-w-sm"
           >
-            <div className="mb-8">
-              <h2 className="text-3xl font-black tracking-tight mb-2">
+            <div className="mb-8 text-center lg:text-left">
+              <h2 className="text-3xl font-black tracking-tight mb-2 uppercase">
                 Join the Scene
               </h2>
               <p className="text-gray-400 text-sm font-medium">
@@ -156,7 +156,7 @@ export default function SignUpPage() {
               onClick={() =>
                 (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/google`)
               }
-              className="w-full py-4 px-6 border-2 border-gray-100 rounded-2xl flex items-center justify-center gap-4 font-bold text-gray-700 hover:bg-gray-50 transition-all active:scale-[0.98] mb-8"
+              className="w-full py-4 px-6 border-2 border-gray-100 rounded-2xl flex items-center justify-center gap-4 font-black text-[10px] uppercase tracking-widest text-gray-700 hover:bg-gray-50 hover:border-blue-600 transition-all active:scale-[0.98] mb-8"
             >
               <Image
                 src="/images/google_icon.png"
@@ -186,10 +186,10 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={() => handleRoleSelect("user")}
-                  className={`py-3 rounded-2xl font-bold text-sm transition-all border-2 ${
+                  className={`py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border-2 ${
                     formData.role === "user"
-                      ? "border-[#715800] bg-[#715800]/5 text-[#715800]"
-                      : "border-gray-100 text-gray-400 hover:border-gray-200"
+                      ? "border-blue-600 bg-blue-50 text-blue-600"
+                      : "border-gray-50 text-gray-400 hover:border-gray-200"
                   }`}
                 >
                   Normal User
@@ -197,10 +197,10 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={() => handleRoleSelect("organizer")}
-                  className={`py-3 rounded-2xl font-bold text-sm transition-all border-2 ${
+                  className={`py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border-2 ${
                     formData.role === "organizer"
-                      ? "border-[#715800] bg-[#715800]/5 text-[#715800]"
-                      : "border-gray-100 text-gray-400 hover:border-gray-200"
+                      ? "border-blue-600 bg-blue-50 text-blue-600"
+                      : "border-gray-50 text-gray-400 hover:border-gray-200"
                   }`}
                 >
                   Organizer/Host
@@ -221,7 +221,7 @@ export default function SignUpPage() {
                     onChange={handleChange}
                     type="text"
                     placeholder="John"
-                    className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-[#715800] outline-none transition-all font-medium text-base"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base"
                   />
                 </div>
                 <div>
@@ -235,7 +235,7 @@ export default function SignUpPage() {
                     onChange={handleChange}
                     type="text"
                     placeholder="Doe"
-                    className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-[#715800] outline-none transition-all font-medium text-base"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base"
                   />
                 </div>
               </div>
@@ -251,7 +251,7 @@ export default function SignUpPage() {
                   onChange={handleChange}
                   type="email"
                   placeholder="name@example.com"
-                  className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-[#715800] outline-none transition-all font-medium text-base"
+                  className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base"
                 />
               </div>
 
@@ -267,12 +267,12 @@ export default function SignUpPage() {
                     onChange={handleChange}
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a password"
-                    className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-[#715800] outline-none transition-all font-medium text-base pr-12"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base pr-12"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#715800] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -282,7 +282,7 @@ export default function SignUpPage() {
               <div className="pt-2">
                 <button
                   disabled={loading}
-                  className="w-full py-4 bg-gray-900 text-white font-black rounded-2xl shadow-xl shadow-black/10 hover:bg-black transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                  className="w-full py-5 bg-black text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-600/10 hover:bg-blue-600 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                 >
                   {loading ? (
                     <>
@@ -300,12 +300,18 @@ export default function SignUpPage() {
               Already a member?{" "}
               <Link
                 href="/auth/signin"
-                className="text-[#715800] font-black hover:underline underline-offset-4"
+                className="text-blue-600 font-black hover:underline underline-offset-4 uppercase text-[10px]"
               >
                 Sign In
               </Link>
             </p>
           </motion.div>
+
+          <div className="hidden sm:block absolute bottom-8 text-center">
+            <p className="text-[10px] text-gray-300 font-black uppercase tracking-tighter">
+              © 2026 Kivo Social. All rights reserved.
+            </p>
+          </div>
         </div>
       </div>
     </GuestGuard>
