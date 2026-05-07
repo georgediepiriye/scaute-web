@@ -107,8 +107,8 @@ export default function LiveFeed() {
             transition={{ delay: 0.2 }}
             className="text-lg md:text-xl font-bold text-slate-500 leading-relaxed"
           >
-            Real-time access to local events, trending spots, and curated moves
-            across the city.
+            The pulse of the city, delivered live. Your next move is just a tap
+            away.
           </motion.p>
         </div>
       </div>
