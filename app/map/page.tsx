@@ -32,6 +32,7 @@ import {
   Phone,
   ChevronRight,
   Timer,
+  ArrowRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -624,7 +625,7 @@ export default function MapPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="fixed inset-x-4 bottom-32 z-[110] md:inset-x-auto md:right-10 md:w-80"
+              className="fixed bottom-0 left-0 md:bottom-auto md:top-[10vh] md:left-1/2 md:-translate-x-1/2 w-full md:max-w-2xl bg-white rounded-t-[40px] md:rounded-[40px] shadow-2xl z-[100] overflow-hidden flex flex-col max-h-[92vh] md:max-h-[85vh]"
             >
               <div className="bg-white rounded-[32px] shadow-2xl border border-gray-100 overflow-hidden relative">
                 <div className="relative h-44 w-full">
@@ -664,232 +665,276 @@ export default function MapPage() {
             </motion.div>
           )}
         </AnimatePresence>
-
         <AnimatePresence>
           {selected && (
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25 }}
-              className="fixed bottom-0 left-0 w-full bg-white rounded-t-[40px] shadow-2xl z-[100] p-6 pb-12 max-h-[85vh] overflow-y-auto"
-            >
-              <div
-                className="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-6 cursor-pointer"
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 onClick={() => setSelected(null)}
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90]"
               />
 
-              {/* ORGANIZER SECTION */}
-              <div className="flex items-center justify-between mb-6 bg-gray-50 p-3 rounded-3xl border border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="relative h-10 w-10">
-                    <Image
-                      src={selected.organizerImage}
-                      alt="Org"
-                      fill
-                      className="rounded-full object-cover border border-white"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase mb-1">
-                      Posted By
-                    </p>
-                    <p className="font-bold text-sm text-gray-900">
-                      {selected.organizerName}
-                    </p>
-                  </div>
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="fixed bottom-0 left-0 md:inset-0 md:m-auto w-full md:max-w-2xl md:h-fit bg-white rounded-t-[40px] md:rounded-[40px] shadow-2xl z-[600] overflow-hidden flex flex-col max-h-[92vh] md:max-h-[85vh]"
+              >
+                {/* Handle Bar - Fixed at top of modal */}
+                <div className="absolute top-0 left-0 w-full h-12 flex items-center justify-center z-[120] pointer-events-none">
+                  <div className="w-12 h-1.5 bg-gray-200/80 backdrop-blur-md rounded-full" />
                 </div>
-                <button
-                  onClick={() => toggleFollow(selected.organizerName)}
-                  className={`px-4 py-2 rounded-full text-xs font-black transition ${followedUsers.has(selected.organizerName) ? "bg-gray-200 text-gray-600" : "bg-black text-white"}`}
-                >
-                  {followedUsers.has(selected.organizerName)
-                    ? "Following"
-                    : "Follow"}
-                </button>
-              </div>
 
-              {/* TITLE & TAGS */}
-              <div className="flex justify-between items-start mb-6">
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[10px] font-black text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase">
-                      👥 {selected.attendees || 0} going
-                    </span>
-                    <span
-                      className={`text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1.5 ${selected.timeStatus === "ongoing" ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-500"}`}
+                {/* 
+          SCROLLABLE CONTENT AREA 
+          - pb-32 ensures content isn't hidden behind the floating footer 
+        */}
+                <div className="overflow-y-auto pb-32 z-[100]">
+                  {/* HERO IMAGE */}
+                  <div className="relative w-full h-64 sm:h-80">
+                    <Image
+                      src={selected.image}
+                      alt={selected.title}
+                      fill
+                      priority
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+
+                    {/* CLOSE BUTTON */}
+                    <button
+                      onClick={() => setSelected(null)}
+                      className="absolute top-6 right-6 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/30 active:scale-90 transition-all shadow-lg z-[130]"
                     >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${selected.timeStatus === "ongoing" ? "bg-green-500 animate-pulse" : "bg-gray-400"}`}
-                      />
-                      {selected.timeStatus}
-                    </span>
+                      <X size={20} />
+                    </button>
+
+                    {/* INTEGRATED COUNTDOWN UI */}
+                    {timeLeft && timeLeft.label !== "Ended" && (
+                      <div className="absolute top-6 left-6 flex justify-start z-[130]">
+                        <div className="bg-black/40 backdrop-blur-xl border border-white/20 px-5 py-3 rounded-[24px] flex flex-col shadow-2xl">
+                          {/* BRAND YELLOW TEXT */}
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-400 leading-none mb-2">
+                            {timeLeft.label}
+                          </p>
+                          <div className="flex items-center gap-3 text-white tabular-nums">
+                            {timeLeft.d > 0 && (
+                              <div className="flex items-baseline gap-0.5">
+                                <span className="text-lg font-black">
+                                  {timeLeft.d}
+                                </span>
+                                <span className="text-[9px] font-black opacity-60 uppercase">
+                                  Days
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-baseline gap-0.5">
+                                <span className="text-lg font-black">
+                                  {timeLeft.h}
+                                </span>
+                                <span className="text-[9px] font-black opacity-60 uppercase">
+                                  Hrs
+                                </span>
+                              </div>
+                              <span className="text-xs font-black opacity-30">
+                                :
+                              </span>
+                              <div className="flex items-baseline gap-0.5">
+                                <span className="text-lg font-black">
+                                  {timeLeft.m}
+                                </span>
+                                <span className="text-[9px] font-black opacity-60 uppercase">
+                                  Min
+                                </span>
+                              </div>
+                              <span className="text-xs font-black opacity-30">
+                                :
+                              </span>
+                              <div className="flex items-baseline gap-0.5">
+                                <span className="text-lg font-black">
+                                  {timeLeft.s}
+                                </span>
+                                <span className="text-[9px] font-black opacity-60 uppercase">
+                                  Sec
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <h2 className="font-black text-2xl text-gray-900 mt-3 tracking-tight">
-                    {selected.title}
-                  </h2>
+
+                  <div className="p-6 md:p-8 -mt-10 relative z-10">
+                    {/* TITLE BLOCK */}
+                    <div className="bg-white rounded-[32px] p-6 shadow-xl shadow-black/5 border border-gray-50 mb-8">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span
+                          className={`flex items-center gap-1.5 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${selected.timeStatus === "ongoing" ? "bg-green-100 text-green-600" : "bg-amber-50 text-amber-600"}`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${selected.timeStatus === "ongoing" ? "bg-green-500 animate-pulse" : "bg-amber-400"}`}
+                          />
+                          {selected.timeStatus}
+                        </span>
+                        <span className="text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1 rounded-full uppercase tracking-widest">
+                          👥 {selected.attendees || 0} Joined
+                        </span>
+                      </div>
+                      <h2 className="text-3xl font-black text-gray-900 tracking-tighter leading-tight">
+                        {selected.title}
+                      </h2>
+                    </div>
+
+                    {/* DATE & TIME GRID */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                      <div className="flex items-center gap-4 bg-gray-50/50 p-5 rounded-[28px] border border-gray-100">
+                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-gray-900 shadow-sm border border-gray-100">
+                          <Calendar size={22} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
+                            Schedule Date
+                          </p>
+                          <p className="text-base font-bold text-gray-900">
+                            {new Date(selected.startDate).toLocaleDateString(
+                              "en-US",
+                              {
+                                weekday: "long",
+                                month: "long",
+                                day: "numeric",
+                              },
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 bg-gray-50/50 p-5 rounded-[28px] border border-gray-100">
+                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-gray-900 shadow-sm border border-gray-100">
+                          <Clock size={22} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
+                            Start Time
+                          </p>
+                          <p className="text-base font-bold text-gray-900">
+                            {new Date(selected.startDate).toLocaleTimeString(
+                              "en-US",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              },
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ORGANIZER & VIBE */}
+                    <div className="flex flex-col md:flex-row gap-4 mb-8">
+                      <div className="flex-1 flex items-center justify-between p-4 bg-gray-900 rounded-[32px] text-white">
+                        <div className="flex items-center gap-3">
+                          <div className="relative h-10 w-10 rounded-full overflow-hidden border border-white/20">
+                            <Image
+                              src={selected.organizerImage}
+                              alt="Org"
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <span className="text-xs font-bold">
+                            {selected.organizerName}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => toggleFollow(selected.organizerName)}
+                          className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                        >
+                          {followedUsers.has(selected.organizerName)
+                            ? "Following"
+                            : "Follow"}
+                        </button>
+                      </div>
+
+                      {/* BRAND YELLOW THEME FOR VIBE */}
+                      <div className="flex items-center gap-4 p-4 px-6 bg-amber-50 rounded-[32px] border border-amber-100">
+                        <Sparkles size={18} className="text-amber-600" />
+                        <div>
+                          <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest leading-none mb-1">
+                            Vibe
+                          </p>
+                          <p className="text-sm font-black text-amber-900 capitalize">
+                            {selected.category}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* LOCATION & PRICE */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-5 rounded-[28px] bg-gray-50 border border-gray-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MapPin size={14} className="text-gray-400" />
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                            Venue
+                          </span>
+                        </div>
+                        <p className="text-sm font-bold text-gray-900 truncate">
+                          {selected.isOnline
+                            ? "Worldwide"
+                            : selected.location?.neighborhood ||
+                              "Port Harcourt"}
+                        </p>
+                      </div>
+                      <div className="p-5 rounded-[28px] bg-gray-50 border border-gray-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Ticket size={14} className="text-gray-400" />
+                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                            Entry
+                          </span>
+                        </div>
+                        <p
+                          className={`text-sm font-black ${selected.isFree ? "text-green-600" : "text-gray-900"}`}
+                        >
+                          {displayPrice}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-2">
+
+                {/* 
+          FLOATING ACTION BAR 
+        */}
+                <div className="absolute bottom-0 left-0 w-full p-6 bg-white/90 backdrop-blur-xl border-t border-gray-100 flex gap-4 items-center shadow-[0_-10px_40px_rgba(0,0,0,0.08)] z-[110]">
                   <button
                     onClick={(e) => toggleLike(e, selected._id)}
-                    className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center active:scale-90"
+                    className="w-16 h-16 rounded-3xl border border-gray-200 flex items-center justify-center active:scale-90 transition-all bg-white"
                   >
                     <Heart
-                      size={18}
+                      size={24}
                       className={
                         likedEvents.has(selected._id)
                           ? "fill-red-500 text-red-500"
-                          : "text-gray-400"
+                          : "text-gray-300"
                       }
                     />
                   </button>
                   <button
-                    onClick={() => setSelected(null)}
-                    className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center"
+                    onClick={() => router.push(`/discover/${selected.id}`)}
+                    className="flex-1 h-16 bg-black text-white font-black rounded-3xl shadow-xl active:scale-95 transition-all uppercase text-xs tracking-[0.2em] flex items-center justify-center gap-3"
                   >
-                    <X size={18} />
+                    Go to Event Page <ArrowRight size={18} />
                   </button>
                 </div>
-              </div>
-
-              <div className="relative w-full h-52 mb-6">
-                <Image
-                  src={selected.image}
-                  alt={selected.title}
-                  fill
-                  priority
-                  className="object-cover rounded-[28px] border border-gray-50"
-                />
-              </div>
-
-              {/* --- NEW COUNTDOWN UI SECTION --- */}
-              {timeLeft && timeLeft.label !== "Ended" && (
-                <div className="mb-6 p-5 bg-blue-50/50 rounded-[32px] border border-blue-100/50 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm">
-                      <Timer size={20} />
-                    </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-600/60">
-                      {timeLeft.label}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 tabular-nums">
-                    {timeLeft.d > 0 && (
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-xl font-black text-blue-900">
-                          {timeLeft.d}
-                        </span>
-                        <span className="text-[9px] font-black text-blue-400 uppercase">
-                          d
-                        </span>
-                      </div>
-                    )}
-                    <div className="bg-white px-3 py-2 rounded-xl border border-blue-100 flex items-center shadow-sm">
-                      <span className="text-lg font-black text-blue-900 leading-none">
-                        {timeLeft.h}
-                      </span>
-                      <span className="mx-1 text-blue-200 font-bold">:</span>
-                      <span className="text-lg font-black text-blue-900 leading-none">
-                        {timeLeft.m}
-                      </span>
-                      <span className="mx-1 text-blue-200 font-bold">:</span>
-                      <span className="text-lg font-black text-blue-900 leading-none">
-                        {timeLeft.s}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* DETAILS GRID */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                  <Calendar size={18} className="text-black" />
-                  <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase">
-                      Date
-                    </p>
-                    <p className="text-xs font-bold text-gray-900">
-                      {formatDateTime(selected.startDate).date}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                  <Clock size={18} className="text-black" />
-                  <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase">
-                      Time
-                    </p>
-                    <p className="text-xs font-bold text-gray-900">
-                      {formatDateTime(selected.startDate).time}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                  <Ticket size={18} className="text-black" />
-                  <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase">
-                      Entry
-                    </p>
-                    <p
-                      className={`text-xs font-black ${selected.isFree ? "text-green-600" : "text-gray-900"}`}
-                    >
-                      {displayPrice}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                  {selected.isOnline ? (
-                    <Globe size={18} className="text-blue-600" />
-                  ) : (
-                    <MapPin size={18} className="text-black" />
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-black text-gray-400 uppercase">
-                      Location
-                    </p>
-                    <p className="text-xs font-bold text-gray-900 truncate">
-                      {selected.isOnline
-                        ? "Worldwide"
-                        : selected.location?.neighborhood || "Port Harcourt"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-4 mb-8">
-                <div className="flex-1 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Sparkles size={12} className="text-gray-400" />
-                    <p className="text-[10px] text-gray-400 font-black uppercase">
-                      Vibe
-                    </p>
-                  </div>
-                  <p className="text-sm font-black text-gray-900 capitalize">
-                    {selected.category}
-                  </p>
-                </div>
-                <div className="flex-1 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Globe size={12} className="text-gray-400" />
-                    <p className="text-[10px] text-gray-400 font-black uppercase">
-                      Medium
-                    </p>
-                  </div>
-                  <p className="text-sm font-black text-gray-900 capitalize">
-                    {selected.isOnline ? "Remote" : "In-Person"}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => router.push(`/discover/${selected.id}`)}
-                className="w-full py-5 bg-black text-white font-black rounded-3xl shadow-xl active:scale-95 transition-all uppercase text-[10px] tracking-[0.2em]"
-              >
-                Go to Event Page
-              </button>
-            </motion.div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </div>

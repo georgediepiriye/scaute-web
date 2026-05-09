@@ -1,19 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
-  SlidersHorizontal,
   ChevronRight,
   Flame,
   Briefcase,
   Music,
   ArrowRight,
   Sparkles,
-  X,
   ChevronLeft,
 } from "lucide-react";
 import Image from "next/image";
@@ -28,7 +26,6 @@ const KIVO_BLUE = "#0052FF";
 const KIVO_YELLOW = "#FFD700";
 const DEEP_BLACK = "#000000";
 
-const ITEMS_PER_PAGE = 6;
 const USER_LOCATION = { lat: 4.819, lng: 7.038 };
 
 // --- SKELETON COMPONENT ---
@@ -64,37 +61,6 @@ const getKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
       Math.sin(dLng / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return (R * c).toFixed(1);
-};
-
-// HELPER: Date Ranges for Quick Filters
-const getDateRange = (filter: string) => {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  if (filter === "today") {
-    return {
-      start: today,
-      end: new Date(today.getTime() + 24 * 60 * 60 * 1000),
-    };
-  }
-  if (filter === "tomorrow") {
-    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-    return {
-      start: tomorrow,
-      end: new Date(tomorrow.getTime() + 24 * 60 * 60 * 1000),
-    };
-  }
-  if (filter === "weekend") {
-    const day = today.getDay();
-    const diffToFriday = day === 0 ? 5 : 5 - day;
-    const friday = new Date(
-      today.getTime() +
-        (diffToFriday > 0 ? diffToFriday : 0) * 24 * 60 * 60 * 1000,
-    );
-    const sunday = new Date(friday.getTime() + 3 * 24 * 60 * 60 * 1000);
-    return { start: friday, end: sunday };
-  }
-  return null;
 };
 
 // HELPER: Human Readable Date
@@ -134,58 +100,103 @@ export default function DiscoverPage() {
   const router = useRouter();
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
+  // --- FILTER STATES ---
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState<string>("all");
-  const [dist, setDist] = useState(25);
   const [page, setPage] = useState(1);
-  const [dateFilter, setDateFilter] = useState("");
+  const [totalPages, setTotalPages] = useState(1);
+  const [dateFilter, setDateFilter] = useState<string>("all");
   const [priceFilter, setPriceFilter] = useState<"all" | "free" | "paid">(
     "all",
   );
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "upcoming" | "ongoing" | "past"
-  >("all");
   const [mediumFilter, setMediumFilter] = useState<
     "all" | "physical" | "online"
   >("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "live" | "upcoming">(
+    "all",
+  );
+
+  // --- FETCH LOGIC ---
+  const fetchEvents = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "6",
+        sort: "-startDate",
+      });
+
+      // 1. Basic Filters
+      if (activeCat !== "all") params.append("category", activeCat);
+      if (search) params.append("title", search);
+      if (dateFilter !== "all") params.append("dateFilter", dateFilter);
+
+      // 2. Price Filter (Using the boolean calculated from ticketTiers)
+      if (priceFilter === "free") {
+        params.append("isFree", "true");
+      } else if (priceFilter === "paid") {
+        params.append("isFree", "false");
+      }
+
+      // 3. Format Filter (Mapping to your eventFormat enum)
+      if (mediumFilter === "online") {
+        params.append("eventFormat", "online");
+      } else if (mediumFilter === "physical") {
+        // Handles both purely physical and hybrid
+        params.append("eventFormat", "physical");
+      }
+
+      // 4. Live vs Upcoming Status
+      // We send this as a custom query param for the backend to handle
+      // date comparisons (startDate <= now <= endDate)
+      if (statusFilter !== "all") {
+        params.append("timeStatus", statusFilter);
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/v1/events?${params.toString()}`,
+      );
+      const result = await response.json();
+
+      if (result.status === "success") {
+        const formatted = result.data.events.map((e: any) => ({
+          ...e,
+          id: e._id,
+          // Using your virtual priceLabel logic for the UI
+          displayPrice: e.priceLabel || (e.isFree ? "Free" : "Paid"),
+          isOnline: e.eventFormat === "online" || e.eventFormat === "hybrid",
+          lat: e.location?.coordinates?.[1] || null,
+          lng: e.location?.coordinates?.[0] || null,
+          organizerName: e.organizer?.name || "Kivo Host",
+        }));
+        setEvents(formatted);
+        setTotalPages(result.pagination.pages);
+      }
+    } catch (error) {
+      console.error("Kivo Discover Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    page,
+    activeCat,
+    dateFilter,
+    priceFilter,
+    mediumFilter,
+    statusFilter,
+    search,
+  ]);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/events?limit=100`,
-        );
-        const result = await response.json();
-
-        if (result.status === "success") {
-          const formatted = result.data.events.map((e: any) => ({
-            ...e,
-            id: e._id,
-            lat: e.location?.coordinates?.[1] || null,
-            lng: e.location?.coordinates?.[0] || null,
-            date: new Date(e.startDate).toISOString().split("T")[0],
-            isOnline: e.medium === "online" || e.isOnline === true,
-            organizerName: e.organizer?.name || "Kivo Host",
-            organizerImage:
-              e.organizer?.image ||
-              `https://api.dicebear.com/7.x/avataaars/svg?seed=${e._id}`,
-            participantImages: e.participantImages || [],
-            attendees: e.attendees || 0,
-          }));
-          setEvents(formatted);
-        }
-      } catch (error) {
-        console.error("Kivo Discover Error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchEvents();
-  }, []);
+  }, [fetchEvents]);
+
+  // Reset to page 1 on filter change
+  useEffect(() => {
+    setPage(1);
+  }, [search, activeCat, dateFilter, priceFilter, mediumFilter, statusFilter]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -193,103 +204,18 @@ export default function DiscoverPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    setPage(1);
-  }, [
-    search,
-    activeCat,
-    dist,
-    dateFilter,
-    priceFilter,
-    statusFilter,
-    mediumFilter,
-  ]);
-
-  const filtered = useMemo(() => {
-    const searchLower = search.toLowerCase();
-    const now = new Date().getTime();
-
-    return events.filter((e) => {
-      const matchSearch = e.title.toLowerCase().includes(searchLower);
-      const matchCat = activeCat === "all" || e.category === activeCat;
-      const matchPrice =
-        priceFilter === "all" ||
-        (priceFilter === "free" ? e.isFree : !e.isFree);
-
-      const matchMedium =
-        mediumFilter === "all" ||
-        (mediumFilter === "online" ? e.isOnline : !e.isOnline);
-
-      const distanceValue = e.lat
-        ? parseFloat(getKm(USER_LOCATION.lat, USER_LOCATION.lng, e.lat, e.lng))
-        : 0;
-      const matchDist = e.isOnline || distanceValue <= dist;
-
-      let matchDate = true;
-      if (dateFilter) {
-        const eventDate = new Date(e.startDate);
-        const range = getDateRange(dateFilter);
-        matchDate = range
-          ? eventDate >= range.start && eventDate < range.end
-          : e.date === dateFilter;
-      }
-
-      const start = new Date(e.startDate).getTime();
-      const end = new Date(e.endDate).getTime();
-      let currentStatus: "upcoming" | "ongoing" | "past" = "upcoming";
-      if (now < start) currentStatus = "upcoming";
-      else if (now <= end) currentStatus = "ongoing";
-      else currentStatus = "past";
-
-      const matchStatus =
-        statusFilter === "all" || statusFilter === currentStatus;
-      e.timeStatus = currentStatus;
-
-      return (
-        matchSearch &&
-        matchCat &&
-        matchDist &&
-        matchPrice &&
-        matchDate &&
-        matchStatus &&
-        matchMedium
-      );
-    });
-  }, [
-    events,
-    search,
-    activeCat,
-    dist,
-    dateFilter,
-    priceFilter,
-    statusFilter,
-    mediumFilter,
-  ]);
-
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const current = filtered.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE,
-  );
-
   const clearFilters = () => {
     setSearch("");
     setActiveCat("all");
-    setDist(25);
-    setDateFilter("");
+    setDateFilter("all");
     setPriceFilter("all");
-    setStatusFilter("all");
     setMediumFilter("all");
+    setStatusFilter("all");
     setPage(1);
   };
 
-  const trendingEvents = useMemo(
-    () =>
-      [...events]
-        .sort((a, b) => (b.attendees || 0) - (a.attendees || 0))
-        .slice(0, 4),
-    [events],
-  );
+  // --- DERIVED SECTIONS ---
+  const trendingEvents = useMemo(() => events.slice(0, 4), [events]);
   const techEvents = useMemo(
     () =>
       events
@@ -298,10 +224,7 @@ export default function DiscoverPage() {
     [events],
   );
   const musicSpotlight = useMemo(
-    () =>
-      events
-        .filter((e) => e.category === "music" || e.category === "entertainment")
-        .slice(0, 2),
+    () => events.filter((e) => e.category === "music").slice(0, 2),
     [events],
   );
 
@@ -325,44 +248,31 @@ export default function DiscoverPage() {
               </motion.div>
               <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-gray-900 leading-[0.85]">
                 Find your next <br />{" "}
-                <span style={{ color: KIVO_BLUE }}>Move.</span>
+                <span className="relative inline-block">
+                  <span style={{ color: KIVO_BLUE }}>Move.</span>
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: "100%" }}
+                    className="absolute -bottom-2 left-0 h-2 rounded-full"
+                    style={{ backgroundColor: KIVO_YELLOW }}
+                  />
+                </span>
               </h1>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="text-right hidden sm:block">
-                <p className="text-xs font-black text-gray-900">
-                  {filtered.length} results
-                </p>
-                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">
-                  {mediumFilter === "online" ? "Worldwide" : `within ${dist}km`}
-                </p>
-              </div>
-              <button
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all active:scale-95 shadow-xl shadow-black/10"
-                style={{ backgroundColor: DEEP_BLACK, color: "white" }}
-              >
-                {isFilterOpen ? (
-                  <X size={16} />
-                ) : (
-                  <SlidersHorizontal size={16} />
-                )}
-                {isFilterOpen ? "Close" : "Filters"}
-              </button>
             </div>
           </div>
         </div>
       </section>
 
+      {/* STICKY FILTER BAR */}
       <div
-        className={`sticky top-[72px] md:top-[80px] z-[40] bg-white/80 backdrop-blur-xl border-b border-gray-100 transition-all ${isScrolled ? "shadow-md py-2" : "py-4"}`}
+        className={`sticky top-[72px] md:top-[80px] z-[40] bg-white/90 backdrop-blur-md border-b border-gray-100 transition-all ${isScrolled ? "py-2 shadow-sm" : "py-4"}`}
       >
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-2 px-2">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col gap-3">
+          {/* ROW 1: CATEGORIES */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
             <button
               onClick={() => setActiveCat("all")}
-              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border ${activeCat === "all" ? "bg-black text-white border-black" : "bg-white text-gray-400 border-gray-100"}`}
+              className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${activeCat === "all" ? "bg-black text-white" : "bg-white text-gray-400 border-gray-100"}`}
             >
               All Vibes
             </button>
@@ -370,207 +280,178 @@ export default function DiscoverPage() {
               <button
                 key={k}
                 onClick={() => setActiveCat(k)}
-                className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border ${activeCat === k ? "text-white border-transparent" : "bg-white text-gray-400 border-gray-100"}`}
+                className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${activeCat === k ? "text-white" : "text-gray-400 border-gray-100"}`}
                 style={{
                   backgroundColor: activeCat === k ? KIVO_BLUE : "transparent",
-                  borderColor: activeCat === k ? KIVO_BLUE : "",
                 }}
               >
                 {v.label}
               </button>
             ))}
           </div>
+
+          {/* ROW 2: FILTERS & SEARCH */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            <div className="flex items-center gap-1.5 pr-3 border-r border-gray-100 mr-1.5">
+              {["live", "upcoming"].map((s) => (
+                <button
+                  key={s}
+                  onClick={() =>
+                    setStatusFilter(statusFilter === s ? "all" : (s as any))
+                  }
+                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all shrink-0 ${
+                    statusFilter === s
+                      ? "bg-red-50 text-red-600 border-red-200"
+                      : "bg-gray-50 text-gray-500 border-transparent"
+                  }`}
+                >
+                  {s === "live" ? "● Live Now" : "Upcoming"}
+                </button>
+              ))}
+            </div>
+
+            {/* 2. Date Filters (Existing) */}
+            <div className="flex items-center gap-1.5 pr-3 border-r border-gray-100 mr-1.5">
+              {["today", "tomorrow", "weekend"].map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setDateFilter(dateFilter === d ? "all" : d)}
+                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all shrink-0 ${
+                    dateFilter === d
+                      ? "bg-blue-50 text-blue-600 border-blue-200"
+                      : "bg-gray-50 text-gray-500 border-transparent"
+                  }`}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+
+            {/* Price Filters */}
+            <div className="flex items-center gap-1.5 pr-3 border-r border-gray-100 mr-1.5">
+              {["free", "paid"].map((p) => (
+                <button
+                  key={p}
+                  onClick={() =>
+                    setPriceFilter(priceFilter === p ? "all" : (p as any))
+                  }
+                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border ${priceFilter === p ? "bg-green-50 text-green-600 border-green-200" : "bg-gray-50 text-gray-500"}`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+
+            {/* Medium Filters */}
+            <div className="flex items-center gap-1.5 pr-3 border-r border-gray-100 mr-1.5">
+              {["physical", "online"].map((m) => (
+                <button
+                  key={m}
+                  onClick={() =>
+                    setMediumFilter(mediumFilter === m ? "all" : (m as any))
+                  }
+                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border ${mediumFilter === m ? "bg-purple-50 text-purple-600 border-purple-200" : "bg-gray-50 text-gray-500"}`}
+                >
+                  {m === "online" ? "Virtual" : "Physical"}
+                </button>
+              ))}
+            </div>
+
+            {/* Search Input */}
+            <div className="relative min-w-[150px]">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300"
+                size={14}
+              />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search moves..."
+                className="w-full pl-9 pr-4 py-1.5 bg-gray-50 rounded-xl text-[10px] font-bold border-none focus:ring-1 focus:ring-blue-100"
+              />
+            </div>
+
+            {/* Reset Button */}
+            {(activeCat !== "all" ||
+              dateFilter !== "all" ||
+              search !== "" ||
+              priceFilter !== "all" ||
+              mediumFilter !== "all" ||
+              statusFilter !== "all") && (
+              <button
+                onClick={clearFilters}
+                className="ml-auto px-4 py-1.5 text-[9px] font-black uppercase rounded-full shrink-0"
+                style={{ backgroundColor: KIVO_YELLOW, color: DEEP_BLACK }}
+              >
+                Reset
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       <main className="flex-1 px-6 max-w-6xl mx-auto w-full py-8 md:py-12">
-        <AnimatePresence>
-          {isFilterOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden mb-12"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-6 md:p-8 bg-gray-50 rounded-[32px] border border-gray-100 shadow-inner">
-                <div className="sm:col-span-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 block ml-1">
-                    Keywords
-                  </label>
-                  <div className="relative">
-                    <Search
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"
-                      size={18}
-                    />
-                    <input
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Concerts, parties, lounges..."
-                      className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-blue-100 font-bold"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 block ml-1">
-                    Location Type
-                  </label>
-                  <select
-                    value={mediumFilter}
-                    onChange={(e) => setMediumFilter(e.target.value as any)}
-                    className="w-full px-6 py-4 bg-white rounded-2xl border-none shadow-sm font-black text-[10px] uppercase tracking-widest text-gray-500"
-                  >
-                    <option value="all">Any Medium</option>
-                    <option value="physical">Physical</option>
-                    <option value="online">Online</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 block ml-1">
-                    Distance ({dist}km)
-                  </label>
-                  <div
-                    className={`bg-white px-4 rounded-2xl shadow-sm h-[56px] flex items-center ${mediumFilter === "online" ? "opacity-30 pointer-events-none" : ""}`}
-                  >
-                    <input
-                      type="range"
-                      min="1"
-                      max="100"
-                      value={dist}
-                      onChange={(e) => setDist(Number(e.target.value))}
-                      className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer"
-                      style={{ accentColor: KIVO_BLUE }}
-                    />
-                  </div>
-                </div>
-
-                <div className="sm:col-span-2 lg:col-span-4 flex flex-wrap gap-3 pt-6 border-t border-gray-200 mt-2">
-                  <select
-                    value={priceFilter}
-                    onChange={(e) => setPriceFilter(e.target.value as any)}
-                    className="bg-white px-6 py-3 rounded-xl border-none shadow-sm font-black text-[10px] uppercase tracking-widest text-gray-500"
-                  >
-                    <option value="all">Any Price</option>
-                    <option value="free">Free Access</option>
-                    <option value="paid">Paid Access</option>
-                  </select>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as any)}
-                    className="bg-white px-6 py-3 rounded-xl border-none shadow-sm font-black text-[10px] uppercase tracking-widest text-gray-500"
-                  >
-                    <option value="all">Any Status</option>
-                    <option value="ongoing">Happening Now</option>
-                    <option value="upcoming">Upcoming</option>
-                    <option value="past">Past</option>
-                  </select>
-                  <button
-                    onClick={clearFilters}
-                    className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 rounded-xl ml-auto"
-                  >
-                    Reset
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {loading ? (
           <DiscoverSkeleton />
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 mb-20 items-stretch">
               <AnimatePresence mode="popLayout">
-                {current.map((e, index) => {
-                  const prices = e.ticketTiers?.map((t: any) => t.price) || [];
-                  const minPrice =
-                    prices.length > 0 ? Math.min(...prices) : null;
-                  const maxPrice =
-                    prices.length > 0 ? Math.max(...prices) : null;
-
-                  const getDisplayPrice = () => {
-                    if (e.externalTicketLink) return "Paid";
-                    if (e.ticketingType === "none") return "Free";
-                    if (minPrice === 0 && maxPrice! > 0) return "Free +";
-                    if (minPrice === 0 && maxPrice === 0) return "Free";
-                    if (minPrice !== null)
-                      return `₦${minPrice.toLocaleString()}`;
-                    return "Free";
-                  };
-
-                  return (
-                    <motion.div
-                      key={e.id}
-                      layout
-                      initial={{ opacity: 0, y: 30 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.5, delay: index * 0.05 }}
-                      className="flex flex-col h-full cursor-pointer"
-                      onClick={() => router.push(`/discover/${e.id}`)}
-                    >
-                      <EventCard
-                        {...e}
-                        location={
-                          e.isOnline
-                            ? "Online"
-                            : `${getKm(USER_LOCATION.lat, USER_LOCATION.lng, e.lat, e.lng)}km • ${e.location?.address || "Port Harcourt"}`
-                        }
-                        time={formatEventTime(e.startDate)}
-                        buttonText={getDisplayPrice()}
-                        isOnline={e.isOnline}
-                        participantImages={e.participantImages}
-                        attendeeCount={e.attendees}
-                      />
-                    </motion.div>
-                  );
-                })}
+                {events.map((e, index) => (
+                  <motion.div
+                    key={e.id}
+                    layout
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="flex flex-col h-full cursor-pointer"
+                    onClick={() => router.push(`/discover/${e.id}`)}
+                  >
+                    <EventCard
+                      {...e}
+                      location={
+                        e.isOnline
+                          ? "Online"
+                          : `${getKm(USER_LOCATION.lat, USER_LOCATION.lng, e.lat, e.lng)}km • Port Harcourt`
+                      }
+                      time={formatEventTime(e.startDate)}
+                    />
+                  </motion.div>
+                ))}
               </AnimatePresence>
             </div>
 
             {totalPages > 1 && (
-              <div className="flex flex-col items-center justify-center gap-6 mt-12 mb-24 px-6 w-full">
-                <div className="flex items-center justify-center gap-2 sm:gap-4 w-full">
-                  <button
-                    disabled={page === 1}
-                    onClick={() => {
-                      setPage((p) => p - 1);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 bg-white hover:bg-gray-50 disabled:opacity-30 transition-all shadow-sm active:scale-90"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <div className="flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-2 px-1 items-center">
-                    {[...Array(totalPages)].map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          setPage(i + 1);
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }}
-                        className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-2xl text-[10px] sm:text-xs font-black transition-all shadow-sm ${page === i + 1 ? "bg-black text-white" : "bg-white text-gray-400 border border-gray-100"}`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    disabled={page === totalPages}
-                    onClick={() => {
-                      setPage((p) => p + 1);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 bg-white hover:bg-gray-50 disabled:opacity-30 transition-all shadow-sm active:scale-90"
-                  >
-                    <ChevronRight size={20} />
-                  </button>
-                </div>
+              <div className="flex items-center justify-center gap-4 mb-24">
+                <button
+                  disabled={page === 1}
+                  onClick={() => {
+                    setPage((p) => p - 1);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center disabled:opacity-20"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <span className="font-black text-xs uppercase tracking-widest">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  disabled={page === totalPages}
+                  onClick={() => {
+                    setPage((p) => p + 1);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center disabled:opacity-20"
+                >
+                  <ChevronRight size={20} />
+                </button>
               </div>
             )}
           </>
         )}
 
+        {/* --- THE HOT LIST SECTION --- */}
         <section className="mt-12 mb-24">
           <div className="flex items-center gap-3 mb-10">
             <div
@@ -588,19 +469,19 @@ export default function DiscoverPage() {
               <div
                 key={e.id}
                 onClick={() => router.push(`/discover/${e.id}`)}
-                className="min-w-[320px] sm:min-w-[380px] md:min-w-[440px] cursor-pointer"
+                className="min-w-[320px] sm:min-w-[440px] cursor-pointer"
               >
                 <EventCard
                   {...e}
                   time={formatEventTime(e.startDate)}
-                  location={e.location?.address || "Port Harcourt"}
-                  isOnline={e.isOnline}
+                  location="Port Harcourt"
                 />
               </div>
             ))}
           </div>
         </section>
 
+        {/* --- PROFESSIONAL MOVES SECTION --- */}
         <section className="mb-24 bg-blue-50/20 -mx-6 px-6 py-20 md:rounded-[80px] border-y md:border border-blue-100/30 relative overflow-hidden">
           <div className="max-w-6xl mx-auto relative z-10">
             <div className="flex items-center gap-4 mb-14">
@@ -626,7 +507,7 @@ export default function DiscoverPage() {
                   onClick={() => router.push(`/discover/${e.id}`)}
                   className="bg-white p-6 rounded-[32px] border border-gray-100 flex items-center gap-6 hover:shadow-2xl transition-all group cursor-pointer"
                 >
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gray-100 overflow-hidden shrink-0 relative">
+                  <div className="w-20 h-20 rounded-2xl bg-gray-100 overflow-hidden shrink-0 relative">
                     <Image
                       src={e.image}
                       fill
@@ -645,23 +526,22 @@ export default function DiscoverPage() {
                       {e.organizerName}
                     </span>
                   </div>
-                  <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center transition-all">
-                    <ChevronRight
-                      size={24}
-                      className="group-hover:translate-x-1 transition-transform"
-                      style={{ color: KIVO_BLUE }}
-                    />
-                  </div>
+                  <ChevronRight
+                    size={24}
+                    style={{ color: KIVO_BLUE }}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
                 </div>
               ))}
             </div>
           </div>
         </section>
 
+        {/* --- MUSIC SCENE SECTION --- */}
         <section className="mb-24">
           <div className="bg-black rounded-[56px] p-10 md:p-20 relative overflow-hidden">
             <div
-              className="absolute top-0 right-0 w-[500px] h-[500px] opacity-5 blur-[150px]"
+              className="absolute top-0 right-0 w-[500px] h-[500px] opacity-10 blur-[150px]"
               style={{ backgroundColor: KIVO_YELLOW }}
             />
             <div className="relative z-10 flex flex-col lg:flex-row items-center gap-16">
@@ -676,7 +556,7 @@ export default function DiscoverPage() {
                 </h2>
                 <button
                   onClick={() => setActiveCat("music")}
-                  className="w-full sm:w-auto px-12 py-6 bg-white text-black rounded-3xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all flex items-center justify-center gap-3"
+                  className="px-12 py-6 bg-white text-black rounded-3xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3"
                 >
                   Explore Music Scene <ArrowRight size={18} />
                 </button>
@@ -686,9 +566,9 @@ export default function DiscoverPage() {
                   <div
                     key={e.id}
                     onClick={() => router.push(`/discover/${e.id}`)}
-                    className="bg-white/5 border border-white/10 p-6 rounded-[36px] flex items-center gap-6 cursor-pointer hover:bg-white/10 transition-all group"
+                    className="bg-white/5 border border-white/10 p-6 rounded-[36px] flex items-center gap-6 cursor-pointer hover:bg-white/10 transition-all"
                   >
-                    <div className="w-20 h-20 rounded-2xl bg-gray-800 overflow-hidden shrink-0 border border-white/10 relative">
+                    <div className="w-20 h-20 rounded-2xl bg-gray-800 overflow-hidden shrink-0 relative">
                       <Image
                         src={e.image}
                         fill

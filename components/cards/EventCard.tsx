@@ -1,18 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { EVENT_CATEGORIES } from "@/lib/categories";
 import Image from "next/image";
 import {
-  Clock,
   MapPin,
   ChevronRight,
   Globe,
-  Timer,
   ExternalLink,
-  TicketCheck,
   Info,
+  Clock,
+  Calendar,
 } from "lucide-react";
 
 export type Props = {
@@ -28,7 +27,8 @@ export type Props = {
   participantImages?: string[];
   isOnline?: boolean;
   className?: string;
-  ticketingType?: "none" | "internal" | "external"; // Updated to match your enum
+  ticketingType?: "none" | "internal" | "external";
+  ticketTiers?: Array<{ name: string; price: number }>;
 };
 
 export default function EventCard({
@@ -45,12 +45,41 @@ export default function EventCard({
   isOnline,
   className = "",
   ticketingType = "internal",
+  ticketTiers = [],
 }: Props) {
   const [timeLeft, setTimeLeft] = useState<any>(null);
   const [status, setStatus] = useState<"upcoming" | "ongoing" | "past">(
     "upcoming",
   );
   const categoryData = EVENT_CATEGORIES[category] ?? EVENT_CATEGORIES.social;
+
+  // Refined Pricing Logic with "From" for multiple tiers
+  const getDisplayPrice = useMemo(() => {
+    if (ticketingType === "external") return "Paid";
+    if (!ticketTiers || ticketTiers.length === 0) return "Free";
+
+    const prices = ticketTiers.map((tier) => tier.price);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const hasMultipleTiers = ticketTiers.length > 1;
+
+    if (minPrice === 0) {
+      return maxPrice > 0 ? "Free +" : "Free";
+    }
+
+    const formattedPrice = `₦${minPrice.toLocaleString()}`;
+
+    // Logic: If there's more than one tier, show "From ₦..."
+    return hasMultipleTiers ? `From ${formattedPrice}` : formattedPrice;
+  }, [ticketingType, ticketTiers]);
+
+  const startDateTime = new Date(startDate).toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
 
   useEffect(() => {
     const calculateTime = () => {
@@ -59,15 +88,11 @@ export default function EventCard({
       const end = new Date(endDate).getTime();
 
       let target: number;
-      let label = "";
-
       if (now < start) {
         target = start;
-        label = "Starts in";
         setStatus("upcoming");
       } else if (now >= start && now < end) {
         target = end;
-        label = "Ends in";
         setStatus("ongoing");
       } else {
         setStatus("past");
@@ -76,8 +101,7 @@ export default function EventCard({
 
       const diff = target - now;
       setTimeLeft({
-        label,
-        d: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
         h: Math.floor((diff / (1000 * 60 * 60)) % 24)
           .toString()
           .padStart(2, "0"),
@@ -95,123 +119,119 @@ export default function EventCard({
     return () => clearInterval(timer);
   }, [startDate, endDate]);
 
-  // Social proof logic for internal events
-  const displayImages =
-    ticketingType === "internal"
-      ? participantImages.length > 0
-        ? participantImages
-        : attendees > 0
-          ? [1, 2, 3]
-          : []
-      : [];
+  const canShowParticipants = ticketingType === "internal";
+  const displayImages = canShowParticipants
+    ? participantImages.length > 0
+      ? participantImages
+      : attendees > 0
+        ? [1, 2, 3]
+        : []
+    : [];
 
   return (
     <div
-      className={`group flex flex-col h-full rounded-[40px] overflow-hidden bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_20px_50px_rgba(0,82,255,0.1)] transition-all duration-500 ${className}`}
+      className={`group flex flex-col rounded-[32px] overflow-hidden bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_20px_50px_rgba(0,82,255,0.1)] transition-all duration-500 ${className}`}
     >
       {/* IMAGE SECTION */}
-      <div className="relative h-64 overflow-hidden shrink-0">
+      <div className="relative h-48 overflow-hidden shrink-0">
         <Image
           src={image || "/placeholder-event.jpg"}
           alt={title}
           fill
           className="object-cover group-hover:scale-110 transition-transform duration-700"
         />
-        <div className="absolute top-5 left-5 flex flex-col gap-2 z-20">
+
+        <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-20">
           {status === "ongoing" && (
-            <div className="px-3 py-1.5 bg-green-500 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white shadow-xl animate-bounce">
+            <div className="px-3 py-1 bg-green-500 rounded-lg text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white animate-pulse shadow-lg">
               Live Now
             </div>
           )}
           {isOnline && (
-            <div className="px-3 py-1.5 bg-blue-600 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white shadow-xl">
+            <div className="px-3 py-1 bg-blue-600 rounded-lg text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white shadow-lg">
               <Globe size={10} /> Online
             </div>
           )}
         </div>
+
+        <div
+          className={`absolute bottom-4 right-4 px-3 py-1 rounded-full border bg-white/90 backdrop-blur-sm shadow-sm ${categoryData.color}`}
+        >
+          <span className="text-[8px] font-black uppercase tracking-tighter">
+            {categoryData.label}
+          </span>
+        </div>
       </div>
 
-      <div className="p-6 flex flex-col flex-1">
-        {/* HEADER */}
-        <div className="flex justify-between items-start mb-6 gap-3">
-          <h2 className="font-black text-2xl text-gray-900 leading-[1.1] tracking-tight line-clamp-2">
-            {title}
-          </h2>
-          <div
-            className={`shrink-0 p-2 rounded-xl border ${categoryData.color} bg-opacity-5`}
-          >
-            <span className="text-[9px] font-black uppercase">
-              {categoryData.label}
-            </span>
-          </div>
-        </div>
-
-        {/* COUNTDOWN */}
-        <div className="mb-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3 ml-1">
-            {status === "past" ? "Status" : timeLeft?.label}
-          </p>
-          <div className="flex items-center gap-2">
-            {status === "past" ? (
-              <span className="text-xl font-black text-red-500 italic uppercase">
-                Finished
+      <div className="p-5 flex flex-col flex-1 gap-3">
+        {/* TIME & COUNTDOWN */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-gray-600">
+              <Calendar
+                size={12}
+                className={
+                  status === "ongoing" ? "text-green-500" : "text-blue-500"
+                }
+              />
+              <span className="text-[10px] font-black uppercase tracking-tight">
+                {status === "ongoing"
+                  ? `Started at ${startDateTime}`
+                  : `Starts at ${startDateTime}`}
               </span>
-            ) : (
-              <div className="flex items-end gap-1.5 tabular-nums">
-                {timeLeft?.d > 0 && (
-                  <div className="flex items-end gap-1">
-                    <span className="text-3xl font-black text-slate-900 leading-none">
-                      {timeLeft.d}
-                    </span>
-                    <span className="text-[10px] font-black text-slate-400 uppercase mb-1">
-                      Days
-                    </span>
-                  </div>
-                )}
-                <div
-                  className={`flex items-center px-3 py-2 rounded-2xl border-2 ${status === "ongoing" ? "bg-green-50 border-green-200 text-green-600" : "bg-blue-50 border-blue-100 text-blue-600"}`}
-                >
-                  <span className="text-xl font-black tracking-tighter">
-                    {timeLeft?.h}
-                  </span>
-                  <span className="mx-1 opacity-30 animate-pulse font-bold">
-                    :
-                  </span>
-                  <span className="text-xl font-black tracking-tighter">
-                    {timeLeft?.m}
-                  </span>
-                  <span className="mx-1 opacity-30 animate-pulse font-bold">
-                    :
-                  </span>
-                  <span className="text-xl font-black tracking-tighter">
-                    {timeLeft?.s}
-                  </span>
-                </div>
-              </div>
+            </div>
+
+            {status === "past" && (
+              <span className="text-[10px] font-black text-red-500 uppercase tracking-tight bg-red-50 px-2 py-0.5 rounded">
+                Event Ended
+              </span>
             )}
           </div>
+
+          {status !== "past" && timeLeft && (
+            <div
+              className={`text-[10px] font-black uppercase px-2.5 py-1.5 rounded-xl border flex items-center gap-2 w-fit ${status === "ongoing" ? "bg-green-50 border-green-100 text-green-700" : "bg-blue-50 border-blue-100 text-blue-600"}`}
+            >
+              <span className="opacity-70 flex items-center gap-1">
+                <Clock size={10} />
+                {status === "ongoing" ? "Ends in" : "Countdown"}
+              </span>
+              <div className="flex items-center gap-1 tabular-nums">
+                {timeLeft.days > 0 && (
+                  <span>
+                    {timeLeft.days} {timeLeft.days === 1 ? "Day" : "Days"}
+                  </span>
+                )}
+                {timeLeft.days > 0 && <span className="opacity-30">•</span>}
+                <span>
+                  {timeLeft.h}:{timeLeft.m}:{timeLeft.s}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* INFO GRID */}
-        <div className="flex flex-col gap-3 mb-8">
-          <div className="flex items-center gap-2.5 text-gray-500">
-            <MapPin size={14} className="text-blue-600" />
-            <span className="font-bold text-xs line-clamp-1">
-              {location} {!isOnline && distance && `(${distance}km)`}
-            </span>
-          </div>
+        <h2 className="font-black text-xl text-gray-900 leading-tight tracking-tight line-clamp-1">
+          {title}
+        </h2>
+
+        <div className="flex items-center gap-2 text-gray-500">
+          <MapPin size={13} className="text-gray-400 shrink-0" />
+          <span className="font-bold text-[11px] line-clamp-1">
+            {location} {!isOnline && distance && `• ${distance}km`}
+          </span>
         </div>
 
-        {/* FOOTER SECTION: Dynamic based on ticketingType */}
-        <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-auto min-h-[80px]">
-          <div className="flex items-center gap-3">
-            {ticketingType === "internal" ? (
-              <>
-                <div className="flex -space-x-2.5">
+        {/* FOOTER */}
+        <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto min-h-[52px]">
+          <div className="flex items-center gap-2">
+            {canShowParticipants ? (
+              <div className="flex items-center gap-2">
+                <div className="flex -space-x-2">
                   {displayImages.slice(0, 3).map((img, i) => (
                     <div
                       key={i}
-                      className="w-8 h-8 relative rounded-full border-2 border-white overflow-hidden bg-gray-100"
+                      className="w-6 h-6 relative rounded-full border-2 border-white overflow-hidden bg-gray-100"
                     >
                       <Image
                         src={
@@ -226,30 +246,33 @@ export default function EventCard({
                     </div>
                   ))}
                 </div>
-                <span className="text-[10px] font-black text-gray-900 uppercase">
+                <span className="text-[9px] font-black text-gray-900 uppercase">
                   {attendees} Joined
-                </span>
-              </>
-            ) : ticketingType === "external" ? (
-              <div className="flex items-center gap-2 bg-blue-50/50 px-3 py-2 rounded-xl border border-blue-100/50">
-                <ExternalLink size={12} className="text-blue-500" />
-                <span className="text-[9px] font-black text-blue-600 uppercase tracking-tight">
-                  External Site
                 </span>
               </div>
             ) : (
-              // Case: "none"
-              <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
-                <Info size={12} className="text-gray-400" />
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-tight">
-                  Open Entry
+              <div className="flex items-center gap-1.5 text-gray-400">
+                {ticketingType === "external" ? (
+                  <ExternalLink size={12} />
+                ) : (
+                  <Info size={12} />
+                )}
+                <span className="text-[9px] font-black uppercase tracking-tight">
+                  {ticketingType === "external" ? "External" : "Open Entry"}
                 </span>
               </div>
             )}
           </div>
 
-          <button className="bg-black text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2">
-            {buttonText} <ChevronRight size={14} />
+          <button className="bg-[#FFD700] hover:bg-[#F2CC00] text-black px-4 py-2.5 rounded-2xl transition-all duration-300 active:scale-95 group/btn flex items-center gap-2 shadow-sm">
+            <span className="font-black text-[10px] uppercase tracking-wider">
+              {buttonText} • {getDisplayPrice}
+            </span>
+            <ChevronRight
+              size={14}
+              className="group-hover/btn:translate-x-0.5 transition-transform"
+              strokeWidth={3}
+            />
           </button>
         </div>
       </div>

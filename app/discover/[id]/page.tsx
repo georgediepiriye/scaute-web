@@ -32,6 +32,9 @@ import Footer from "@/components/layout/Footer";
 import EventMap from "@/components/map/EventMap";
 import toast, { Toaster } from "react-hot-toast";
 
+// BRAND COLORS
+const KIVO_YELLOW = "#FFD700";
+
 export default function EventDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -114,17 +117,14 @@ export default function EventDetailsPage() {
 
   const handleCTA = () => {
     if (event.isCancelled) return;
-
     if (event.externalTicketLink) {
       setShowExternalModal(true);
       return;
     }
-
     if (event.joinLink && event.isOnline) {
       window.open(event.joinLink, "_blank");
       return;
     }
-
     setIsCheckoutOpen(true);
   };
 
@@ -163,10 +163,8 @@ export default function EventDetailsPage() {
       </div>
     );
 
-  // UPDATED DATE LOGIC: Displaying Start to End Date/Time
   const start = new Date(event.startDate);
   const end = new Date(event.endDate);
-
   const isSameDay = start.toDateString() === end.toDateString();
 
   const formattedDate = isSameDay
@@ -183,7 +181,6 @@ export default function EventDetailsPage() {
         event={event}
       />
 
-      {/* EXTERNAL REDIRECT MODAL */}
       <AnimatePresence>
         {showExternalModal && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center px-6">
@@ -200,7 +197,13 @@ export default function EventDetailsPage() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="relative w-full max-w-md bg-white rounded-[40px] p-10 text-center shadow-2xl"
             >
-              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <div
+                className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-6"
+                style={{
+                  backgroundColor: `${KIVO_YELLOW}20`,
+                  color: "#856404",
+                }}
+              >
                 <ExternalLink size={32} />
               </div>
               <h3 className="text-2xl font-black tracking-tight mb-2 uppercase italic">
@@ -213,7 +216,7 @@ export default function EventDetailsPage() {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={confirmExternalRedirect}
-                  className="w-full py-5 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-blue-600/10"
+                  className="w-full py-5 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-[1.02] transition-all shadow-xl"
                 >
                   Continue to Booking
                 </button>
@@ -243,7 +246,7 @@ export default function EventDetailsPage() {
               Back to City
             </button>
             <div className="flex gap-2">
-              <button className="p-3 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-blue-600 transition-all">
+              <button className="p-3 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-black transition-all">
                 <Share2 size={18} />
               </button>
             </div>
@@ -263,7 +266,10 @@ export default function EventDetailsPage() {
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
                 />
                 <div className="absolute top-6 left-6 flex gap-2">
-                  <span className="px-5 py-2.5 bg-white/90 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase text-gray-900 shadow-sm">
+                  <span
+                    className="px-5 py-2.5 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase text-black shadow-sm"
+                    style={{ backgroundColor: `${KIVO_YELLOW}EE` }}
+                  >
                     {event.category}
                   </span>
                   <span
@@ -286,7 +292,6 @@ export default function EventDetailsPage() {
                   {event.title}
                 </h1>
 
-                {/* ORGANIZER PROFILE SECTION */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between p-8 bg-gray-50 rounded-[32px] gap-6 border border-gray-100/50">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-2xl bg-white shadow-sm overflow-hidden relative border border-gray-100">
@@ -312,7 +317,7 @@ export default function EventDetailsPage() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setIsFollowing(!isFollowing)}
-                      className={`flex-1 sm:flex-none px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${isFollowing ? "bg-white border-2 border-gray-100 text-green-600" : "bg-black text-white hover:bg-blue-600 shadow-xl shadow-blue-600/10"}`}
+                      className={`flex-1 sm:flex-none px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${isFollowing ? "bg-white border-2 border-gray-100 text-green-600" : "bg-black text-white hover:scale-[1.02] shadow-xl"}`}
                     >
                       {isFollowing ? (
                         <>
@@ -324,7 +329,7 @@ export default function EventDetailsPage() {
                         </>
                       )}
                     </button>
-                    <button className="w-14 h-14 bg-white border-2 border-gray-100 rounded-2xl flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all">
+                    <button className="w-14 h-14 bg-white border-2 border-gray-100 rounded-2xl flex items-center justify-center text-gray-400 hover:text-black transition-all">
                       <MessageSquare size={20} />
                     </button>
                   </div>
@@ -332,7 +337,13 @@ export default function EventDetailsPage() {
 
                 <div className="flex flex-wrap gap-6 py-8 border-y border-gray-100">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-blue-600 border border-gray-100">
+                    <div
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center border border-gray-100"
+                      style={{
+                        backgroundColor: `${KIVO_YELLOW}15`,
+                        color: "#856404",
+                      }}
+                    >
                       <Calendar size={24} />
                     </div>
                     <div>
@@ -345,7 +356,13 @@ export default function EventDetailsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-blue-600 border border-gray-100">
+                    <div
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center border border-gray-100"
+                      style={{
+                        backgroundColor: `${KIVO_YELLOW}15`,
+                        color: "#856404",
+                      }}
+                    >
                       {event.isOnline ? (
                         <Globe size={24} />
                       ) : (
@@ -368,7 +385,7 @@ export default function EventDetailsPage() {
 
               <div className="space-y-4">
                 <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
-                  <Info size={20} className="text-blue-600" /> Overview
+                  <Info size={20} className="text-gray-400" /> Overview
                 </h3>
                 <div className="relative">
                   <p
@@ -402,30 +419,28 @@ export default function EventDetailsPage() {
                 event.ticketTiers?.length > 0 && (
                   <div className="space-y-6 pt-6">
                     <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
-                      <Ticket size={20} className="text-blue-600" /> Ticket
+                      <Ticket size={20} className="text-gray-400" /> Ticket
                       Tiers
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {event.ticketTiers.map((tier: any) => (
                         <div
                           key={tier._id}
-                          className="p-6 bg-white border border-gray-100 rounded-[32px] shadow-sm hover:border-blue-600/30 transition-all"
+                          className="p-6 bg-white border border-gray-100 rounded-[32px] shadow-sm hover:border-black/10 transition-all"
                         >
                           <div className="flex justify-between items-start mb-3">
                             <h4 className="font-black text-gray-900 uppercase text-sm tracking-tight">
                               {tier.name}
                             </h4>
-                            <span className="text-lg font-black text-blue-600">
+                            <span
+                              className="text-lg font-black"
+                              style={{ color: "#000" }}
+                            >
                               {tier.price === 0
                                 ? "FREE"
                                 : `₦${tier.price.toLocaleString()}`}
                             </span>
                           </div>
-                          {tier.description && (
-                            <p className="text-xs text-gray-400 mb-4 font-medium line-clamp-2">
-                              {tier.description}
-                            </p>
-                          )}
                           <div className="flex items-center justify-between text-[10px] font-black uppercase text-gray-400 mb-2">
                             <span>Availability</span>
                             <span>
@@ -435,7 +450,7 @@ export default function EventDetailsPage() {
                           </div>
                           <div className="w-full h-1.5 bg-gray-50 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-blue-600 transition-all"
+                              className="h-full bg-black transition-all"
                               style={{
                                 width: `${Math.min(100, ((tier.sold || 0) / tier.capacity) * 100)}%`,
                               }}
@@ -459,7 +474,13 @@ export default function EventDetailsPage() {
                       {displayPrice}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300">
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                    style={{
+                      backgroundColor: `${KIVO_YELLOW}20`,
+                      color: "#856404",
+                    }}
+                  >
                     <Users size={20} />
                   </div>
                 </div>
@@ -467,51 +488,18 @@ export default function EventDetailsPage() {
                 <button
                   onClick={handleCTA}
                   disabled={event.isCancelled || hasReserved}
-                  className={`w-full py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-xl ${event.isCancelled ? "bg-red-50 text-red-400 cursor-not-allowed" : "bg-black text-white hover:bg-blue-600 active:scale-95 shadow-blue-600/10"}`}
+                  className={`w-full py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-xl ${event.isCancelled ? "bg-red-50 text-red-400 cursor-not-allowed" : "bg-black text-white hover:scale-[1.02] active:scale-95"}`}
                 >
                   {getButtonContent()}
                 </button>
 
                 <div className="pt-8 border-t border-gray-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">
-                      Venue Map
-                    </p>
-                    {!event.isOnline && (
-                      <button
-                        onClick={handleOpenMap}
-                        className="text-[10px] font-black uppercase text-blue-600 hover:underline"
-                      >
-                        Get Directions
-                      </button>
-                    )}
+                  <div className="h-56 rounded-[32px] overflow-hidden bg-gray-100 border border-gray-100">
+                    <EventMap
+                      latitude={event.location?.coordinates?.[1]}
+                      longitude={event.location?.coordinates?.[0]}
+                    />
                   </div>
-                  {!event.isOnline ? (
-                    <div className="space-y-4">
-                      <div className="h-56 rounded-[32px] overflow-hidden bg-gray-100 border border-gray-100">
-                        <EventMap
-                          latitude={event.location?.coordinates?.[1]}
-                          longitude={event.location?.coordinates?.[0]}
-                        />
-                      </div>
-                      <p className="text-xs font-bold text-gray-500 leading-relaxed px-2 italic">
-                        {`${event.location?.address || ""}, ${event.location?.neighborhood || "Location details provided upon registration."}`}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="h-56 rounded-[32px] bg-blue-50 flex flex-col items-center justify-center text-center p-8 border border-blue-100">
-                      <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-blue-600 shadow-sm mb-4">
-                        <Monitor size={32} />
-                      </div>
-                      <p className="text-xs font-black uppercase text-blue-600 tracking-widest">
-                        Virtual Move
-                      </p>
-                      <p className="text-[10px] font-bold text-blue-400 mt-2">
-                        Access link will be visible in your profile after
-                        registration.
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -522,7 +510,7 @@ export default function EventDetailsPage() {
       <div className="lg:hidden fixed bottom-6 left-6 right-6 z-[100]">
         <button
           onClick={handleCTA}
-          className="w-full py-5 bg-black text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all shadow-blue-600/20"
+          className="w-full py-5 bg-black text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
         >
           {getButtonContent()} — {displayPrice}
         </button>
