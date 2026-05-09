@@ -18,6 +18,7 @@ import {
   ArrowUpRight,
   Calendar,
   Camera,
+  SearchCheck,
 } from "lucide-react";
 import Navbar from "@/components/layout/NavBar";
 import MobileNav from "@/components/layout/MobileNav";
@@ -344,11 +345,31 @@ export default function ProfilePage() {
                             <h4 className="font-black text-sm truncate uppercase tracking-tight text-slate-800">
                               {event.title}
                             </h4>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-green-50 text-green-600 rounded-md">
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                              {/* APPROVAL STATUS BADGE */}
+                              <div
+                                className={`flex items-center gap-1 px-2 py-0.5 rounded-md border ${
+                                  event.approvalStatus === "approved"
+                                    ? "bg-green-50 text-green-600 border-green-100"
+                                    : "bg-amber-50 text-amber-600 border-amber-100"
+                                }`}
+                              >
+                                <SearchCheck size={10} />
+                                <span className="text-[9px] font-black uppercase">
+                                  {event.approvalStatus || "Pending"}
+                                </span>
+                              </div>
+
+                              <span className="text-slate-300">•</span>
+
+                              <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">
                                 {event.status || "Live"}
                               </span>
-                              <span className="text-slate-300">•</span>
+
+                              <span className="text-slate-300 hidden sm:inline">
+                                •
+                              </span>
+
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                 {event.attendees || 0} Sold
                               </span>
@@ -357,7 +378,7 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="flex items-center gap-3 mt-4 sm:mt-0 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-50 pt-3 sm:pt-0">
-                          {/* ✅ SCAN BUTTON LOGIC: Only show if event has ticket tiers */}
+                          {/* ✅ SCAN BUTTON LOGIC */}
                           {event.ticketTiers &&
                             event.ticketTiers.length > 0 && (
                               <button

@@ -14,6 +14,7 @@ import {
   LogOut,
   User as UserIcon,
   MapPin,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function Navbar() {
@@ -97,7 +98,6 @@ export default function Navbar() {
     }
   };
 
-  // Removed AI Assistant to focus on Events/Tickets/Map
   const navLinks = [
     { href: "/map", label: "Live Map" },
     { href: "/discover", label: "Discover" },
@@ -109,7 +109,7 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 w-full z-[500] bg-white/80 backdrop-blur-2xl border-b border-slate-100">
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-5 flex justify-between items-center relative z-[110]">
-        {/* LOGO - Updated to Royal Blue */}
+        {/* LOGO */}
         <Link href="/" className="flex items-center gap-2 cursor-pointer group">
           <div className="relative flex items-center justify-center w-10 h-10 bg-blue-600 rounded-2xl rotate-3 group-hover:rotate-0 transition-transform duration-300">
             <Zap size={22} className="text-amber-400 fill-amber-400" />
@@ -138,6 +138,17 @@ export default function Navbar() {
             <>
               {authState.isLoggedIn ? (
                 <div className="flex items-center gap-4">
+                  {/* ADMIN LINK - DESKTOP */}
+                  {authState.user?.role === "admin" && (
+                    <Link
+                      href="/admin/dashboard"
+                      className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-950 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all"
+                    >
+                      <ShieldCheck size={14} className="text-blue-400" />
+                      Admin
+                    </Link>
+                  )}
+
                   <Bell
                     size={20}
                     className="text-slate-400 cursor-pointer hover:text-blue-600 hidden sm:block"
@@ -186,7 +197,6 @@ export default function Navbar() {
             </>
           )}
 
-          {/* Mobile Toggle - Styled like a button card */}
           <button
             className="md:hidden w-12 h-12 flex items-center justify-center bg-slate-950 rounded-2xl text-white transition-all active:scale-90 shadow-lg"
             onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
@@ -224,22 +234,36 @@ export default function Navbar() {
                       />
                     )}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="font-black text-2xl tracking-tight leading-none mb-1 text-slate-950">
                       {authState.user?.name || "Kivo User"}
                     </p>
-                    <Link
-                      href="/profile"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="text-blue-600 text-[11px] font-black uppercase tracking-widest"
-                    >
-                      My Dashboard
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href="/profile"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="text-blue-600 text-[11px] font-black uppercase tracking-widest"
+                      >
+                        My Dashboard
+                      </Link>
+                      {authState.user?.role === "admin" && (
+                        <>
+                          <span className="text-slate-300">•</span>
+                          <Link
+                            href="/admin/dashboard"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="text-slate-950 text-[11px] font-black uppercase tracking-widest flex items-center gap-1"
+                          >
+                            Admin Console
+                          </Link>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Links - Large Mobile Style */}
+              {/* Links */}
               <div className="flex flex-col gap-2">
                 {navLinks.map((link, i) => (
                   <motion.div
@@ -292,7 +316,7 @@ export default function Navbar() {
                   </div>
                 )}
 
-                {/* Location Footer in Mobile Menu */}
+                {/* Location Footer */}
                 <div className="flex items-center justify-center gap-2 py-6 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
                   <MapPin size={12} />
                   Port Harcourt, Nigeria

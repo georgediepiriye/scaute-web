@@ -240,6 +240,24 @@ export default function CreateEventPage() {
       }
     }
 
+    if (step === 3) {
+      if (
+        formData.ticketingType === "internal" &&
+        (!formData.ticketTiers || formData.ticketTiers.length === 0)
+      ) {
+        return toast.error(
+          "Please add at least one ticket tier to sell on Kivo.",
+        );
+      }
+
+      if (
+        formData.ticketingType === "external" &&
+        !formData.externalTicketLink
+      ) {
+        return toast.error("Please provide the external ticket URL.");
+      }
+    }
+
     setStep((s) => s + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -316,8 +334,13 @@ export default function CreateEventPage() {
         throw new Error(errorData.message || "Broadcast failed.");
       }
 
-      toast.success("Move Broadcasted!");
-      router.push("/discover");
+      toast.success("Move Submitted! Waiting for Kivo Team approval.", {
+        duration: 5000,
+      });
+
+      setTimeout(() => {
+        router.push("/profile");
+      }, 2500);
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -330,7 +353,7 @@ export default function CreateEventPage() {
 
     const options = {
       maxSizeMB: 0.8, // Keep it under 1MB
-      maxWidthOrHeight: 1200, // Good enough for event banners
+      maxWidthOrHeight: 1200,
       useWebWorker: true,
     };
 

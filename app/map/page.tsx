@@ -31,6 +31,7 @@ import {
   Compass,
   Phone,
   ChevronRight,
+  Timer,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -74,6 +75,7 @@ export default function MapPage() {
   const [showHotspots, setShowHotspots] = useState(true);
   const [likedEvents, setLikedEvents] = useState<Set<string>>(new Set());
   const [followedUsers, setFollowedUsers] = useState<Set<string>>(new Set());
+  const [timeLeft, setTimeLeft] = useState<any>(null);
 
   // AUTH STATE LOGIC
   const [authState, setAuthState] = useState({
@@ -111,6 +113,52 @@ export default function MapPage() {
       });
     }
   }, []);
+
+  useEffect(() => {
+    if (!selected) {
+      setTimeLeft(null);
+      return;
+    }
+
+    const calculateTime = () => {
+      const now = new Date().getTime();
+      const start = new Date(selected.startDate).getTime();
+      const end = new Date(selected.endDate).getTime();
+
+      let target: number;
+      let label = "";
+
+      if (now < start) {
+        target = start;
+        label = "Starts in";
+      } else if (now >= start && now < end) {
+        target = end;
+        label = "Ends in";
+      } else {
+        setTimeLeft({ label: "Ended" });
+        return;
+      }
+
+      const diff = target - now;
+      setTimeLeft({
+        label,
+        d: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        h: Math.floor((diff / (1000 * 60 * 60)) % 24)
+          .toString()
+          .padStart(2, "0"),
+        m: Math.floor((diff / 1000 / 60) % 60)
+          .toString()
+          .padStart(2, "0"),
+        s: Math.floor((diff / 1000) % 60)
+          .toString()
+          .padStart(2, "0"),
+      });
+    };
+
+    calculateTime();
+    const timer = setInterval(calculateTime, 1000);
+    return () => clearInterval(timer);
+  }, [selected]);
 
   useEffect(() => {
     checkAuth();
@@ -631,6 +679,7 @@ export default function MapPage() {
                 onClick={() => setSelected(null)}
               />
 
+              {/* ORGANIZER SECTION */}
               <div className="flex items-center justify-between mb-6 bg-gray-50 p-3 rounded-3xl border border-gray-100">
                 <div className="flex items-center gap-3">
                   <div className="relative h-10 w-10">
@@ -660,6 +709,7 @@ export default function MapPage() {
                 </button>
               </div>
 
+              {/* TITLE & TAGS */}
               <div className="flex justify-between items-start mb-6">
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -671,18 +721,8 @@ export default function MapPage() {
                     >
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${selected.timeStatus === "ongoing" ? "bg-green-500 animate-pulse" : "bg-gray-400"}`}
-                      />{" "}
+                      />
                       {selected.timeStatus}
-                    </span>
-                    <span
-                      className={`text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1.5 ${selected.isOnline ? "bg-blue-100 text-blue-600" : "bg-purple-100 text-purple-600"}`}
-                    >
-                      {selected.isOnline ? (
-                        <Globe size={10} />
-                      ) : (
-                        <MapPin size={10} />
-                      )}
-                      {selected.isOnline ? "Online" : "Physical"}
                     </span>
                   </div>
                   <h2 className="font-black text-2xl text-gray-900 mt-3 tracking-tight">
@@ -720,14 +760,49 @@ export default function MapPage() {
                   priority
                   className="object-cover rounded-[28px] border border-gray-50"
                 />
-                {selected.isOnline && (
-                  <div className="absolute top-4 left-4 px-3 py-1.5 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-xl">
-                    <Globe size={10} className="animate-pulse" />
-                    Online
-                  </div>
-                )}
               </div>
 
+              {/* --- NEW COUNTDOWN UI SECTION --- */}
+              {timeLeft && timeLeft.label !== "Ended" && (
+                <div className="mb-6 p-5 bg-blue-50/50 rounded-[32px] border border-blue-100/50 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm">
+                      <Timer size={20} />
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-600/60">
+                      {timeLeft.label}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 tabular-nums">
+                    {timeLeft.d > 0 && (
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-black text-blue-900">
+                          {timeLeft.d}
+                        </span>
+                        <span className="text-[9px] font-black text-blue-400 uppercase">
+                          d
+                        </span>
+                      </div>
+                    )}
+                    <div className="bg-white px-3 py-2 rounded-xl border border-blue-100 flex items-center shadow-sm">
+                      <span className="text-lg font-black text-blue-900 leading-none">
+                        {timeLeft.h}
+                      </span>
+                      <span className="mx-1 text-blue-200 font-bold">:</span>
+                      <span className="text-lg font-black text-blue-900 leading-none">
+                        {timeLeft.m}
+                      </span>
+                      <span className="mx-1 text-blue-200 font-bold">:</span>
+                      <span className="text-lg font-black text-blue-900 leading-none">
+                        {timeLeft.s}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* DETAILS GRID */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
                   <Calendar size={18} className="text-black" />

@@ -9,6 +9,7 @@ import LiveFeed from "@/components/landing/LiveFeed";
 import Ticketing from "@/components/landing/Ticketing";
 import Features from "@/components/landing/Features";
 import HostBenefits from "@/components/landing/HostBenefits";
+import HostBridge from "@/components/landing/HostBridge";
 
 export default function Home() {
   return (
@@ -16,6 +17,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <LiveFeed />
+      <HostBridge />
       <Ticketing />
       <Features />
 

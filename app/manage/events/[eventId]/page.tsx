@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Loader2,
   AlertTriangle,
+  SearchCheck,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import Navbar from "@/components/layout/NavBar";
@@ -43,6 +44,7 @@ export interface EventData {
     id: string;
     title: string;
     organizer: string;
+    approvalStatus?: string;
     coOrganizers?: Array<{
       email: string;
       _id: string;
@@ -302,11 +304,26 @@ export default function ManageEventDashboard() {
               <h1 className="text-4xl font-black uppercase tracking-tighter leading-none">
                 {event?.title}
               </h1>
-              <div className="flex items-center gap-3 mt-4">
+              <div className="flex flex-wrap items-center gap-3 mt-4">
                 <span className="px-3 py-1 bg-blue-600/10 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest">
                   {isOrganizer ? "Main Organizer" : "Partner Access"}
                 </span>
-                <span className="text-slate-300">•</span>
+
+                {/* APPROVAL STATUS BADGE */}
+                <div
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${
+                    event.approvalStatus === "approved"
+                      ? "bg-green-50 text-green-600 border-green-100"
+                      : "bg-amber-50 text-amber-600 border-amber-100"
+                  }`}
+                >
+                  <SearchCheck size={12} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">
+                    {event.approvalStatus || "Pending"}
+                  </span>
+                </div>
+
+                <span className="text-slate-300 hidden md:inline">•</span>
                 <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
                   ID: {id?.toString().slice(-6)}
                 </span>

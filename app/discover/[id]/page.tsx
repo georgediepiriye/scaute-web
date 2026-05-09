@@ -163,18 +163,15 @@ export default function EventDetailsPage() {
       </div>
     );
 
-  const formattedDate =
-    new Date(event.startDate).toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-    }) +
-    " • " +
-    new Date(event.startDate).toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
+  // UPDATED DATE LOGIC: Displaying Start to End Date/Time
+  const start = new Date(event.startDate);
+  const end = new Date(event.endDate);
+
+  const isSameDay = start.toDateString() === end.toDateString();
+
+  const formattedDate = isSameDay
+    ? `${start.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })} • ${start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} - ${end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
+    : `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} @ ${start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — ${end.toLocaleDateString("en-US", { month: "short", day: "numeric" })} @ ${end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] flex flex-col">

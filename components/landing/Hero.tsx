@@ -6,32 +6,35 @@ import {
   useScroll,
   useTransform,
   useSpring,
+  useReducedMotion,
   Variants,
 } from "framer-motion";
-import { Compass } from "lucide-react";
+import { Navigation } from "lucide-react";
 import Link from "next/link";
 
 const KIVO_BLUE = "#0052FF";
 
 export default function Hero() {
   const containerRef = useRef(null);
+  const shouldReduceMotion = useReducedMotion();
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"],
   });
 
+  // Heavier spring settings for a more "premium" feel
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
+    stiffness: 70,
+    damping: 20,
     restDelta: 0.001,
   });
 
-  // Scale down parallax intensity for mobile to prevent overflow
-  const xLeft = useTransform(smoothProgress, [0, 1], ["0%", "-10%"]);
-  const xRight = useTransform(smoothProgress, [0, 1], ["0%", "10%"]);
-  const opacityFade = useTransform(smoothProgress, [0, 0.4], [0.03, 0]);
-  const scaleEffect = useTransform(smoothProgress, [0, 1], [1, 1.05]);
+  // Parallax values
+  const xLeft = useTransform(smoothProgress, [0, 1], ["0%", "-15%"]);
+  const xRight = useTransform(smoothProgress, [0, 1], ["0%", "15%"]);
+  const opacityFade = useTransform(smoothProgress, [0, 0.5], [0.03, 0]);
+  const scaleEffect = useTransform(smoothProgress, [0, 1], [1, 1.08]);
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -39,20 +42,20 @@ export default function Hero() {
       opacity: 1,
       transition: {
         staggerChildren: 0.1,
-        delayChildren: 0.1,
+        delayChildren: 0.2,
       },
     },
   };
 
   const itemVariants: Variants = {
-    hidden: { y: 20, opacity: 0, filter: "blur(10px)" },
+    hidden: { y: 30, opacity: 0, filter: "blur(8px)" },
     visible: {
       y: 0,
       opacity: 1,
       filter: "blur(0px)",
       transition: {
         duration: 0.8,
-        ease: [0.22, 1, 0.36, 1],
+        ease: [0.16, 1, 0.3, 1], // Custom smooth ease
       },
     },
   };
@@ -62,24 +65,27 @@ export default function Hero() {
       ref={containerRef}
       className="relative min-h-[90vh] md:min-h-[98vh] flex flex-col items-center justify-center pt-24 md:pt-32 pb-12 md:pb-20 px-4 overflow-hidden bg-[#fafafa]"
     >
-      {/* 1. ULTRA-SMOOTH PARALLAX BACKGROUND */}
+      {/* 1. GPU-OPTIMIZED PARALLAX BACKGROUND */}
       <motion.div
-        style={{ opacity: opacityFade, scale: scaleEffect }}
-        className="absolute inset-0 pointer-events-none select-none flex flex-col justify-center items-center gap-1 md:gap-2"
+        style={{
+          opacity: opacityFade,
+          scale: shouldReduceMotion ? 1 : scaleEffect,
+        }}
+        className="absolute inset-0 pointer-events-none select-none flex flex-col justify-center items-center gap-1 md:gap-2 overflow-hidden"
       >
         <motion.h2
-          style={{ x: xLeft }}
-          className="text-[18vw] md:text-[26vw] font-black leading-none uppercase whitespace-nowrap text-slate-950"
+          style={{ x: shouldReduceMotion ? 0 : xLeft }}
+          className="text-[18vw] md:text-[26vw] font-black leading-none uppercase whitespace-nowrap text-slate-950 will-change-transform"
         >
           PORT HARCOURT
         </motion.h2>
         <motion.h2
           style={{
-            x: xRight,
+            x: shouldReduceMotion ? 0 : xRight,
             WebkitTextStroke: "1px rgba(0,0,0,0.15)",
             color: "transparent",
           }}
-          className="text-[18vw] md:text-[26vw] font-black leading-none uppercase whitespace-nowrap italic"
+          className="text-[18vw] md:text-[26vw] font-black leading-none uppercase whitespace-nowrap italic will-change-transform"
         >
           RIVERS STATE
         </motion.h2>
@@ -94,7 +100,7 @@ export default function Hero() {
         {/* 2. STATUS BADGE */}
         <motion.div
           variants={itemVariants}
-          className="group flex items-center gap-2 bg-white/80 backdrop-blur-md p-1 pr-4 md:pr-6 rounded-full shadow-sm border border-slate-100 mb-8 md:mb-12"
+          className="group flex items-center gap-2 bg-white/90 backdrop-blur-xl p-1 pr-4 md:pr-6 rounded-full shadow-sm border border-slate-200/50 mb-8 md:mb-12"
         >
           <div
             style={{ backgroundColor: KIVO_BLUE }}
@@ -108,7 +114,7 @@ export default function Hero() {
               Live Now
             </span>
           </div>
-          <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-widest text-slate-500">
+          <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-widest text-slate-600">
             23 moves <span className="hidden xs:inline">active</span> in{" "}
             <span className="text-slate-950 font-black">PH City</span>
           </span>
@@ -118,7 +124,7 @@ export default function Hero() {
         <div className="text-center mb-10 md:mb-16">
           <motion.h1
             variants={itemVariants}
-            className="text-5xl sm:text-7xl md:text-[140px] font-black tracking-[-0.05em] md:tracking-[-0.06em] leading-[0.9] md:leading-[0.8] uppercase text-slate-950"
+            className="text-5xl sm:text-7xl md:text-[140px] font-black tracking-[-0.05em] md:tracking-[-0.07em] leading-[0.9] md:leading-[0.8] uppercase text-slate-950"
           >
             What’s <br />
             <span className="relative inline-block px-2 md:px-4">
@@ -127,11 +133,11 @@ export default function Hero() {
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{
-                  delay: 0.8,
+                  delay: 1.2,
                   duration: 1,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className="absolute bottom-1 md:bottom-5 left-0 w-full h-[0.25em] bg-amber-400/40 -z-10 origin-left"
+                className="absolute bottom-1 md:bottom-5 left-0 w-full h-[0.2em] bg-amber-400/50 -z-10 origin-left"
               />
             </span>{" "}
             <br />
@@ -173,8 +179,8 @@ export default function Hero() {
                   </span>
                 </div>
                 <div className="bg-white/10 p-3 md:p-4 rounded-2xl md:rounded-3xl group-hover:rotate-[360deg] transition-transform duration-1000 ease-in-out">
-                  <Compass
-                    className="w-6 h-6 md:w-9 md:h-9"
+                  <Navigation
+                    className="w-6 h-6 md:w-9 md:h-9 fill-current rotate-[15deg]"
                     strokeWidth={2.5}
                   />
                 </div>
@@ -187,7 +193,7 @@ export default function Hero() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
+          transition={{ delay: 2 }}
           className="mt-12 md:mt-20 flex flex-col items-center gap-3 md:gap-4"
         >
           <span className="text-[8px] md:text-[10px] uppercase tracking-[0.3em] font-bold text-slate-400">

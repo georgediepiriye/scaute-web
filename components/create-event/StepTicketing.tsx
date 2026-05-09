@@ -1,5 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Users, Ticket, LinkIcon, Trash2, Ban } from "lucide-react";
+import {
+  Users,
+  Ticket,
+  LinkIcon,
+  Trash2,
+  Ban,
+  MessageCircle,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 // BRAND COLOR CONSTANTS
@@ -34,14 +41,14 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
     { id: "internal", label: "Kivo Tickets", sub: "Sell on app", icon: Ticket },
     {
       id: "external",
-      label: "External Link",
+      label: "External Ticket Link",
       sub: "Third-party",
       icon: LinkIcon,
     },
   ];
 
   return (
-    <div className="bg-white p-6 md:p-10 rounded-[40px] border border-gray-100 shadow-sm space-y-8">
+    <div className="bg-white p-6 md:p-10 rounded-[40px] border border-gray-100 shadow-sm space-y-10">
       {/* 1. Selection Buttons */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {TICKET_OPTIONS.map((opt) => {
@@ -50,6 +57,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
           return (
             <button
               key={opt.id}
+              type="button"
               onClick={() => updateForm("ticketingType", opt.id)}
               className={`p-6 rounded-[24px] border-2 flex flex-col items-center text-center gap-3 transition-all ${
                 isActive
@@ -153,6 +161,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => removeTier(idx)}
                   className="absolute -top-2 -right-2 bg-white text-red-500 p-2.5 rounded-full shadow-lg border border-gray-100 hover:bg-red-50 transition-colors"
                 >
@@ -163,14 +172,9 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
           </div>
 
           <button
+            type="button"
             onClick={addTier}
             className="w-full py-6 border-2 border-dashed border-gray-200 rounded-[32px] text-[10px] font-black uppercase text-gray-400 hover:bg-blue-50/50 transition-all"
-            style={
-              {
-                hoverBorderColor: KIVO_BLUE,
-                hoverColor: KIVO_BLUE,
-              } as any
-            }
           >
             + Add New Ticket Tier
           </button>
@@ -191,12 +195,11 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
             <div className="relative">
               <input
                 placeholder="https://eventbrite.com/your-event"
-                value={formData.externalTicketLink}
+                value={formData.externalTicketLink || ""}
                 onChange={(e) =>
                   updateForm("externalTicketLink", e.target.value)
                 }
-                className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white transition-all"
-                style={{ focusBorderColor: KIVO_BLUE } as any}
+                className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white transition-all shadow-sm"
               />
               <LinkIcon
                 size={16}
@@ -209,6 +212,37 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
           </div>
         </motion.div>
       )}
+
+      {/* 4. Community & Group Links (WhatsApp/Telegram) */}
+      <div className="space-y-4 pt-8 border-t border-gray-100">
+        <div className="flex items-center gap-2 mb-2">
+          <MessageCircle size={16} style={{ color: KIVO_BLUE }} />
+          <h3 className="text-[10px] font-black uppercase text-gray-400">
+            Community Management
+          </h3>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[9px] font-black uppercase text-gray-400 ml-1">
+            WhatsApp / Telegram / Facebook / Group Link
+          </label>
+          <div className="relative">
+            <input
+              placeholder="https://chat.whatsapp.com/..."
+              value={formData.communityLink || ""}
+              onChange={(e) => updateForm("communityLink", e.target.value)}
+              className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white focus:border-blue-200 transition-all shadow-sm"
+            />
+            <div className="absolute right-5 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md bg-white border border-gray-100 text-[8px] font-black text-gray-400 uppercase">
+              Optional
+            </div>
+          </div>
+          <p className="text-[9px] text-gray-400 font-bold uppercase ml-1">
+            Share a link for attendees to join your event group chat for live
+            updates.
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
