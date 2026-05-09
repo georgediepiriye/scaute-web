@@ -625,7 +625,7 @@ export default function MapPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="fixed bottom-0 left-0 md:bottom-auto md:top-[10vh] md:left-1/2 md:-translate-x-1/2 w-full md:max-w-2xl bg-white rounded-t-[40px] md:rounded-[40px] shadow-2xl z-[100] overflow-hidden flex flex-col max-h-[92vh] md:max-h-[85vh]"
+              className="fixed bottom-0 left-0 md:bottom-auto md:top-[10vh] md:left-1/2 md:-translate-x-1/2 w-full md:max-w-2xl bg-white rounded-t-[40px] md:rounded-[40px] shadow-2xl z-[100] overflow-hidden flex flex-col max-h-[85vh] md:max-h-[85vh]"
             >
               <div className="bg-white rounded-[32px] shadow-2xl border border-gray-100 overflow-hidden relative">
                 <div className="relative h-44 w-full">
@@ -682,7 +682,7 @@ export default function MapPage() {
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed bottom-0 left-0 md:inset-0 md:m-auto w-full md:max-w-2xl md:h-fit bg-white rounded-t-[40px] md:rounded-[40px] shadow-2xl z-[600] overflow-hidden flex flex-col max-h-[92vh] md:max-h-[85vh]"
+                className="fixed bottom-0 left-0 md:inset-0 md:m-auto w-full md:max-w-2xl md:h-fit bg-white rounded-t-[40px] md:rounded-[40px] shadow-2xl z-[600] overflow-hidden flex flex-col max-h-[85vh] md:max-h-[85vh]"
               >
                 {/* Handle Bar - Fixed at top of modal */}
                 <div className="absolute top-0 left-0 w-full h-12 flex items-center justify-center z-[120] pointer-events-none">
