@@ -367,7 +367,9 @@ export default function DiscoverPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search moves..."
-                className="w-full pl-9 pr-4 py-1.5 bg-gray-50 rounded-xl text-[10px] font-bold border-none focus:ring-1 focus:ring-blue-100"
+                className="w-full pl-9 pr-4 py-1.5 bg-gray-50 rounded-xl font-bold border-none focus:ring-1 focus:ring-blue-100 
+             text-[16px] md:text-[10px] origin-left scale-[0.625] md:scale-100"
+                style={{ width: "160%" }}
               />
             </div>
 
