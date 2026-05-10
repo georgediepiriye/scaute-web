@@ -12,6 +12,7 @@ import {
   Info,
   Clock,
   Calendar,
+  Flame,
 } from "lucide-react";
 
 export type Props = {
@@ -22,13 +23,13 @@ export type Props = {
   endDate: string;
   location: string;
   distance?: string;
-  buttonText: string;
   attendees?: number;
   participantImages?: string[];
   isOnline?: boolean;
   className?: string;
   ticketingType?: "none" | "internal" | "external";
   ticketTiers?: Array<{ name: string; price: number }>;
+  isTrending?: boolean;
 };
 
 export default function EventCard({
@@ -39,13 +40,13 @@ export default function EventCard({
   endDate,
   location,
   distance,
-  buttonText,
   attendees = 0,
   participantImages = [],
   isOnline,
   className = "",
   ticketingType = "internal",
   ticketTiers = [],
+  isTrending,
 }: Props) {
   const [timeLeft, setTimeLeft] = useState<any>(null);
   const [status, setStatus] = useState<"upcoming" | "ongoing" | "past">(
@@ -142,6 +143,11 @@ export default function EventCard({
         />
 
         <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-20">
+          {isTrending && (
+            <div className="px-3 py-1 bg-[#FFD700] rounded-lg text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 text-black shadow-lg border border-black/5">
+              <Flame size={10} className="fill-black" /> Trending
+            </div>
+          )}
           {status === "ongoing" && (
             <div className="px-3 py-1 bg-green-500 rounded-lg text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white animate-pulse shadow-lg">
               Live Now
@@ -266,7 +272,7 @@ export default function EventCard({
 
           <button className="bg-[#FFD700] hover:bg-[#F2CC00] text-black px-4 py-2.5 rounded-2xl transition-all duration-300 active:scale-95 group/btn flex items-center gap-2 shadow-sm">
             <span className="font-black text-[10px] uppercase tracking-wider">
-              {buttonText} • {getDisplayPrice}
+              • {getDisplayPrice}
             </span>
             <ChevronRight
               size={14}

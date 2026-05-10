@@ -17,20 +17,20 @@ import {
   Ticket,
   ExternalLink,
   Globe,
-  Monitor,
   ChevronDown,
   ChevronUp,
   Users,
   UserPlus,
   Check,
   MessageSquare,
+  Navigation,
 } from "lucide-react";
 
 import Navbar from "@/components/layout/NavBar";
 import MobileNav from "@/components/layout/MobileNav";
 import Footer from "@/components/layout/Footer";
 import EventMap from "@/components/map/EventMap";
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 
 // BRAND COLORS
 const KIVO_YELLOW = "#FFD700";
@@ -46,7 +46,9 @@ export default function EventDetailsPage() {
   const [showExternalModal, setShowExternalModal] = useState(false);
   const [hasReserved, setHasReserved] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [similarEvents, setSimilarEvents] = useState<any[]>([]);
 
+  // 1. FETCH MAIN EVENT
   useEffect(() => {
     const fetchEventDetails = async () => {
       try {
@@ -70,6 +72,29 @@ export default function EventDetailsPage() {
 
     if (params.id) fetchEventDetails();
   }, [params.id]);
+
+  // 2. FETCH SIMILAR EVENTS
+  useEffect(() => {
+    const fetchSimilarEvents = async () => {
+      if (!event?.category) return;
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/v1/events?category=${event.category}&limit=5`,
+        );
+        const result = await res.json();
+        if (result.status === "success") {
+          const filtered = result.data.events.filter(
+            (e: any) => e._id !== event._id,
+          );
+          setSimilarEvents(filtered);
+        }
+      } catch (error) {
+        console.error("Kivo Similar Events Error:", error);
+      }
+    };
+
+    fetchSimilarEvents();
+  }, [event]);
 
   const timeStatus = useMemo(() => {
     if (!event) return null;
@@ -172,9 +197,14 @@ export default function EventDetailsPage() {
     : `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} @ ${start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — ${end.toLocaleDateString("en-US", { month: "short", day: "numeric" })} @ ${end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] flex flex-col">
+    <div className="min-h-screen bg-[#FDFDFD] flex flex-col relative">
       <Toaster position="top-center" reverseOrder={false} />
-      <Navbar />
+
+      {/* Navbar Z-Index Management */}
+      <div className="relative z-[150]">
+        <Navbar />
+      </div>
+
       <CheckoutPanel
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
@@ -232,7 +262,7 @@ export default function EventDetailsPage() {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 pt-20 pb-32 md:pt-28 md:pb-24">
+      <main className="flex-1 relative pt-24 pb-32 md:pt-36 md:pb-24">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center justify-between mb-8">
             <button
@@ -254,6 +284,7 @@ export default function EventDetailsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             <div className="lg:col-span-8 space-y-12">
+              {/* IMAGE HEADER */}
               <div className="relative aspect-[16/9] w-full rounded-[40px] overflow-hidden shadow-2xl border border-gray-100">
                 <Image
                   src={
@@ -263,7 +294,6 @@ export default function EventDetailsPage() {
                   fill
                   className="object-cover"
                   priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
                 />
                 <div className="absolute top-6 left-6 flex gap-2">
                   <span
@@ -287,6 +317,7 @@ export default function EventDetailsPage() {
                 </div>
               </div>
 
+              {/* TITLE & ORGANIZER */}
               <div className="space-y-8">
                 <h1 className="text-4xl md:text-7xl font-black tracking-tighter text-gray-900 leading-[0.85] uppercase italic">
                   {event.title}
@@ -335,6 +366,7 @@ export default function EventDetailsPage() {
                   </div>
                 </div>
 
+                {/* DATE & LOCATION GRID */}
                 <div className="flex flex-wrap gap-6 py-8 border-y border-gray-100">
                   <div className="flex items-center gap-4">
                     <div
@@ -355,7 +387,7 @@ export default function EventDetailsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 group">
                     <div
                       className="w-14 h-14 rounded-2xl flex items-center justify-center border border-gray-100"
                       style={{
@@ -370,19 +402,28 @@ export default function EventDetailsPage() {
                       )}
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest flex items-center gap-2">
                         Where
+                        {!event.isOnline && (
+                          <button
+                            onClick={handleOpenMap}
+                            className="text-blue-600 hover:underline flex items-center gap-1"
+                          >
+                            <Navigation size={10} /> Directions
+                          </button>
+                        )}
                       </p>
-                      <p className="font-black text-gray-900">
+                      <p className="font-black text-gray-900 leading-tight">
                         {event.isOnline
                           ? "Virtual / Online"
-                          : `${event.location?.address || ""}, ${event.location?.neighborhood || "Location details upon registration"}`}
+                          : `${event.location?.address || ""}, ${event.location?.neighborhood || "Port Harcourt"}`}
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
+              {/* OVERVIEW SECTION */}
               <div className="space-y-4">
                 <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
                   <Info size={20} className="text-gray-400" /> Overview
@@ -415,6 +456,7 @@ export default function EventDetailsPage() {
                 )}
               </div>
 
+              {/* TICKET TIERS */}
               {event.ticketingType === "internal" &&
                 event.ticketTiers?.length > 0 && (
                   <div className="space-y-6 pt-6">
@@ -463,6 +505,7 @@ export default function EventDetailsPage() {
                 )}
             </div>
 
+            {/* SIDEBAR CTA */}
             <div className="lg:col-span-4 space-y-6">
               <div className="hidden lg:block sticky top-28 p-8 bg-white rounded-[40px] border border-gray-100 shadow-2xl shadow-black/5 space-y-8">
                 <div className="flex items-center justify-between">
@@ -494,7 +537,10 @@ export default function EventDetailsPage() {
                 </button>
 
                 <div className="pt-8 border-t border-gray-100">
-                  <div className="h-56 rounded-[32px] overflow-hidden bg-gray-100 border border-gray-100">
+                  <div
+                    className="h-56 rounded-[32px] overflow-hidden bg-gray-100 border border-gray-100 group cursor-pointer"
+                    onClick={handleOpenMap}
+                  >
                     <EventMap
                       latitude={event.location?.coordinates?.[1]}
                       longitude={event.location?.coordinates?.[0]}
@@ -507,6 +553,7 @@ export default function EventDetailsPage() {
         </div>
       </main>
 
+      {/* MOBILE CTA BAR */}
       <div className="lg:hidden fixed bottom-6 left-6 right-6 z-[100]">
         <button
           onClick={handleCTA}
@@ -515,6 +562,61 @@ export default function EventDetailsPage() {
           {getButtonContent()} — {displayPrice}
         </button>
       </div>
+
+      {/* SIMILAR EVENTS SECTION */}
+      {similarEvents.length > 0 && (
+        <section className="bg-gray-50 py-24 border-t border-gray-100 relative z-10">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-2">
+                  More to Explore
+                </p>
+                <h2 className="text-4xl font-black tracking-tighter text-gray-900 uppercase italic">
+                  Similar <span style={{ color: KIVO_YELLOW }}>Vibes</span>
+                </h2>
+              </div>
+              <button
+                onClick={() => router.push("/discover")}
+                className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors w-fit"
+              >
+                View All Discoveries
+              </button>
+            </div>
+
+            <div className="flex gap-6 overflow-x-auto pb-8 snap-x no-scrollbar">
+              {similarEvents.map((item: any) => (
+                <motion.div
+                  key={item._id}
+                  whileHover={{ y: -5 }}
+                  onClick={() => router.push(`/discover/${item._id}`)}
+                  className="min-w-[300px] md:min-w-[350px] group cursor-pointer snap-start"
+                >
+                  <div className="relative aspect-[4/5] rounded-[32px] overflow-hidden mb-4 shadow-xl">
+                    <Image
+                      src={
+                        item.image || "https://picsum.photos/seed/kivo/600/800"
+                      }
+                      alt={item.title}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <p className="text-[10px] font-black uppercase text-yellow-400 mb-1">
+                        {item.location?.neighborhood || "Port Harcourt"}
+                      </p>
+                      <h3 className="text-white font-black text-xl leading-tight line-clamp-2">
+                        {item.title}
+                      </h3>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <MobileNav />
       <Footer />
