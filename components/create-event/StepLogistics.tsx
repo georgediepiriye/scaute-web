@@ -52,7 +52,10 @@ export const StepLogistics = ({
                 ? "bg-white shadow-sm border border-gray-200"
                 : "text-gray-400"
             }`}
-            style={{ color: formData.eventFormat === f ? KIVO_BLUE : "" }}
+            style={{
+              color: formData.eventFormat === f ? "#000" : "",
+              backgroundColor: formData.eventFormat === f ? KIVO_YELLOW : "",
+            }}
           >
             {f}
           </button>
@@ -72,7 +75,7 @@ export const StepLogistics = ({
               value={formData.startDate}
               onChange={(e) => updateForm("startDate", e.target.value)}
               className="flex-1 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2 transition-all"
-              style={{ "--tw-ring-color": `${KIVO_BLUE}20` } as any}
+              style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
             />
             <input
               type="time"
@@ -80,7 +83,7 @@ export const StepLogistics = ({
               required
               onChange={(e) => updateForm("startTime", e.target.value)}
               className="w-1/3 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2 transition-all"
-              style={{ "--tw-ring-color": `${KIVO_BLUE}20` } as any}
+              style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
             />
           </div>
         </div>
@@ -96,7 +99,7 @@ export const StepLogistics = ({
               value={formData.endDate}
               onChange={(e) => updateForm("endDate", e.target.value)}
               className="flex-1 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2 transition-all"
-              style={{ "--tw-ring-color": `${KIVO_BLUE}20` } as any}
+              style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
             />
             <input
               type="time"
@@ -104,7 +107,7 @@ export const StepLogistics = ({
               value={formData.endTime}
               onChange={(e) => updateForm("endTime", e.target.value)}
               className="w-1/3 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2 transition-all"
-              style={{ "--tw-ring-color": `${KIVO_BLUE}20` } as any}
+              style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
             />
           </div>
         </div>
@@ -124,7 +127,7 @@ export const StepLogistics = ({
           <button
             onClick={() => updateForm("isRecurring", !formData.isRecurring)}
             className={`w-14 h-8 rounded-full transition-all relative ${formData.isRecurring ? "" : "bg-gray-200"}`}
-            style={{ backgroundColor: formData.isRecurring ? KIVO_BLUE : "" }}
+            style={{ backgroundColor: formData.isRecurring ? KIVO_YELLOW : "" }}
           >
             <motion.div
               animate={{ x: formData.isRecurring ? 24 : 4 }}
@@ -151,7 +154,8 @@ export const StepLogistics = ({
                     onChange={(e) =>
                       updateForm("recurrenceFrequency", e.target.value)
                     }
-                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white border-none"
+                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white border-none focus:ring-2"
+                    style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
                   >
                     <option value="none">Select...</option>
                     <option value="daily">Daily</option>
@@ -177,7 +181,7 @@ export const StepLogistics = ({
                       }
                     }}
                     className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:ring-2"
-                    style={{ "--tw-ring-color": `${KIVO_BLUE}20` } as any}
+                    style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
                   />
                 </div>
                 <div className="space-y-2">
@@ -190,7 +194,8 @@ export const StepLogistics = ({
                     onChange={(e) =>
                       updateForm("recurrenceEndDate", e.target.value)
                     }
-                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white"
+                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2"
+                    style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
                   />
                 </div>
               </div>
@@ -207,15 +212,15 @@ export const StepLogistics = ({
                         onClick={() => toggleDay(day)}
                         className={`w-12 h-12 rounded-xl text-[10px] font-black uppercase border-2 transition-all ${
                           formData.selectedDays?.includes(day)
-                            ? "text-white shadow-lg shadow-blue-600/20"
+                            ? "text-black shadow-lg shadow-yellow-400/20"
                             : "border-gray-100 bg-gray-50 text-gray-400"
                         }`}
                         style={{
                           backgroundColor: formData.selectedDays?.includes(day)
-                            ? KIVO_BLUE
+                            ? KIVO_YELLOW
                             : "",
                           borderColor: formData.selectedDays?.includes(day)
-                            ? KIVO_BLUE
+                            ? KIVO_YELLOW
                             : "",
                         }}
                       >
@@ -267,13 +272,13 @@ export const StepLogistics = ({
               animate={{ opacity: 1, y: 0 }}
               className="p-4 rounded-2xl border space-y-1"
               style={{
-                backgroundColor: `${KIVO_BLUE}05`,
-                borderColor: `${KIVO_BLUE}20`,
+                backgroundColor: `${KIVO_YELLOW}10`,
+                borderColor: `${KIVO_YELLOW}40`,
               }}
             >
               <p
                 className="text-[10px] font-black uppercase tracking-tighter opacity-70"
-                style={{ color: KIVO_BLUE }}
+                style={{ color: "#000" }}
               >
                 Selected Address
               </p>
@@ -282,10 +287,10 @@ export const StepLogistics = ({
               </p>
               {formData.neighborhood && (
                 <div className="flex items-center gap-1.5 mt-1">
-                  <MapPin size={10} style={{ color: KIVO_BLUE }} />
+                  <MapPin size={10} style={{ color: "#000" }} />
                   <p
                     className="text-[10px] font-black uppercase"
-                    style={{ color: KIVO_BLUE }}
+                    style={{ color: "#000" }}
                   >
                     Area: {formData.neighborhood}
                   </p>
@@ -299,10 +304,12 @@ export const StepLogistics = ({
             onClick={() => setShowMapPicker(true)}
             className="w-full py-5 font-black text-[10px] uppercase rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg"
             style={{
-              backgroundColor: formData.locationCoords ? KIVO_BLUE : "#000000",
-              color: "#FFFFFF",
+              backgroundColor: formData.locationCoords
+                ? KIVO_YELLOW
+                : "#000000",
+              color: formData.locationCoords ? "#000" : "#FFFFFF",
               boxShadow: formData.locationCoords
-                ? `0 10px 15px -3px ${KIVO_BLUE}40`
+                ? `0 10px 15px -3px ${KIVO_YELLOW}40`
                 : "",
             }}
           >

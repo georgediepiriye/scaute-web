@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ChevronRight, ChevronLeft } from "lucide-react";
+import { Search, ChevronRight, ChevronLeft, Calendar } from "lucide-react";
 import { EVENT_CATEGORIES } from "@/lib/categories";
 import EventCard from "@/components/cards/EventCard";
 import Navbar from "@/components/layout/NavBar";
@@ -16,14 +16,61 @@ import VibeCheckSection from "@/components/discover/VibeCheckSection";
 import NightMovesSection from "@/components/discover/NightMovesSection";
 import CreateEventCTA from "@/components/discover/CreateEventCTA";
 
-// BRAND COLOR CONSTANTS
 const KIVO_BLUE = "#0052FF";
 const KIVO_YELLOW = "#FFD700";
 const DEEP_BLACK = "#000000";
-
 const USER_LOCATION = { lat: 4.819, lng: 7.038 };
 
-// --- SKELETON COMPONENT ---
+/**
+ * PRODUCTION DATE GENERATOR
+ * Returns UTC-aligned strings for precise backend filtering.
+ */
+const getDateRange = (filter: string) => {
+  const now = new Date();
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
+
+  switch (filter) {
+    case "today":
+      return { start: start.toISOString(), end: end.toISOString() };
+    case "tomorrow":
+      const tomorrow = new Date(start);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowEnd = new Date(tomorrow);
+      tomorrowEnd.setHours(23, 59, 59, 999);
+      return { start: tomorrow.toISOString(), end: tomorrowEnd.toISOString() };
+    case "weekend":
+      const day = now.getDay();
+      const daysToFriday = (5 - day + 7) % 7;
+      const fri = new Date(start);
+      fri.setDate(start.getDate() + daysToFriday);
+      const sun = new Date(fri);
+      sun.setDate(fri.getDate() + 2);
+      sun.setHours(23, 59, 59, 999);
+      return { start: fri.toISOString(), end: sun.toISOString() };
+    case "this-week":
+      const sunThisWeek = new Date(start);
+      sunThisWeek.setDate(start.getDate() + (7 - now.getDay()));
+      sunThisWeek.setHours(23, 59, 59, 999);
+      return { start: start.toISOString(), end: sunThisWeek.toISOString() };
+    case "next-week":
+      const monNextWeek = new Date(start);
+      monNextWeek.setDate(start.getDate() + (7 - now.getDay() + 1));
+      const sunNextWeek = new Date(monNextWeek);
+      sunNextWeek.setDate(monNextWeek.getDate() + 6);
+      sunNextWeek.setHours(23, 59, 59, 999);
+      return {
+        start: monNextWeek.toISOString(),
+        end: sunNextWeek.toISOString(),
+      };
+    default:
+      return null;
+  }
+};
+
 const DiscoverSkeleton = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 mb-20 items-stretch">
     {[...Array(6)].map((_, i) => (
@@ -43,7 +90,6 @@ const DiscoverSkeleton = () => (
   </div>
 );
 
-// HELPER: Calculate Distance
 const getKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
   if (!lat1 || !lng1 || !lat2 || !lng2) return "0.0";
   const R = 6371;
@@ -58,7 +104,6 @@ const getKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
   return (R * c).toFixed(1);
 };
 
-// HELPER: Human Readable Date
 const formatEventTime = (dateStr: string) => {
   const date = new Date(dateStr);
   const now = new Date();
@@ -68,7 +113,6 @@ const formatEventTime = (dateStr: string) => {
     date.getMonth(),
     date.getDate(),
   );
-
   const diffDays = Math.round(
     (eventDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
   );
@@ -97,7 +141,6 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // --- FILTER STATES ---
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState<string>("all");
   const [page, setPage] = useState(1);
@@ -119,20 +162,27 @@ export default function DiscoverPage() {
     nightMoves: [],
   });
 
-  // --- FETCH LOGIC ---
   const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "12",
-        // UPDATED: Primary sort by status (Featured), then by engagement (Views), then by date
         sort: "-status,-views,-startDate",
       });
 
       if (activeCat !== "all") params.append("category", activeCat);
       if (search) params.append("title", search);
-      if (dateFilter !== "all") params.append("dateFilter", dateFilter);
+
+      // Sending both keyword and ranges for maximum backend compatibility
+      if (dateFilter !== "all") {
+        params.append("dateFilter", dateFilter);
+        const range = getDateRange(dateFilter);
+        if (range) {
+          params.append("startDate[lte]", range.end);
+          params.append("endDate[gte]", range.start);
+        }
+      }
 
       if (priceFilter === "free") params.append("isFree", "true");
       else if (priceFilter === "paid") params.append("isFree", "false");
@@ -157,7 +207,6 @@ export default function DiscoverPage() {
           lat: e.location?.coordinates?.[1] || null,
           lng: e.location?.coordinates?.[0] || null,
           organizerName: e.organizer?.name || "Kivo Host",
-          // ADDED: Engagement metrics for the UI cards
           views: e.views || 0,
           likes: e.likes || 0,
         }));
@@ -180,34 +229,27 @@ export default function DiscoverPage() {
   ]);
 
   const fetchAllContent = useCallback(async () => {
-    setLoading(true);
     try {
       const [hot, pro, culture, night] = await Promise.all([
-        // HOT LIST: Featured events, sorted by views first
         fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/events?status=featured&sort=-views&limit=4`,
         ),
-        // PROFESSIONAL: Multi-category works now because of the backend split(',') fix
         fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/events?category=business,tech,education&limit=4`,
         ),
-        // VIBE CHECK: Changed 'arts' to 'culture' to match common Kivo category slugs
         fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/events?category=culture,social,religious&limit=3`,
         ),
-        // NIGHT MOVES: Multi-category sorted by 'likes' to show social popularity
         fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/events?category=party,music,entertainment&sort=-likes&limit=4`,
         ),
       ]);
-
       const results = await Promise.all([
         hot.json(),
         pro.json(),
         culture.json(),
         night.json(),
       ]);
-
       setSections({
         hotList: results[0].data.events,
         professional: results[1].data.events,
@@ -216,8 +258,6 @@ export default function DiscoverPage() {
       });
     } catch (error) {
       console.error("Section Fetch Error:", error);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -249,7 +289,6 @@ export default function DiscoverPage() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] flex flex-col overflow-x-hidden">
       <Navbar />
-
       <section className="pt-28 md:pt-36 pb-12 px-6 bg-white border-b border-gray-100">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -281,12 +320,10 @@ export default function DiscoverPage() {
         </div>
       </section>
 
-      {/* STICKY FILTER BAR */}
       <div
         className={`sticky top-[72px] md:top-[80px] z-[40] bg-white/90 backdrop-blur-md border-b border-gray-100 transition-all ${isScrolled ? "py-2 shadow-sm" : "py-4"}`}
       >
         <div className="max-w-6xl mx-auto px-6 flex flex-col gap-3">
-          {/* ROW 1: CATEGORIES */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
             <button
               onClick={() => setActiveCat("all")}
@@ -308,7 +345,31 @@ export default function DiscoverPage() {
             ))}
           </div>
 
-          {/* ROW 2: FILTERS & SEARCH */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 border-b border-gray-50 mb-1">
+            <div className="flex items-center gap-2 pr-3 border-r border-gray-100 mr-1.5 shrink-0">
+              <Calendar size={12} className="text-gray-400" />
+              <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">
+                When
+              </span>
+            </div>
+            {[
+              "all",
+              "today",
+              "tomorrow",
+              "weekend",
+              "this-week",
+              "next-week",
+            ].map((d) => (
+              <button
+                key={d}
+                onClick={() => setDateFilter(d)}
+                className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all shrink-0 ${dateFilter === d ? "bg-blue-50 text-blue-600 border-blue-200" : "bg-gray-50 text-gray-500 border-transparent"}`}
+              >
+                {d.replace("-", " ")}
+              </button>
+            ))}
+          </div>
+
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
             <div className="flex items-center gap-1.5 pr-3 border-r border-gray-100 mr-1.5">
               {["live", "upcoming"].map((s) => (
@@ -317,33 +378,12 @@ export default function DiscoverPage() {
                   onClick={() =>
                     setStatusFilter(statusFilter === s ? "all" : (s as any))
                   }
-                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all shrink-0 ${
-                    statusFilter === s
-                      ? "bg-red-50 text-red-600 border-red-200"
-                      : "bg-gray-50 text-gray-500 border-transparent"
-                  }`}
+                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all shrink-0 ${statusFilter === s ? "bg-red-50 text-red-600 border-red-200" : "bg-gray-50 text-gray-500 border-transparent"}`}
                 >
                   {s === "live" ? "● Live Now" : "Upcoming"}
                 </button>
               ))}
             </div>
-
-            <div className="flex items-center gap-1.5 pr-3 border-r border-gray-100 mr-1.5">
-              {["today", "tomorrow", "weekend"].map((d) => (
-                <button
-                  key={d}
-                  onClick={() => setDateFilter(dateFilter === d ? "all" : d)}
-                  className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all shrink-0 ${
-                    dateFilter === d
-                      ? "bg-blue-50 text-blue-600 border-blue-200"
-                      : "bg-gray-50 text-gray-500 border-transparent"
-                  }`}
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-
             <div className="flex items-center gap-1.5 pr-3 border-r border-gray-100 mr-1.5">
               {["free", "paid"].map((p) => (
                 <button
@@ -357,7 +397,6 @@ export default function DiscoverPage() {
                 </button>
               ))}
             </div>
-
             <div className="flex items-center gap-1.5 pr-3 border-r border-gray-100 mr-1.5">
               {["physical", "online"].map((m) => (
                 <button
@@ -371,22 +410,19 @@ export default function DiscoverPage() {
                 </button>
               ))}
             </div>
-
             <div className="relative min-w-[150px]">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 z-10"
                 size={14}
               />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search moves..."
-                className="w-full pl-9 pr-4 py-1.5 bg-gray-50 rounded-xl font-bold border-none focus:ring-1 focus:ring-blue-100 
-             text-[16px] md:text-[10px] origin-left scale-[0.625] md:scale-100"
+                className="w-full pl-9 pr-4 py-1.5 bg-gray-50 rounded-xl font-bold border-none focus:ring-1 focus:ring-blue-100 text-[16px] md:text-[10px] origin-left scale-[0.625] md:scale-100 relative"
                 style={{ width: "160%" }}
               />
             </div>
-
             {(activeCat !== "all" ||
               dateFilter !== "all" ||
               search !== "" ||
@@ -412,7 +448,6 @@ export default function DiscoverPage() {
           </div>
         ) : (
           <>
-            {/* MAIN GRID SECTION */}
             <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 mb-32 items-stretch">
               <AnimatePresence mode="popLayout">
                 {events.map((e, index) => (
@@ -438,60 +473,55 @@ export default function DiscoverPage() {
                 ))}
               </AnimatePresence>
             </div>
-            {/* PAGINATION */}
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-4 mt-12 mb-24">
                 <button
                   disabled={page === 1}
                   onClick={() => {
                     setPage((p) => p - 1);
+                    // Returns the user to the top of the page smoothly
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
-                  className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center disabled:opacity-20"
+                  className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center disabled:opacity-20 transition-all hover:bg-gray-50"
                 >
                   <ChevronLeft size={20} />
                 </button>
-                <span className="font-black text-xs uppercase tracking-widest">
+
+                <span className="font-black text-xs uppercase tracking-widest text-gray-500">
                   Page {page} of {totalPages}
                 </span>
+
                 <button
                   disabled={page === totalPages}
                   onClick={() => {
                     setPage((p) => p + 1);
+                    // Returns the user to the top of the page smoothly
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
-                  className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center disabled:opacity-20"
+                  className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center disabled:opacity-20 transition-all hover:bg-gray-50"
                 >
                   <ChevronRight size={20} />
                 </button>
               </div>
             )}
-            {/* THE HOT LIST SECTION */}
             <HotListSection
               data={sections.hotList}
               getKm={getKm}
               location={USER_LOCATION}
               formatTime={formatEventTime}
             />
-            {/* GROWTH & TECH SECTION */}
             <ProfessionalSection
               data={sections.professional}
               getKm={getKm}
               location={USER_LOCATION}
               formatTime={formatEventTime}
             />
-
-            {/* VIBE CHECK SECTION */}
             <VibeCheckSection data={sections.vibeCheck} />
-
-            {/* NIGHT MOVES SECTION */}
             <NightMovesSection data={sections.nightMoves} />
           </>
         )}
       </main>
-
       <CreateEventCTA />
-
       <MobileNav />
       <Footer />
     </div>

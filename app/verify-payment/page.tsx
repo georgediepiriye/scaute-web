@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import confetti from "canvas-confetti";
+import html2canvas from "html2canvas"; // Import html2canvas
 
 // BRAND CONSTANTS
 const KIVO_BLUE = "#0052FF";
@@ -31,10 +32,10 @@ function VerifyPaymentContent() {
   const [ticketData, setTicketData] = useState<any>(null);
   const [attempts, setAttempts] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // Loading state for saving
 
   const isVerifying = useRef(false);
 
-  // Check for the cookie on mount to update the UI text
   useEffect(() => {
     const checkAuth = () => {
       if (typeof window !== "undefined") {
@@ -83,8 +84,34 @@ function VerifyPaymentContent() {
     }
   };
 
-  const handleSavePass = () => {
-    window.print();
+  /**
+   * Captures the Ticket UI as an image and downloads it
+   */
+  const handleSavePass = async () => {
+    if (!ticketRef.current) return;
+
+    setIsSaving(true);
+    try {
+      // Small delay to ensure QR code is fully rendered
+      const canvas = await html2canvas(ticketRef.current, {
+        scale: 3, // Maintains high quality for scanning
+        backgroundColor: "#FFFFFF", // Ensures the background isn't transparent
+        useCORS: true, // Necessary if using external images/assets
+        logging: false,
+      });
+
+      const image = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = `Kivo-Ticket-${ticketData?.eventTitle || "Pass"}.png`;
+      link.click();
+    } catch (err) {
+      console.error("Failed to save ticket:", err);
+      // Fallback to print if canvas fails
+      window.print();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const verifyOrder = useCallback(
@@ -98,7 +125,7 @@ function VerifyPaymentContent() {
           {
             method: "GET",
             cache: "no-store",
-            credentials: "include", // Necessary for cookie-based auth
+            credentials: "include",
           },
         );
         const result = await res.json();
@@ -158,11 +185,6 @@ function VerifyPaymentContent() {
         <h2 className="mt-8 text-2xl font-black uppercase italic tracking-tighter text-center">
           Securing your spot...
         </h2>
-        <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mt-2 text-center">
-          {attempts > 5
-            ? "Waiting for bank confirmation..."
-            : "Verifying session with Kivo servers"}
-        </p>
       </div>
     );
   }
@@ -176,13 +198,9 @@ function VerifyPaymentContent() {
         <h2 className="text-2xl font-black uppercase italic tracking-tighter">
           Verification Failed
         </h2>
-        <p className="text-gray-500 text-sm font-medium mt-2 max-w-xs mx-auto">
-          We couldn&apos;t confirm your payment. Check your email for a receipt
-          or try refreshing.
-        </p>
         <button
           onClick={() => handleMoveNavigation("/profile", "/discover")}
-          className="mt-8 px-10 py-5 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-black/20"
+          className="mt-8 px-10 py-5 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest"
         >
           Back to Events
         </button>
@@ -192,9 +210,30 @@ function VerifyPaymentContent() {
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-6 py-12">
+      {/* CSS to hide everything except the ticket when printing */}
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .printable-ticket,
+          .printable-ticket * {
+            visibility: visible;
+          }
+          .printable-ticket {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            border: none !important;
+            shadow: none !important;
+          }
+        }
+      `}</style>
+
       <div className="max-w-md w-full space-y-8">
         <div className="flex flex-col items-center text-center space-y-4">
-          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-[30px] flex items-center justify-center shadow-xl shadow-green-100/30">
+          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-[30px] flex items-center justify-center shadow-xl">
             <CheckCircle size={40} />
           </div>
           <h1 className="text-5xl font-black uppercase italic tracking-tighter leading-none text-center">
@@ -208,7 +247,7 @@ function VerifyPaymentContent() {
           </p>
         </div>
 
-        {/* Messaging Box - Updated with KIVO_BLUE */}
+        {/* Messaging Box */}
         <div
           className="border p-4 rounded-2xl flex gap-3 items-start text-left"
           style={{
@@ -226,14 +265,14 @@ function VerifyPaymentContent() {
             style={{ color: KIVO_BLUE }}
           >
             A confirmation has been sent to your email.{" "}
-            {isLoggedIn && "This ticket is also saved to your Kivo profile."}
+            {isLoggedIn && "This ticket is also saved to your profile."}
           </p>
         </div>
 
-        {/* Ticket UI */}
+        {/* Ticket UI - Added 'printable-ticket' class */}
         <div
           ref={ticketRef}
-          className="bg-white border-2 border-black rounded-[40px] overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]"
+          className="printable-ticket bg-white border-2 border-black rounded-[40px] overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]"
         >
           <div className="p-8 space-y-6 flex flex-col items-center">
             <div className="w-full flex justify-between items-start text-left">
@@ -300,9 +339,15 @@ function VerifyPaymentContent() {
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={handleSavePass}
-            className="flex items-center justify-center gap-2 py-5 bg-gray-100 rounded-3xl font-black text-[10px] uppercase hover:bg-gray-200 transition-colors"
+            disabled={isSaving}
+            className="flex items-center justify-center gap-2 py-5 bg-gray-100 rounded-3xl font-black text-[10px] uppercase hover:bg-gray-200 transition-colors disabled:opacity-50"
           >
-            <Download size={16} /> Save Pass
+            {isSaving ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Download size={16} />
+            )}
+            {isSaving ? "Saving..." : "Save Pass"}
           </button>
           <button
             onClick={handleShare}
@@ -312,10 +357,9 @@ function VerifyPaymentContent() {
           </button>
         </div>
 
-        {/* Primary Action Button - Kivo Blue */}
         <button
           onClick={() => handleMoveNavigation("/profile", "/discover")}
-          className="w-full flex items-center justify-center gap-2 py-6 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-transform active:scale-[0.98]"
+          className="w-full flex items-center justify-center gap-2 py-6 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl"
           style={{
             backgroundColor: KIVO_BLUE,
             boxShadow: `0 20px 25px -5px ${KIVO_BLUE}33`,

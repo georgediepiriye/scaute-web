@@ -210,8 +210,11 @@ export default function EventSettingsPage() {
   if (loading)
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-[#020817]">
-        <Loader2 className="animate-spin text-blue-500 mb-4" size={32} />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
+        <div className="relative w-12 h-12 mb-4">
+          <div className="absolute inset-0 border-4 border-yellow-500/10 rounded-xl" />
+          <div className="absolute inset-0 border-4 border-t-yellow-500 rounded-xl animate-spin" />
+        </div>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/60">
           Syncing with Kivo...
         </p>
       </div>
@@ -219,7 +222,7 @@ export default function EventSettingsPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-32 selection:bg-blue-500/20">
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-32 selection:bg-yellow-500/20">
         <Toaster position="bottom-center" />
         <Navbar />
 
@@ -229,12 +232,12 @@ export default function EventSettingsPage() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.back()}
-                className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 rounded-2xl hover:border-blue-500/30 transition-colors"
+                className="w-12 h-12 flex items-center justify-center bg-white border border-slate-200 rounded-2xl hover:border-yellow-500/50 transition-colors"
               >
                 <ChevronLeft size={20} />
               </button>
               <div>
-                <h1 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">
+                <h1 className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-600">
                   Control Center
                 </h1>
                 <p className="text-xl font-black uppercase tracking-tight">
@@ -245,7 +248,7 @@ export default function EventSettingsPage() {
             <button
               onClick={handleUpdate}
               disabled={saving}
-              className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] flex items-center gap-2 hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-600/20"
+              className="px-10 py-4 bg-yellow-400 text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] flex items-center gap-2 hover:bg-yellow-500 active:translate-y-[2px] active:shadow-none transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
             >
               {saving ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -262,7 +265,7 @@ export default function EventSettingsPage() {
             {/* 1. BASIC INFO */}
             <section className="bg-white p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-8">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                <Info size={16} className="text-blue-600" /> Basic Details
+                <Info size={16} className="text-yellow-500" /> Basic Details
               </h3>
 
               <div className="space-y-6">
@@ -276,7 +279,7 @@ export default function EventSettingsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, title: e.target.value })
                     }
-                    className="w-full p-5 bg-slate-50 border border-transparent focus:border-blue-500/20 focus:bg-white rounded-2xl text-sm font-bold outline-none transition-all"
+                    className="w-full p-5 bg-slate-50 border border-transparent focus:border-yellow-500/20 focus:bg-white rounded-2xl text-sm font-bold outline-none transition-all"
                     placeholder="E.g. Port Harcourt Night Run"
                   />
                 </div>
@@ -291,7 +294,7 @@ export default function EventSettingsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
-                    className="w-full p-5 bg-slate-50 border border-transparent focus:border-blue-500/20 focus:bg-white rounded-2xl text-sm font-bold outline-none transition-all resize-none"
+                    className="w-full p-5 bg-slate-50 border border-transparent focus:border-yellow-500/20 focus:bg-white rounded-2xl text-sm font-bold outline-none transition-all resize-none"
                     placeholder="Tell them what's happening..."
                   />
                 </div>
@@ -299,7 +302,7 @@ export default function EventSettingsPage() {
                 <div className="pt-4 flex items-center justify-between bg-slate-50 p-6 rounded-2xl border border-slate-100">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`p-3 rounded-xl ${formData.isPublic ? "bg-blue-100 text-blue-600" : "bg-slate-200 text-slate-600"}`}
+                      className={`p-3 rounded-xl ${formData.isPublic ? "bg-yellow-100 text-yellow-700" : "bg-slate-200 text-slate-600"}`}
                     >
                       {formData.isPublic ? (
                         <Eye size={18} />
@@ -322,7 +325,7 @@ export default function EventSettingsPage() {
                     onClick={() =>
                       setFormData({ ...formData, isPublic: !formData.isPublic })
                     }
-                    className={`px-6 py-2 rounded-xl text-[9px] font-black uppercase border transition-all ${formData.isPublic ? "border-blue-200 text-blue-600 bg-white" : "border-slate-200 text-slate-500 bg-white"}`}
+                    className={`px-6 py-2 rounded-xl text-[9px] font-black uppercase border transition-all ${formData.isPublic ? "border-yellow-200 text-yellow-700 bg-white hover:bg-yellow-50" : "border-slate-200 text-slate-500 bg-white hover:bg-slate-50"}`}
                   >
                     {formData.isPublic ? "Make Private" : "Make Public"}
                   </button>
@@ -333,7 +336,7 @@ export default function EventSettingsPage() {
             {/* 2. SCHEDULE */}
             <section className="bg-white p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-8">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                <Calendar size={16} className="text-blue-600" /> Schedule
+                <Calendar size={16} className="text-yellow-500" /> Schedule
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
@@ -347,7 +350,7 @@ export default function EventSettingsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, startDate: e.target.value })
                     }
-                    className="w-full p-4 bg-slate-50 border border-transparent focus:border-blue-500/20 rounded-2xl text-sm font-bold disabled:opacity-50"
+                    className="w-full p-4 bg-slate-50 border border-transparent focus:border-yellow-500/20 rounded-2xl text-sm font-bold disabled:opacity-50 transition-all"
                   />
                 </div>
                 <div className="space-y-2">
@@ -360,7 +363,7 @@ export default function EventSettingsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, endDate: e.target.value })
                     }
-                    className="w-full p-4 bg-slate-50 border border-transparent focus:border-blue-500/20 rounded-2xl text-sm font-bold"
+                    className="w-full p-4 bg-slate-50 border border-transparent focus:border-yellow-500/20 rounded-2xl text-sm font-bold transition-all"
                   />
                 </div>
               </div>
@@ -370,12 +373,12 @@ export default function EventSettingsPage() {
             <section className="bg-white p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                  <MapPin size={16} className="text-blue-600" /> Venue
+                  <MapPin size={16} className="text-yellow-500" /> Venue
                 </h3>
                 {!hasStarted && (
                   <button
                     onClick={useCurrentLocation}
-                    className="text-[10px] font-black text-blue-600 flex items-center gap-1 hover:opacity-70 transition-opacity"
+                    className="text-[10px] font-black text-yellow-600 flex items-center gap-1 hover:opacity-70 transition-opacity"
                   >
                     <Navigation
                       size={12}
@@ -410,7 +413,7 @@ export default function EventSettingsPage() {
               <button
                 disabled={hasStarted}
                 onClick={() => setShowMapPicker(true)}
-                className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/10"
+                className="w-full py-5 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-yellow-500 hover:text-black transition-all shadow-lg active:scale-95"
               >
                 {formData.locationCoords ? "Adjust Pin on Map" : "Drop Map Pin"}
               </button>
@@ -420,7 +423,7 @@ export default function EventSettingsPage() {
             <section className="bg-white p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                  <Ticket size={16} className="text-blue-600" /> Tickets
+                  <Ticket size={16} className="text-yellow-500" /> Tickets
                 </h3>
                 <button
                   onClick={() =>
@@ -432,7 +435,7 @@ export default function EventSettingsPage() {
                       ],
                     })
                   }
-                  className="px-4 py-2 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-yellow-400 text-black rounded-xl text-[9px] font-black uppercase flex items-center gap-2 hover:bg-yellow-500 transition-colors shadow-sm"
                 >
                   <Plus size={12} /> Add Tier
                 </button>
@@ -441,7 +444,7 @@ export default function EventSettingsPage() {
                 {formData.ticketTiers.map((tier: any, idx: number) => (
                   <div
                     key={idx}
-                    className="p-6 bg-slate-50 rounded-[2rem] grid grid-cols-1 md:grid-cols-3 gap-6 relative border border-slate-100 group hover:border-blue-500/20 transition-all"
+                    className="p-6 bg-slate-50 rounded-[2rem] grid grid-cols-1 md:grid-cols-3 gap-6 relative border border-slate-100 group hover:border-yellow-500/20 transition-all"
                   >
                     <div className="space-y-1">
                       <p className="text-[8px] font-black uppercase text-slate-400">
@@ -454,7 +457,7 @@ export default function EventSettingsPage() {
                           updated[idx].name = e.target.value;
                           setFormData({ ...formData, ticketTiers: updated });
                         }}
-                        className="bg-transparent font-bold text-sm outline-none w-full"
+                        className="bg-transparent font-bold text-sm outline-none w-full focus:text-yellow-700 transition-colors"
                         placeholder="Tier Name"
                       />
                     </div>
@@ -471,7 +474,7 @@ export default function EventSettingsPage() {
                           updated[idx].price = Number(e.target.value);
                           setFormData({ ...formData, ticketTiers: updated });
                         }}
-                        className="bg-transparent font-bold text-sm outline-none w-full"
+                        className="bg-transparent font-bold text-sm outline-none w-full focus:text-yellow-700 transition-colors"
                         placeholder="Price"
                       />
                     </div>
@@ -488,7 +491,7 @@ export default function EventSettingsPage() {
                           updated[idx].capacity = Number(e.target.value);
                           setFormData({ ...formData, ticketTiers: updated });
                         }}
-                        className="bg-transparent font-bold text-sm outline-none w-full"
+                        className="bg-transparent font-bold text-sm outline-none w-full focus:text-yellow-700 transition-colors"
                         placeholder="Capacity"
                       />
                     </div>
@@ -502,7 +505,7 @@ export default function EventSettingsPage() {
                           ),
                         })
                       }
-                      className="absolute -top-2 -right-2 bg-white p-2 rounded-full text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm border border-slate-200"
+                      className="absolute -top-2 -right-2 bg-white p-2 rounded-full text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm border border-slate-200 hover:bg-red-50"
                     >
                       <Trash2 size={12} />
                     </button>
@@ -516,7 +519,7 @@ export default function EventSettingsPage() {
           <aside className="lg:col-span-4 space-y-6">
             <div className="bg-[#0F172A] rounded-[3rem] p-10 space-y-8 text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 p-8 opacity-5">
-                <CreditCard size={120} className="text-blue-500" />
+                <CreditCard size={120} className="text-yellow-500" />
               </div>
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2 relative z-10">
                 <CreditCard size={14} /> Stats
@@ -525,14 +528,14 @@ export default function EventSettingsPage() {
                 <p className="text-[10px] font-black uppercase text-slate-400">
                   Tickets Sold
                 </p>
-                <p className="text-4xl font-black mt-1">
+                <p className="text-4xl font-black mt-1 text-yellow-400">
                   {formData.ticketTiers?.reduce(
                     (acc: any, t: any) => acc + (t.sold || 0),
                     0,
                   )}
                 </p>
               </div>
-              <button className="w-full py-5 bg-blue-600 hover:bg-blue-700 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 relative z-10 shadow-xl shadow-blue-900/20">
+              <button className="w-full py-5 bg-yellow-400 text-black hover:bg-yellow-500 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 relative z-10 shadow-xl shadow-yellow-900/20">
                 Request Payout
               </button>
             </div>
@@ -571,7 +574,7 @@ export default function EventSettingsPage() {
             <div className="absolute top-6 right-6 z-[110]">
               <button
                 onClick={() => setShowMapPicker(false)}
-                className="p-4 bg-slate-900 text-white rounded-full hover:bg-blue-600 transition-colors shadow-2xl"
+                className="p-4 bg-slate-900 text-white rounded-full hover:bg-yellow-500 hover:text-black transition-colors shadow-2xl"
               >
                 <X size={20} />
               </button>
@@ -591,7 +594,7 @@ export default function EventSettingsPage() {
             <div className="p-10 bg-white border-t border-slate-100 flex justify-center">
               <button
                 onClick={() => setShowMapPicker(false)}
-                className="px-12 py-5 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl hover:bg-blue-700 active:scale-95 transition-all"
+                className="px-12 py-5 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl hover:bg-yellow-500 hover:text-black active:scale-95 transition-all"
               >
                 Confirm Pin
               </button>

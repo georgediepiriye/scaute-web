@@ -7,20 +7,30 @@ import Image from "next/image";
 import {
   MapPin,
   ChevronRight,
-  Globe,
-  ExternalLink,
-  Info,
   Clock,
   Calendar,
   Flame,
+  Sparkles,
+  AlertCircle,
+  Zap,
+  CheckCircle2,
+  Video,
+  Radio,
 } from "lucide-react";
 
+// Kivo Brand Constants
+const KIVO_BLUE = "#0052FF";
+const KIVO_YELLOW = "#FFD700";
+
 export type Props = {
+  id?: string;
   title: string;
   image: string;
+  altText?: string;
   category: keyof typeof EVENT_CATEGORIES;
   startDate: string;
   endDate: string;
+  createdAt?: string;
   location: string;
   distance?: string;
   attendees?: number;
@@ -28,16 +38,26 @@ export type Props = {
   isOnline?: boolean;
   className?: string;
   ticketingType?: "none" | "internal" | "external";
-  ticketTiers?: Array<{ name: string; price: number }>;
+  ticketTiers?: Array<{
+    name: string;
+    price: number;
+    capacity?: number;
+    sold?: number;
+    salesEnd?: string;
+  }>;
   isTrending?: boolean;
+  isBoosted?: boolean;
+  priorityLevel?: number;
 };
 
 export default function EventCard({
   title,
   image,
+  altText,
   category,
   startDate,
   endDate,
+  createdAt,
   location,
   distance,
   attendees = 0,
@@ -47,31 +67,61 @@ export default function EventCard({
   ticketingType = "internal",
   ticketTiers = [],
   isTrending,
+  isBoosted,
+  priorityLevel = 0,
 }: Props) {
   const [timeLeft, setTimeLeft] = useState<any>(null);
   const [status, setStatus] = useState<"upcoming" | "ongoing" | "past">(
     "upcoming",
   );
+
   const categoryData = EVENT_CATEGORIES[category] ?? EVENT_CATEGORIES.social;
 
-  // Refined Pricing Logic with "From" for multiple tiers
+  // Logic to determine if a "New" tag should be shown
+  const isNew = useMemo(() => {
+    if (!createdAt) return false;
+    const createdDate = new Date(createdAt).getTime();
+    const now = new Date().getTime();
+    const fortyEightHoursInMs = 48 * 60 * 60 * 1000;
+    return now - createdDate < fortyEightHoursInMs;
+  }, [createdAt]);
+
+  // Ticket Urgency Logic
+  const urgencyStatus = useMemo(() => {
+    if (
+      !ticketTiers ||
+      ticketTiers.length === 0 ||
+      ticketingType !== "internal"
+    )
+      return null;
+
+    const totalCapacity = ticketTiers.reduce(
+      (acc, tier) => acc + (tier.capacity || 0),
+      0,
+    );
+    const totalSold = ticketTiers.reduce(
+      (acc, tier) => acc + (tier.sold || 0),
+      0,
+    );
+
+    if (totalCapacity > 0) {
+      if (totalSold >= totalCapacity) return "sold-out";
+      const percentRemaining =
+        ((totalCapacity - totalSold) / totalCapacity) * 100;
+      if (percentRemaining <= 15) return "almost-sold-out";
+    }
+    return null;
+  }, [ticketTiers, ticketingType]);
+
+  // Price Formatting
   const getDisplayPrice = useMemo(() => {
     if (ticketingType === "external") return "Paid";
     if (!ticketTiers || ticketTiers.length === 0) return "Free";
-
     const prices = ticketTiers.map((tier) => tier.price);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
-    const hasMultipleTiers = ticketTiers.length > 1;
-
-    if (minPrice === 0) {
-      return maxPrice > 0 ? "Free +" : "Free";
-    }
-
-    const formattedPrice = `₦${minPrice.toLocaleString()}`;
-
-    // Logic: If there's more than one tier, show "From ₦..."
-    return hasMultipleTiers ? `From ${formattedPrice}` : formattedPrice;
+    if (minPrice === 0) return maxPrice > 0 ? "Free +" : "Free";
+    return `₦${minPrice.toLocaleString()}${ticketTiers.length > 1 ? "+" : ""}`;
   }, [ticketingType, ticketTiers]);
 
   const startDateTime = new Date(startDate).toLocaleString([], {
@@ -82,13 +132,14 @@ export default function EventCard({
     hour12: true,
   });
 
+  // Countdown & Status Timer
   useEffect(() => {
     const calculateTime = () => {
       const now = new Date().getTime();
       const start = new Date(startDate).getTime();
       const end = new Date(endDate).getTime();
-
       let target: number;
+
       if (now < start) {
         target = start;
         setStatus("upcoming");
@@ -114,20 +165,17 @@ export default function EventCard({
           .padStart(2, "0"),
       });
     };
-
     calculateTime();
     const timer = setInterval(calculateTime, 1000);
     return () => clearInterval(timer);
   }, [startDate, endDate]);
 
   const canShowParticipants = ticketingType === "internal";
-  const displayImages = canShowParticipants
-    ? participantImages.length > 0
-      ? participantImages
-      : attendees > 0
-        ? [1, 2, 3]
-        : []
-    : [];
+  const displayImages =
+    participantImages.length > 0 ? participantImages : [1, 2, 3];
+  const baseStatusScore = isBoosted
+    ? (priorityLevel || 0) - 4
+    : priorityLevel || 0;
 
   return (
     <div
@@ -137,29 +185,53 @@ export default function EventCard({
       <div className="relative h-48 overflow-hidden shrink-0">
         <Image
           src={image || "/placeholder-event.jpg"}
-          alt={title}
+          alt={altText || title}
           fill
           className="object-cover group-hover:scale-110 transition-transform duration-700"
+          sizes="(max-width: 768px) 100vw, 33vw"
         />
 
+        {/* FLOATING STATUS BADGES (TOP LEFT) */}
         <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-20">
-          {isTrending && (
-            <div className="px-3 py-1 bg-[#FFD700] rounded-lg text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 text-black shadow-lg border border-black/5">
-              <Flame size={10} className="fill-black" /> Trending
+          {isBoosted && (
+            <div
+              className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white shadow-lg"
+              style={{ backgroundColor: KIVO_BLUE }}
+            >
+              <Zap size={11} className="fill-white" /> Promoted
             </div>
           )}
-          {status === "ongoing" && (
-            <div className="px-3 py-1 bg-green-500 rounded-lg text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white animate-pulse shadow-lg">
-              Live Now
+
+          {isNew && !isBoosted && (
+            <div className="px-3 py-1.5 bg-gradient-to-r from-blue-400 to-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest text-white shadow-lg flex items-center gap-1.5">
+              <Sparkles size={11} /> New
             </div>
           )}
-          {isOnline && (
-            <div className="px-3 py-1 bg-blue-600 rounded-lg text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white shadow-lg">
-              <Globe size={10} /> Online
+
+          {baseStatusScore === 1 && (
+            <div
+              className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white shadow-lg"
+              style={{ backgroundColor: KIVO_BLUE }}
+            >
+              <CheckCircle2 size={11} className="fill-white/20" /> Verified
+            </div>
+          )}
+
+          {baseStatusScore === 3 && (
+            <div className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white shadow-xl border border-white/20">
+              <Sparkles size={11} /> Premier
             </div>
           )}
         </div>
 
+        {/* ONLINE TAG (TOP RIGHT) */}
+        {isOnline && (
+          <div className="absolute top-4 right-4 px-3 py-1.5 bg-white/95 backdrop-blur-sm rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-gray-900 shadow-md border border-gray-100 z-20">
+            <Video size={11} className="text-[#0052FF]" /> Online
+          </div>
+        )}
+
+        {/* CATEGORY TAG (BOTTOM RIGHT) */}
         <div
           className={`absolute bottom-4 right-4 px-3 py-1 rounded-full border bg-white/90 backdrop-blur-sm shadow-sm ${categoryData.color}`}
         >
@@ -169,46 +241,39 @@ export default function EventCard({
         </div>
       </div>
 
+      {/* CONTENT SECTION */}
       <div className="p-5 flex flex-col flex-1 gap-3">
-        {/* TIME & COUNTDOWN */}
         <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-gray-600">
-              <Calendar
-                size={12}
-                className={
-                  status === "ongoing" ? "text-green-500" : "text-blue-500"
-                }
-              />
-              <span className="text-[10px] font-black uppercase tracking-tight">
-                {status === "ongoing"
-                  ? `Started at ${startDateTime}`
-                  : `Starts at ${startDateTime}`}
-              </span>
-            </div>
-
-            {status === "past" && (
-              <span className="text-[10px] font-black text-red-500 uppercase tracking-tight bg-red-50 px-2 py-0.5 rounded">
-                Event Ended
-              </span>
-            )}
+          {/* DATE & STATUS HEADER */}
+          <div className="flex items-center gap-1.5 text-gray-600">
+            <Calendar
+              size={12}
+              className={
+                status === "ongoing" ? "text-emerald-500" : "text-blue-500"
+              }
+            />
+            <span className="text-[10px] font-black uppercase tracking-tight">
+              {status === "ongoing"
+                ? `Happening Now`
+                : `Starts ${startDateTime}`}
+            </span>
           </div>
 
+          {/* TIMER / LIVE BAR */}
           {status !== "past" && timeLeft && (
             <div
-              className={`text-[10px] font-black uppercase px-2.5 py-1.5 rounded-xl border flex items-center gap-2 w-fit ${status === "ongoing" ? "bg-green-50 border-green-100 text-green-700" : "bg-blue-50 border-blue-100 text-blue-600"}`}
+              className={`text-[10px] font-black uppercase px-2.5 py-1.5 rounded-xl border flex items-center gap-2 w-fit ${status === "ongoing" ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-blue-50 border-blue-100 text-blue-600"}`}
             >
               <span className="opacity-70 flex items-center gap-1">
-                <Clock size={10} />
-                {status === "ongoing" ? "Ends in" : "Countdown"}
+                {status === "ongoing" ? (
+                  <Radio size={10} className="animate-pulse" />
+                ) : (
+                  <Clock size={10} />
+                )}
+                {status === "ongoing" ? "LIVE" : "Countdown"}
               </span>
               <div className="flex items-center gap-1 tabular-nums">
-                {timeLeft.days > 0 && (
-                  <span>
-                    {timeLeft.days} {timeLeft.days === 1 ? "Day" : "Days"}
-                  </span>
-                )}
-                {timeLeft.days > 0 && <span className="opacity-30">•</span>}
+                {timeLeft.days > 0 && <span>{timeLeft.days}D</span>}
                 <span>
                   {timeLeft.h}:{timeLeft.m}:{timeLeft.s}
                 </span>
@@ -217,18 +282,22 @@ export default function EventCard({
           )}
         </div>
 
+        {/* TITLE */}
         <h2 className="font-black text-xl text-gray-900 leading-tight tracking-tight line-clamp-1">
           {title}
         </h2>
 
+        {/* LOCATION */}
         <div className="flex items-center gap-2 text-gray-500">
           <MapPin size={13} className="text-gray-400 shrink-0" />
           <span className="font-bold text-[11px] line-clamp-1">
-            {location} {!isOnline && distance && `• ${distance}km`}
+            {isOnline
+              ? "Virtual / Web Access"
+              : `${location} ${distance ? `• ${distance}km` : ""}`}
           </span>
         </div>
 
-        {/* FOOTER */}
+        {/* FOOTER SECTION */}
         <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto min-h-[52px]">
           <div className="flex items-center gap-2">
             {canShowParticipants ? (
@@ -245,7 +314,7 @@ export default function EventCard({
                             ? img
                             : `https://api.dicebear.com/7.x/avataaars/svg?seed=${title}${i}`
                         }
-                        alt="p"
+                        alt="participant"
                         fill
                         className="object-cover"
                       />
@@ -257,22 +326,19 @@ export default function EventCard({
                 </span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-gray-400">
-                {ticketingType === "external" ? (
-                  <ExternalLink size={12} />
-                ) : (
-                  <Info size={12} />
-                )}
-                <span className="text-[9px] font-black uppercase tracking-tight">
-                  {ticketingType === "external" ? "External" : "Open Entry"}
-                </span>
-              </div>
+              <span className="text-[9px] font-black uppercase tracking-tight text-gray-400">
+                Public Event
+              </span>
             )}
           </div>
 
-          <button className="bg-[#FFD700] hover:bg-[#F2CC00] text-black px-4 py-2.5 rounded-2xl transition-all duration-300 active:scale-95 group/btn flex items-center gap-2 shadow-sm">
+          {/* PRICE / CTA BUTTON */}
+          <button
+            className="text-black px-4 py-2.5 rounded-2xl transition-all duration-300 active:scale-95 group/btn flex items-center gap-2 shadow-sm"
+            style={{ backgroundColor: KIVO_YELLOW }}
+          >
             <span className="font-black text-[10px] uppercase tracking-wider">
-              • {getDisplayPrice}
+              {getDisplayPrice}
             </span>
             <ChevronRight
               size={14}

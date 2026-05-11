@@ -23,7 +23,7 @@ export default function CheckoutPanel({
   const [selectedTier, setSelectedTier] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(900); // 15 minutes
+  const [timeLeft, setTimeLeft] = useState(900);
 
   // User Auth State
   const [user, setUser] = useState<any>(null);
@@ -32,10 +32,8 @@ export default function CheckoutPanel({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
 
-  /**
-   * Fetches user data to enable "Use my details"
-   */
   const fetchUser = useCallback(async () => {
     try {
       const response = await fetch(
@@ -59,46 +57,36 @@ export default function CheckoutPanel({
   useEffect(() => {
     if (isOpen) {
       fetchUser();
-      setTimeLeft(900); // Reset timer whenever panel opens
+      setTimeLeft(900);
     }
   }, [isOpen, fetchUser]);
 
-  /**
-   * Auto-fills the form using profile data
-   */
   const handleUseMyDetails = () => {
     if (!user) {
       toast.error("Could not find profile details");
       return;
     }
-
     const names = user.name ? user.name.split(" ") : ["", ""];
     setFirstName(names[0] || "");
     setLastName(names.slice(1).join(" ") || "");
     setEmail(user.email || "");
-
+    setConfirmEmail(user.email || "");
     toast.success("Details filled from profile");
   };
 
-  // Set default tier if none selected
   useEffect(() => {
     if (event?.ticketTiers?.length > 0 && !selectedTier) {
       setSelectedTier(event.ticketTiers[0]);
     }
   }, [event, selectedTier]);
 
-  /**
-   * Timer logic with auto-close on expiry
-   */
   useEffect(() => {
     if (!isOpen) return;
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          toast.error("Booking session expired. Please try again.", {
-            id: "checkout-timeout",
-          });
+          toast.error("Session expired. Please try again.");
           resetAndClose();
           return 0;
         }
@@ -115,35 +103,67 @@ export default function CheckoutPanel({
   };
 
   /**
-   * Field validation and Step management
+   * VALIDATION ENGINE
    */
-  const validateAndProceed = () => {
+  const handleValidation = (): boolean => {
     if (step === 1) {
       if (!selectedTier) {
-        toast.error("Please select a ticket tier.");
-        return;
+        toast.error("Please select a ticket tier");
+        return false;
       }
+      return true;
+    }
+
+    // Step 2 Checks
+    if (!firstName.trim()) {
+      toast.error("First name is required");
+      return false;
+    }
+    if (!lastName.trim()) {
+      toast.error("Last name is required");
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const cleanEmail = email.trim();
+    const cleanConfirm = confirmEmail.trim();
+
+    if (!cleanEmail) {
+      toast.error("Email address is required");
+      return false;
+    }
+
+    if (!emailRegex.test(cleanEmail)) {
+      toast.error("Please enter a valid email");
+      return false;
+    }
+
+    if (!cleanConfirm) {
+      toast.error("Please confirm your email");
+      return false;
+    }
+
+    if (cleanEmail.toLowerCase() !== cleanConfirm.toLowerCase()) {
+      toast.error("Emails do not match!");
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateAndProceed = () => {
+    const isValid = handleValidation();
+    if (!isValid) return;
+
+    if (step === 1) {
       setStep(2);
     } else {
-      // Step 2 Validation
-      if (!firstName.trim()) return toast.error("First name is required");
-      if (!lastName.trim()) return toast.error("Last name is required");
-
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!email.trim() || !emailRegex.test(email)) {
-        return toast.error("Please enter a valid email address");
-      }
-
       handleProcessOrder();
     }
   };
 
-  /**
-   * API call to create order and redirect to payment
-   */
   const handleProcessOrder = async () => {
     setLoading(true);
-
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/book`,
@@ -162,11 +182,6 @@ export default function CheckoutPanel({
         },
       );
 
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Server communication error. Please try again.");
-      }
-
       const result = await response.json();
 
       if (response.ok && result.status === "success") {
@@ -178,12 +193,10 @@ export default function CheckoutPanel({
           window.location.href = result.data.authorization_url;
         }
       } else {
-        throw new Error(
-          result.message || "Booking failed. Ticket might be sold out.",
-        );
+        toast.error(result.message || "Booking failed");
       }
     } catch (error: any) {
-      toast.error(error.message || "Check your internet connection.");
+      toast.error("Check your internet connection.");
     } finally {
       setLoading(false);
     }
@@ -197,18 +210,17 @@ export default function CheckoutPanel({
       setFirstName("");
       setLastName("");
       setEmail("");
+      setConfirmEmail("");
     }, 500);
   };
 
   if (!isOpen) return null;
-
   const total = quantity * (selectedTier?.price || 0);
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -217,7 +229,6 @@ export default function CheckoutPanel({
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200]"
           />
 
-          {/* Panel */}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
@@ -225,7 +236,6 @@ export default function CheckoutPanel({
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-[201] shadow-2xl flex flex-col"
           >
-            {/* Header */}
             <div className="p-6 border-b flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-black tracking-tighter uppercase italic">
@@ -243,7 +253,6 @@ export default function CheckoutPanel({
               </button>
             </div>
 
-            {/* Timer Banner */}
             <div className="bg-amber-50 px-6 py-2.5 flex items-center justify-between border-b border-amber-100">
               <span className="text-[10px] font-black text-amber-700 uppercase flex items-center gap-2">
                 <Timer size={14} className="animate-pulse" /> Inventory Reserved
@@ -253,7 +262,6 @@ export default function CheckoutPanel({
               </span>
             </div>
 
-            {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto">
               <div className="p-6 space-y-8">
                 {step === 1 && (
@@ -304,7 +312,7 @@ export default function CheckoutPanel({
                       <div className="flex items-center gap-6 p-4 bg-gray-50 rounded-[24px] justify-center">
                         <button
                           onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                          className="w-12 h-12 rounded-xl bg-white shadow-sm font-black text-xl active:scale-90 transition-transform"
+                          className="w-12 h-12 rounded-xl bg-white shadow-sm font-black text-xl"
                         >
                           -
                         </button>
@@ -315,7 +323,7 @@ export default function CheckoutPanel({
                           onClick={() =>
                             setQuantity(Math.min(10, quantity + 1))
                           }
-                          className="w-12 h-12 rounded-xl bg-white shadow-sm font-black text-xl active:scale-90 transition-transform"
+                          className="w-12 h-12 rounded-xl bg-white shadow-sm font-black text-xl"
                         >
                           +
                         </button>
@@ -373,10 +381,22 @@ export default function CheckoutPanel({
                             placeholder="Email Address"
                           />
                         </div>
+                        <div className="relative">
+                          <Mail
+                            className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"
+                            size={18}
+                          />
+                          <input
+                            value={confirmEmail}
+                            onChange={(e) => setConfirmEmail(e.target.value)}
+                            type="email"
+                            className="w-full pl-14 pr-5 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-black focus:bg-white transition-all text-[16px] font-bold outline-none"
+                            placeholder="Confirm Email Address"
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    {/* Summary Card */}
                     <div className="p-6 rounded-[32px] bg-gray-50 border border-gray-100 flex justify-between items-end">
                       <div>
                         <p className="text-[10px] font-black text-gray-400 uppercase">
@@ -395,7 +415,6 @@ export default function CheckoutPanel({
               </div>
             </div>
 
-            {/* Sticky Footer */}
             <div className="p-6 border-t bg-white">
               <button
                 onClick={validateAndProceed}
@@ -415,7 +434,6 @@ export default function CheckoutPanel({
                   </>
                 )}
               </button>
-
               {step === 2 && !loading && (
                 <button
                   onClick={() => setStep(1)}

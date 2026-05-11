@@ -527,7 +527,7 @@ export default function MapPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="what do you want to do?"
-              className="w-full pl-10 pr-4 py-3 rounded-2xl bg-gray-100 text-sm border-transparent outline-none font-bold text-gray-900"
+              className="w-full pl-10 pr-4 py-3 rounded-2xl bg-gray-100 text-base border-transparent outline-none font-bold text-gray-900 placeholder:text-sm"
             />
           </div>
           <button

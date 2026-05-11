@@ -3,6 +3,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link"; // Added for similar events navigation
 import { useParams, useRouter } from "next/navigation";
 import CheckoutPanel from "@/components/events/CheckoutPanel";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,38 +18,39 @@ import {
   Ticket,
   ExternalLink,
   Globe,
+  Monitor,
   ChevronDown,
   ChevronUp,
   Users,
   UserPlus,
   Check,
   MessageSquare,
-  Navigation,
+  Sparkles, // Added for section icon
 } from "lucide-react";
 
 import Navbar from "@/components/layout/NavBar";
 import MobileNav from "@/components/layout/MobileNav";
 import Footer from "@/components/layout/Footer";
 import EventMap from "@/components/map/EventMap";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
-// BRAND COLORS
 const KIVO_YELLOW = "#FFD700";
+const KIVO_BLUE = "#0052FF";
 
 export default function EventDetailsPage() {
   const params = useParams();
   const router = useRouter();
 
   const [event, setEvent] = useState<any>(null);
+  const [similarEvents, setSimilarEvents] = useState<any[]>([]); // State for similar events
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [showExternalModal, setShowExternalModal] = useState(false);
   const [hasReserved, setHasReserved] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const [similarEvents, setSimilarEvents] = useState<any[]>([]);
 
-  // 1. FETCH MAIN EVENT
+  // Fetch Event Details
   useEffect(() => {
     const fetchEventDetails = async () => {
       try {
@@ -62,6 +64,9 @@ export default function EventDetailsPage() {
           const data = result.data.event;
           data.isOnline = data.medium === "online" || data.isOnline === true;
           setEvent(data);
+
+          // Fetch similar events once we have the category
+          fetchSimilarEvents(data.category, data._id);
         }
       } catch (error) {
         console.error("Kivo Detail Fetch Error:", error);
@@ -73,28 +78,24 @@ export default function EventDetailsPage() {
     if (params.id) fetchEventDetails();
   }, [params.id]);
 
-  // 2. FETCH SIMILAR EVENTS
-  useEffect(() => {
-    const fetchSimilarEvents = async () => {
-      if (!event?.category) return;
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/events?category=${event.category}&limit=5`,
+  // Fetch Similar Events Logic
+  const fetchSimilarEvents = async (category: string, currentId: string) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/v1/events?category=${category}&limit=3`,
+      );
+      const result = await res.json();
+      if (result.status === "success") {
+        // Filter out the current event from the list
+        const filtered = result.data.events.filter(
+          (e: any) => e._id !== currentId,
         );
-        const result = await res.json();
-        if (result.status === "success") {
-          const filtered = result.data.events.filter(
-            (e: any) => e._id !== event._id,
-          );
-          setSimilarEvents(filtered);
-        }
-      } catch (error) {
-        console.error("Kivo Similar Events Error:", error);
+        setSimilarEvents(filtered);
       }
-    };
-
-    fetchSimilarEvents();
-  }, [event]);
+    } catch (error) {
+      console.error("Error fetching similar events:", error);
+    }
+  };
 
   const timeStatus = useMemo(() => {
     if (!event) return null;
@@ -188,29 +189,30 @@ export default function EventDetailsPage() {
       </div>
     );
 
-  const start = new Date(event.startDate);
-  const end = new Date(event.endDate);
-  const isSameDay = start.toDateString() === end.toDateString();
-
-  const formattedDate = isSameDay
-    ? `${start.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })} • ${start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} - ${end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
-    : `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} @ ${start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — ${end.toLocaleDateString("en-US", { month: "short", day: "numeric" })} @ ${end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
+  const formattedDate =
+    new Date(event.startDate).toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+    }) +
+    " • " +
+    new Date(event.startDate).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] flex flex-col relative">
+    <div className="min-h-screen bg-[#FDFDFD] flex flex-col">
       <Toaster position="top-center" reverseOrder={false} />
-
-      {/* Navbar Z-Index Management */}
-      <div className="relative z-[150]">
-        <Navbar />
-      </div>
-
+      <Navbar />
       <CheckoutPanel
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
         event={event}
       />
 
+      {/* EXTERNAL REDIRECT MODAL (Keep Existing Logic) */}
       <AnimatePresence>
         {showExternalModal && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center px-6">
@@ -227,13 +229,7 @@ export default function EventDetailsPage() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="relative w-full max-w-md bg-white rounded-[40px] p-10 text-center shadow-2xl"
             >
-              <div
-                className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-6"
-                style={{
-                  backgroundColor: `${KIVO_YELLOW}20`,
-                  color: "#856404",
-                }}
-              >
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
                 <ExternalLink size={32} />
               </div>
               <h3 className="text-2xl font-black tracking-tight mb-2 uppercase italic">
@@ -246,7 +242,7 @@ export default function EventDetailsPage() {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={confirmExternalRedirect}
-                  className="w-full py-5 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-[1.02] transition-all shadow-xl"
+                  className="w-full py-5 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-blue-600/10"
                 >
                   Continue to Booking
                 </button>
@@ -262,8 +258,9 @@ export default function EventDetailsPage() {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 relative pt-24 pb-32 md:pt-36 md:pb-24">
+      <main className="flex-1 pt-20 pb-12 md:pt-28">
         <div className="max-w-6xl mx-auto px-6">
+          {/* Back button and Share (Keep Existing) */}
           <div className="flex items-center justify-between mb-8">
             <button
               onClick={() => router.back()}
@@ -275,16 +272,15 @@ export default function EventDetailsPage() {
               />{" "}
               Back to City
             </button>
-            <div className="flex gap-2">
-              <button className="p-3 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-black transition-all">
-                <Share2 size={18} />
-              </button>
-            </div>
+            <button className="p-3 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-blue-600 transition-all">
+              <Share2 size={18} />
+            </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            {/* Left Content (Keep Existing) */}
             <div className="lg:col-span-8 space-y-12">
-              {/* IMAGE HEADER */}
+              {/* Image Banner */}
               <div className="relative aspect-[16/9] w-full rounded-[40px] overflow-hidden shadow-2xl border border-gray-100">
                 <Image
                   src={
@@ -294,20 +290,14 @@ export default function EventDetailsPage() {
                   fill
                   className="object-cover"
                   priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
                 />
                 <div className="absolute top-6 left-6 flex gap-2">
-                  <span
-                    className="px-5 py-2.5 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase text-black shadow-sm"
-                    style={{ backgroundColor: `${KIVO_YELLOW}EE` }}
-                  >
+                  <span className="px-5 py-2.5 bg-white/90 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase text-gray-900 shadow-sm">
                     {event.category}
                   </span>
                   <span
-                    className={`px-5 py-2.5 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase flex items-center gap-2 text-white shadow-xl ${
-                      timeStatus === "ongoing"
-                        ? "bg-green-500/90"
-                        : "bg-gray-900/80"
-                    }`}
+                    className={`px-5 py-2.5 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase flex items-center gap-2 text-white shadow-xl ${timeStatus === "ongoing" ? "bg-green-500/90" : "bg-gray-900/80"}`}
                   >
                     <span
                       className={`w-1.5 h-1.5 rounded-full bg-white ${timeStatus === "ongoing" ? "animate-pulse" : ""}`}
@@ -317,12 +307,11 @@ export default function EventDetailsPage() {
                 </div>
               </div>
 
-              {/* TITLE & ORGANIZER */}
+              {/* Title & Organizer Section */}
               <div className="space-y-8">
                 <h1 className="text-4xl md:text-7xl font-black tracking-tighter text-gray-900 leading-[0.85] uppercase italic">
                   {event.title}
                 </h1>
-
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between p-8 bg-gray-50 rounded-[32px] gap-6 border border-gray-100/50">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-2xl bg-white shadow-sm overflow-hidden relative border border-gray-100">
@@ -345,10 +334,34 @@ export default function EventDetailsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    {event.communityLink && (
+                      <a
+                        href={event.communityLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-6 py-4 bg-gray-900 text-white rounded-2xl transition-all group"
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = KIVO_YELLOW;
+                          e.currentTarget.style.color = "#000";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "#111827";
+                          e.currentTarget.style.color = "#fff";
+                        }}
+                      >
+                        <MessageSquare
+                          size={16}
+                          style={{ color: KIVO_YELLOW }}
+                        />
+                        <span className="text-[10px] font-black uppercase tracking-widest">
+                          Join Community
+                        </span>
+                      </a>
+                    )}
                     <button
                       onClick={() => setIsFollowing(!isFollowing)}
-                      className={`flex-1 sm:flex-none px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${isFollowing ? "bg-white border-2 border-gray-100 text-green-600" : "bg-black text-white hover:scale-[1.02] shadow-xl"}`}
+                      className={`px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${isFollowing ? "bg-white border-2 border-gray-100 text-green-600" : "bg-black text-white hover:bg-blue-600 shadow-xl shadow-blue-600/10"}`}
                     >
                       {isFollowing ? (
                         <>
@@ -360,22 +373,13 @@ export default function EventDetailsPage() {
                         </>
                       )}
                     </button>
-                    <button className="w-14 h-14 bg-white border-2 border-gray-100 rounded-2xl flex items-center justify-center text-gray-400 hover:text-black transition-all">
-                      <MessageSquare size={20} />
-                    </button>
                   </div>
                 </div>
 
-                {/* DATE & LOCATION GRID */}
+                {/* When & Where */}
                 <div className="flex flex-wrap gap-6 py-8 border-y border-gray-100">
                   <div className="flex items-center gap-4">
-                    <div
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center border border-gray-100"
-                      style={{
-                        backgroundColor: `${KIVO_YELLOW}15`,
-                        color: "#856404",
-                      }}
-                    >
+                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-blue-600 border border-gray-100">
                       <Calendar size={24} />
                     </div>
                     <div>
@@ -387,14 +391,8 @@ export default function EventDetailsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 group">
-                    <div
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center border border-gray-100"
-                      style={{
-                        backgroundColor: `${KIVO_YELLOW}15`,
-                        color: "#856404",
-                      }}
-                    >
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-blue-600 border border-gray-100">
                       {event.isOnline ? (
                         <Globe size={24} />
                       ) : (
@@ -402,31 +400,23 @@ export default function EventDetailsPage() {
                       )}
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest flex items-center gap-2">
+                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">
                         Where
-                        {!event.isOnline && (
-                          <button
-                            onClick={handleOpenMap}
-                            className="text-blue-600 hover:underline flex items-center gap-1"
-                          >
-                            <Navigation size={10} /> Directions
-                          </button>
-                        )}
                       </p>
-                      <p className="font-black text-gray-900 leading-tight">
+                      <p className="font-black text-gray-900">
                         {event.isOnline
                           ? "Virtual / Online"
-                          : `${event.location?.address || ""}, ${event.location?.neighborhood || "Port Harcourt"}`}
+                          : `${event.location?.address || ""}, ${event.location?.neighborhood || "Location details upon registration"}`}
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* OVERVIEW SECTION */}
+              {/* Overview (Keep Existing) */}
               <div className="space-y-4">
                 <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
-                  <Info size={20} className="text-gray-400" /> Overview
+                  <Info size={20} className="text-blue-600" /> Overview
                 </h3>
                 <div className="relative">
                   <p
@@ -455,57 +445,9 @@ export default function EventDetailsPage() {
                   </button>
                 )}
               </div>
-
-              {/* TICKET TIERS */}
-              {event.ticketingType === "internal" &&
-                event.ticketTiers?.length > 0 && (
-                  <div className="space-y-6 pt-6">
-                    <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
-                      <Ticket size={20} className="text-gray-400" /> Ticket
-                      Tiers
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {event.ticketTiers.map((tier: any) => (
-                        <div
-                          key={tier._id}
-                          className="p-6 bg-white border border-gray-100 rounded-[32px] shadow-sm hover:border-black/10 transition-all"
-                        >
-                          <div className="flex justify-between items-start mb-3">
-                            <h4 className="font-black text-gray-900 uppercase text-sm tracking-tight">
-                              {tier.name}
-                            </h4>
-                            <span
-                              className="text-lg font-black"
-                              style={{ color: "#000" }}
-                            >
-                              {tier.price === 0
-                                ? "FREE"
-                                : `₦${tier.price.toLocaleString()}`}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between text-[10px] font-black uppercase text-gray-400 mb-2">
-                            <span>Availability</span>
-                            <span>
-                              {Math.max(0, tier.capacity - (tier.sold || 0))}{" "}
-                              Left
-                            </span>
-                          </div>
-                          <div className="w-full h-1.5 bg-gray-50 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-black transition-all"
-                              style={{
-                                width: `${Math.min(100, ((tier.sold || 0) / tier.capacity) * 100)}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
             </div>
 
-            {/* SIDEBAR CTA */}
+            {/* Sidebar Checkout (Keep Existing) */}
             <div className="lg:col-span-4 space-y-6">
               <div className="hidden lg:block sticky top-28 p-8 bg-white rounded-[40px] border border-gray-100 shadow-2xl shadow-black/5 space-y-8">
                 <div className="flex items-center justify-between">
@@ -517,106 +459,167 @@ export default function EventDetailsPage() {
                       {displayPrice}
                     </p>
                   </div>
-                  <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                    style={{
-                      backgroundColor: `${KIVO_YELLOW}20`,
-                      color: "#856404",
-                    }}
-                  >
+                  <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300">
                     <Users size={20} />
                   </div>
                 </div>
-
                 <button
                   onClick={handleCTA}
                   disabled={event.isCancelled || hasReserved}
-                  className={`w-full py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-xl ${event.isCancelled ? "bg-red-50 text-red-400 cursor-not-allowed" : "bg-black text-white hover:scale-[1.02] active:scale-95"}`}
+                  className={`w-full py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-xl ${event.isCancelled ? "bg-red-50 text-red-400 cursor-not-allowed" : "bg-black text-white hover:bg-blue-600 active:scale-95 shadow-blue-600/10"}`}
                 >
                   {getButtonContent()}
                 </button>
-
+                {/* Map Section */}
                 <div className="pt-8 border-t border-gray-100">
-                  <div
-                    className="h-56 rounded-[32px] overflow-hidden bg-gray-100 border border-gray-100 group cursor-pointer"
-                    onClick={handleOpenMap}
-                  >
-                    <EventMap
-                      latitude={event.location?.coordinates?.[1]}
-                      longitude={event.location?.coordinates?.[0]}
-                    />
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                      Venue Map
+                    </p>
+                    {!event.isOnline && (
+                      <button
+                        onClick={handleOpenMap}
+                        className="text-[10px] font-black uppercase text-blue-600 hover:underline"
+                      >
+                        Get Directions
+                      </button>
+                    )}
                   </div>
+                  {!event.isOnline ? (
+                    <div className="space-y-4">
+                      <div className="h-56 rounded-[32px] overflow-hidden bg-gray-100 border border-gray-100">
+                        <EventMap
+                          latitude={event.location?.coordinates?.[1]}
+                          longitude={event.location?.coordinates?.[0]}
+                        />
+                      </div>
+                      <p className="text-xs font-bold text-gray-500 leading-relaxed px-2 italic">{`${event.location?.address || ""}, ${event.location?.neighborhood || "Location details provided upon registration."}`}</p>
+                    </div>
+                  ) : (
+                    <div className="h-56 rounded-[32px] bg-blue-50 flex flex-col items-center justify-center text-center p-8 border border-blue-100">
+                      <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-blue-600 shadow-sm mb-4">
+                        <Monitor size={32} />
+                      </div>
+                      <p className="text-xs font-black uppercase text-blue-600 tracking-widest">
+                        Virtual Move
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
+          {/* SIMILAR EVENTS SECTION */}
+          {similarEvents.length > 0 && (
+            <div className="mt-32 space-y-10 pb-20">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <div
+                    className="flex items-center gap-2"
+                    style={{ color: KIVO_BLUE }}
+                  >
+                    <Sparkles size={18} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      Recommendations
+                    </span>
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter">
+                    More Like This
+                  </h2>
+                </div>
+                <Link
+                  href="/explore"
+                  className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black border-b-2 border-transparent hover:border-black transition-all"
+                >
+                  See All Events
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {similarEvents.map((similar: any) => (
+                  <Link
+                    href={`/events/${similar._id}`}
+                    key={similar._id}
+                    className="group"
+                  >
+                    <div
+                      className="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 hover:-translate-y-2 group-hover:shadow-2xl"
+                      style={{
+                        // Subtle brand glow on hover
+                        boxShadow: "0 20px 40px -20px rgba(255, 215, 0, 0.3)",
+                      }}
+                    >
+                      <div className="relative aspect-[4/3] w-full">
+                        <Image
+                          src={
+                            similar.image ||
+                            "https://picsum.photos/seed/similar/800/600"
+                          }
+                          alt={similar.title}
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute top-4 left-4">
+                          <span
+                            className="px-4 py-2 rounded-xl text-[9px] font-black uppercase text-gray-900 shadow-sm"
+                            style={{ backgroundColor: KIVO_YELLOW }}
+                          >
+                            {similar.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-8 space-y-4">
+                        <div
+                          className="flex items-center gap-2"
+                          style={{ color: KIVO_BLUE }}
+                        >
+                          <Calendar size={14} />
+                          <span className="text-[10px] font-black uppercase">
+                            {new Date(similar.startDate).toLocaleDateString(
+                              "en-US",
+                              { month: "short", day: "numeric" },
+                            )}
+                          </span>
+                        </div>
+
+                        <h4 className="text-xl font-black uppercase italic tracking-tight line-clamp-1 group-hover:text-blue-600 transition-colors">
+                          {similar.title}
+                        </h4>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <MapPin size={14} />
+                            <span className="text-[10px] font-black uppercase truncate max-w-[100px]">
+                              {similar.location?.neighborhood ||
+                                "Port Harcourt"}
+                            </span>
+                          </div>
+                          <span
+                            className="text-[10px] font-black uppercase tracking-wider group-hover:underline"
+                            style={{ color: KIVO_YELLOW }}
+                          >
+                            View Details
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
-      {/* MOBILE CTA BAR */}
       <div className="lg:hidden fixed bottom-6 left-6 right-6 z-[100]">
         <button
           onClick={handleCTA}
-          className="w-full py-5 bg-black text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
+          className="w-full py-5 bg-black text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all shadow-blue-600/20"
         >
           {getButtonContent()} — {displayPrice}
         </button>
       </div>
-
-      {/* SIMILAR EVENTS SECTION */}
-      {similarEvents.length > 0 && (
-        <section className="bg-gray-50 py-24 border-t border-gray-100 relative z-10">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-2">
-                  More to Explore
-                </p>
-                <h2 className="text-4xl font-black tracking-tighter text-gray-900 uppercase italic">
-                  Similar <span style={{ color: KIVO_YELLOW }}>Vibes</span>
-                </h2>
-              </div>
-              <button
-                onClick={() => router.push("/discover")}
-                className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors w-fit"
-              >
-                View All Discoveries
-              </button>
-            </div>
-
-            <div className="flex gap-6 overflow-x-auto pb-8 snap-x no-scrollbar">
-              {similarEvents.map((item: any) => (
-                <motion.div
-                  key={item._id}
-                  whileHover={{ y: -5 }}
-                  onClick={() => router.push(`/discover/${item._id}`)}
-                  className="min-w-[300px] md:min-w-[350px] group cursor-pointer snap-start"
-                >
-                  <div className="relative aspect-[4/5] rounded-[32px] overflow-hidden mb-4 shadow-xl">
-                    <Image
-                      src={
-                        item.image || "https://picsum.photos/seed/kivo/600/800"
-                      }
-                      alt={item.title}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                    <div className="absolute bottom-6 left-6 right-6">
-                      <p className="text-[10px] font-black uppercase text-yellow-400 mb-1">
-                        {item.location?.neighborhood || "Port Harcourt"}
-                      </p>
-                      <h3 className="text-white font-black text-xl leading-tight line-clamp-2">
-                        {item.title}
-                      </h3>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       <MobileNav />
       <Footer />

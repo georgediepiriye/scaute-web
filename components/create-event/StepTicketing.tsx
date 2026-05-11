@@ -6,10 +6,10 @@ import {
   Trash2,
   Ban,
   MessageCircle,
+  CalendarDays,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-// BRAND COLOR CONSTANTS
 const KIVO_BLUE = "#0052FF";
 const KIVO_YELLOW = "#FFD700";
 
@@ -20,7 +20,12 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
   const addTier = () => {
     const newTiers = [
       ...tiers,
-      { name: "General Admission", price: 0, capacity: 50 },
+      {
+        name: "General Admission",
+        price: 0,
+        capacity: 50,
+        salesEnd: formData.startDate || "",
+      },
     ];
     updateForm("ticketTiers", newTiers);
   };
@@ -32,7 +37,17 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
 
   const updateTier = (index: number, field: string, value: any) => {
     const newTiers = [...tiers];
-    newTiers[index] = { ...newTiers[index], [field]: value };
+
+    let formattedValue = value;
+
+    // Handle numeric casting for Price and Capacity
+    if (field === "price" || field === "capacity") {
+      // If the user clears the input, we keep it as an empty string temporarily
+      // or set it to 0. Number("") returns 0, which is what we want for the state.
+      formattedValue = value === "" ? 0 : Number(value);
+    }
+
+    newTiers[index] = { ...newTiers[index], [field]: formattedValue };
     updateForm("ticketTiers", newTiers);
   };
 
@@ -41,7 +56,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
     { id: "internal", label: "Kivo Tickets", sub: "Sell on app", icon: Ticket },
     {
       id: "external",
-      label: "External Ticket Link",
+      label: "External Link",
       sub: "Third-party",
       icon: LinkIcon,
     },
@@ -61,17 +76,18 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
               onClick={() => updateForm("ticketingType", opt.id)}
               className={`p-6 rounded-[24px] border-2 flex flex-col items-center text-center gap-3 transition-all ${
                 isActive
-                  ? "bg-blue-50/50"
+                  ? ""
                   : "border-gray-50 bg-gray-50/50 text-gray-400 hover:border-gray-200"
               }`}
               style={{
-                borderColor: isActive ? KIVO_BLUE : "",
-                color: isActive ? KIVO_BLUE : "",
+                borderColor: isActive ? KIVO_YELLOW : "",
+                backgroundColor: isActive ? `${KIVO_YELLOW}20` : "",
+                color: isActive ? "#000" : "",
               }}
             >
               <Icon
                 size={24}
-                style={{ color: isActive ? KIVO_BLUE : "#D1D5DB" }}
+                style={{ color: isActive ? "#000" : "#D1D5DB" }}
               />
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider">
@@ -107,8 +123,9 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 key={idx}
-                className="p-6 bg-gray-50 rounded-[32px] grid md:grid-cols-3 gap-6 relative border border-transparent transition-colors hover:border-blue-100"
+                className="p-6 bg-gray-50 rounded-[32px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative border border-transparent transition-colors hover:border-yellow-100"
               >
+                {/* Name */}
                 <div className="space-y-2">
                   <label className="text-[9px] font-black uppercase text-gray-400 ml-1">
                     Tier Name
@@ -118,10 +135,11 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                     value={tier.name}
                     onChange={(e) => updateTier(idx, "name", e.target.value)}
                     className="w-full p-4 rounded-2xl bg-white font-bold text-sm outline-none shadow-sm focus:ring-2 transition-all"
-                    style={{ "--tw-ring-color": `${KIVO_BLUE}15` } as any}
+                    style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
                   />
                 </div>
 
+                {/* Price */}
                 <div className="space-y-2">
                   <label className="text-[9px] font-black uppercase text-gray-400 ml-1">
                     Price (₦)
@@ -129,15 +147,15 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                   <input
                     type="number"
                     placeholder="0"
-                    value={tier.price}
-                    onChange={(e) =>
-                      updateTier(idx, "price", Number(e.target.value))
-                    }
+                    // Show empty string if 0 so placeholder is visible
+                    value={tier.price === 0 ? "" : tier.price}
+                    onChange={(e) => updateTier(idx, "price", e.target.value)}
                     className="w-full p-4 rounded-2xl bg-white font-bold text-sm outline-none shadow-sm focus:ring-2 transition-all"
-                    style={{ "--tw-ring-color": `${KIVO_BLUE}15` } as any}
+                    style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
                   />
                 </div>
 
+                {/* Capacity */}
                 <div className="space-y-2">
                   <label className="text-[9px] font-black uppercase text-gray-400 ml-1">
                     Capacity
@@ -146,16 +164,42 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                     <input
                       type="number"
                       placeholder="100"
-                      value={tier.capacity}
+                      value={tier.capacity === 0 ? "" : tier.capacity}
                       onChange={(e) =>
-                        updateTier(idx, "capacity", Number(e.target.value))
+                        updateTier(idx, "capacity", e.target.value)
                       }
                       className="w-full p-4 rounded-2xl bg-white font-bold text-sm outline-none shadow-sm focus:ring-2 transition-all"
-                      style={{ "--tw-ring-color": `${KIVO_BLUE}15` } as any}
+                      style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
                     />
                     <Users
                       size={14}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300"
+                    />
+                  </div>
+                </div>
+
+                {/* Sales End Date */}
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase text-gray-400 ml-1">
+                    Sales End Date
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="datetime-local"
+                      value={
+                        tier.salesEnd
+                          ? new Date(tier.salesEnd).toISOString().slice(0, 16)
+                          : ""
+                      }
+                      onChange={(e) =>
+                        updateTier(idx, "salesEnd", e.target.value)
+                      }
+                      className="w-full p-4 rounded-2xl bg-white font-bold text-[10px] outline-none shadow-sm focus:ring-2 transition-all"
+                      style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+                    />
+                    <CalendarDays
+                      size={14}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none"
                     />
                   </div>
                 </div>
@@ -174,7 +218,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
           <button
             type="button"
             onClick={addTier}
-            className="w-full py-6 border-2 border-dashed border-gray-200 rounded-[32px] text-[10px] font-black uppercase text-gray-400 hover:bg-blue-50/50 transition-all"
+            className="w-full py-6 border-2 border-dashed border-gray-200 rounded-[32px] text-[10px] font-black uppercase text-gray-400 hover:bg-yellow-50/50 transition-all"
           >
             + Add New Ticket Tier
           </button>
@@ -199,21 +243,19 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                 onChange={(e) =>
                   updateForm("externalTicketLink", e.target.value)
                 }
-                className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white transition-all shadow-sm"
+                className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white focus:ring-2 transition-all shadow-sm"
+                style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
               />
               <LinkIcon
                 size={16}
                 className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-300"
               />
             </div>
-            <p className="text-[9px] text-gray-400 font-bold uppercase ml-1">
-              Followers will be redirected to this link to purchase tickets.
-            </p>
           </div>
         </motion.div>
       )}
 
-      {/* 4. Community & Group Links (WhatsApp/Telegram) */}
+      {/* 4. Community Management */}
       <div className="space-y-4 pt-8 border-t border-gray-100">
         <div className="flex items-center gap-2 mb-2">
           <MessageCircle size={16} style={{ color: KIVO_BLUE }} />
@@ -221,26 +263,19 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
             Community Management
           </h3>
         </div>
-
         <div className="space-y-2">
           <label className="text-[9px] font-black uppercase text-gray-400 ml-1">
-            WhatsApp / Telegram / Facebook / Group Link
+            Group Link
           </label>
           <div className="relative">
             <input
               placeholder="https://chat.whatsapp.com/..."
               value={formData.communityLink || ""}
               onChange={(e) => updateForm("communityLink", e.target.value)}
-              className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white focus:border-blue-200 transition-all shadow-sm"
+              className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white focus:ring-2 transition-all shadow-sm"
+              style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
             />
-            <div className="absolute right-5 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md bg-white border border-gray-100 text-[8px] font-black text-gray-400 uppercase">
-              Optional
-            </div>
           </div>
-          <p className="text-[9px] text-gray-400 font-bold uppercase ml-1">
-            Share a link for attendees to join your event group chat for live
-            updates.
-          </p>
         </div>
       </div>
     </div>

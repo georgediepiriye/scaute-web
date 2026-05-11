@@ -9,6 +9,7 @@ export interface PendingSync {
 
 export interface LocalTicket {
   id: string;
+  eventId: string;
   checkInCode: string;
   guestName: string;
   tier: string;
@@ -22,9 +23,12 @@ export class KivoScannerDB extends Dexie {
 
   constructor() {
     super("KivoScannerDB");
-    this.version(2).stores({
-      tickets: "id, checkInCode, status, updatedAt",
-      outbox: "++id, checkInCode",
+
+    this.version(3).stores({
+      tickets:
+        "id, eventId, checkInCode, status, updatedAt, [checkInCode+eventId]",
+
+      outbox: "++id, checkInCode, eventId, timestamp",
     });
   }
 }

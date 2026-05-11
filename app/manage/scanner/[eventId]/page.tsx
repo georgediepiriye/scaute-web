@@ -91,6 +91,7 @@ export default function TicketScannerPage() {
           await db.tickets.bulkPut(
             result.data.map((t: any) => ({
               id: t._id,
+              eventId: params.eventId, // <-- IMPORTANT: Store the eventId
               checkInCode: t.checkInCode,
               guestName: t.buyerInfo
                 ? `${t.buyerInfo.firstName} ${t.buyerInfo.lastName}`
@@ -131,13 +132,18 @@ export default function TicketScannerPage() {
 
       try {
         const ticket = await db.tickets
-          .where("checkInCode")
-          .equals(cleanCode)
+          .where({
+            checkInCode: cleanCode,
+            eventId: params.eventId,
+          })
           .first();
 
         if (!ticket) {
           playSound("error");
-          setLastResult({ success: false, message: "TICKET NOT FOUND" });
+          setLastResult({
+            success: false,
+            message: "INVALID TICKET FOR THIS EVENT",
+          });
         } else if (ticket.status === "used" || ticket.status === "checked-in") {
           playSound("error");
           setLastResult({

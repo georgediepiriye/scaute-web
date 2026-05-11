@@ -21,6 +21,8 @@ import {
   Loader2,
   AlertTriangle,
   SearchCheck,
+  ExternalLink,
+  Copy,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import Navbar from "@/components/layout/NavBar";
@@ -45,6 +47,7 @@ export interface EventData {
     title: string;
     organizer: string;
     approvalStatus?: string;
+    slug?: string;
     coOrganizers?: Array<{
       email: string;
       _id: string;
@@ -59,6 +62,35 @@ export interface EventData {
     checkInCount: number;
   };
 }
+
+const MetricCard = ({
+  label,
+  value,
+  icon,
+  trend,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  trend?: string;
+}) => (
+  <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm group hover:border-yellow-500/20 transition-all">
+    <div className="flex items-center justify-between mb-4">
+      <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-yellow-50 group-hover:scale-110 transition-all duration-500">
+        {icon}
+      </div>
+      {trend && (
+        <span className="text-[9px] font-black uppercase text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
+          {trend}
+        </span>
+      )}
+    </div>
+    <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">
+      {label}
+    </p>
+    <p className="text-3xl font-black mt-1 tracking-tighter">{value}</p>
+  </div>
+);
 
 export default function ManageEventDashboard() {
   const params = useParams();
@@ -115,6 +147,23 @@ export default function ManageEventDashboard() {
   useEffect(() => {
     if (id) fetchDashboardData();
   }, [id, fetchDashboardData]);
+
+  const handleCopyLink = () => {
+    const eventSlug = (data?.event as any)?.slug || id;
+    const url = `https://kivo-isca.onrender.com/e/${eventSlug}`;
+
+    navigator.clipboard.writeText(url);
+    toast.success("Move link copied to clipboard!", {
+      style: {
+        borderRadius: "16px",
+        background: "#0F172A",
+        color: "#fff",
+        fontSize: "12px",
+        fontWeight: "bold",
+        textTransform: "uppercase",
+      },
+    });
+  };
 
   const isOrganizer = useMemo(() => {
     if (!data || !loggedInUserId) return false;
@@ -211,10 +260,10 @@ export default function ManageEventDashboard() {
       <div className="fixed inset-0 z-[200] bg-[#020817] flex items-center justify-center">
         <div className="flex flex-col items-center gap-6">
           <div className="relative w-16 h-16">
-            <div className="absolute inset-0 border-4 border-blue-500/10 rounded-3xl" />
-            <div className="absolute inset-0 border-4 border-t-blue-600 rounded-3xl animate-spin" />
+            <div className="absolute inset-0 border-4 border-yellow-500/10 rounded-3xl" />
+            <div className="absolute inset-0 border-4 border-t-yellow-500 rounded-3xl animate-spin" />
           </div>
-          <p className="text-blue-500 font-black text-[10px] uppercase tracking-[0.3em] animate-pulse">
+          <p className="text-yellow-500 font-black text-[10px] uppercase tracking-[0.3em] animate-pulse">
             Syncing Analytics
           </p>
         </div>
@@ -246,7 +295,7 @@ export default function ManageEventDashboard() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans relative selection:bg-blue-600/20">
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans relative selection:bg-yellow-500/20">
         <Toaster position="top-right" reverseOrder={false} />
 
         {confirmDeleteId && (
@@ -294,7 +343,7 @@ export default function ManageEventDashboard() {
             <div>
               <button
                 onClick={() => router.back()}
-                className="flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors mb-4"
+                className="flex items-center gap-2 text-slate-400 hover:text-yellow-600 transition-colors mb-4"
               >
                 <ArrowLeft size={16} />
                 <span className="text-[10px] font-black uppercase tracking-widest">
@@ -304,12 +353,46 @@ export default function ManageEventDashboard() {
               <h1 className="text-4xl font-black uppercase tracking-tighter leading-none">
                 {event?.title}
               </h1>
+              <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2.5 rounded-2xl shadow-sm hover:border-yellow-500/20 transition-all group">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0">
+                      Live Link:
+                    </span>
+                    <span className="text-xs font-bold text-slate-600 truncate max-w-[180px] sm:max-w-xs">
+                      kivo-isca.onrender.com/e/{(event as any).slug || id}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 border-l border-slate-100 ml-2 pl-2">
+                    <button
+                      onClick={handleCopyLink}
+                      className="p-1.5 hover:bg-yellow-50 rounded-lg transition-colors group/btn"
+                      title="Copy URL"
+                    >
+                      <Copy
+                        size={14}
+                        className="text-slate-400 group-hover/btn:text-yellow-600"
+                      />
+                    </button>
+                    <a
+                      href={`https://kivo-isca.onrender.com/e/${(event as any).slug || id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 hover:bg-slate-50 rounded-lg transition-colors"
+                    >
+                      <ExternalLink
+                        size={14}
+                        className="text-slate-400 hover:text-slate-900"
+                      />
+                    </a>
+                  </div>
+                </div>
+              </div>
               <div className="flex flex-wrap items-center gap-3 mt-4">
-                <span className="px-3 py-1 bg-blue-600/10 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                <span className="px-3 py-1 bg-yellow-400/10 text-yellow-700 rounded-full text-[10px] font-black uppercase tracking-widest">
                   {isOrganizer ? "Main Organizer" : "Partner Access"}
                 </span>
 
-                {/* APPROVAL STATUS BADGE */}
                 <div
                   className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${
                     event.approvalStatus === "approved"
@@ -337,7 +420,7 @@ export default function ManageEventDashboard() {
                     e.stopPropagation();
                     router.push(`/manage/events/settings/${event?.id}`);
                   }}
-                  className="flex-1 md:flex-none px-6 py-4 bg-white border border-slate-200 rounded-2xl font-black text-xs uppercase tracking-widest hover:border-blue-500/30 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 md:flex-none px-6 py-4 bg-yellow-400 text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-yellow-500 transition-all flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                 >
                   <Settings size={14} /> Edit Move
                 </button>
@@ -351,18 +434,18 @@ export default function ManageEventDashboard() {
                 <MetricCard
                   label="Total Revenue"
                   value={`₦${metrics.totalRevenue.toLocaleString()}`}
-                  icon={<Wallet className="text-blue-600" size={18} />}
+                  icon={<Wallet className="text-yellow-600" size={18} />}
                   trend="Kivo Balance"
                 />
                 <MetricCard
                   label="Tickets Sold"
                   value={metrics.totalTicketsSold.toString()}
-                  icon={<TicketIcon className="text-blue-600" size={18} />}
+                  icon={<TicketIcon className="text-yellow-600" size={18} />}
                 />
                 <MetricCard
                   label="Check-In Rate"
                   value={`${Math.round((metrics.checkInCount / (metrics.totalTicketsSold || 1)) * 100)}%`}
-                  icon={<Users className="text-blue-600" size={18} />}
+                  icon={<Users className="text-yellow-600" size={18} />}
                   trend={`${metrics.checkInCount} scanned`}
                 />
               </div>
@@ -370,22 +453,20 @@ export default function ManageEventDashboard() {
               <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden flex flex-col">
                 <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                    <Users size={16} className="text-blue-600" /> Guest List
+                    <Users size={16} className="text-yellow-500" /> Guest List
                   </h3>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <Search
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"
-                        size={14}
-                      />
-                      <input
-                        type="text"
-                        placeholder="Search guests..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-3 bg-slate-50 border border-transparent focus:border-blue-500/20 focus:bg-white rounded-xl text-xs font-bold transition-all outline-none w-full md:w-64"
-                      />
-                    </div>
+                  <div className="relative">
+                    <Search
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"
+                      size={14}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search guests..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-3 bg-slate-50 border border-transparent focus:border-yellow-500/20 focus:bg-white rounded-xl text-xs font-bold transition-all outline-none w-full md:w-64"
+                    />
                   </div>
                 </div>
 
@@ -409,10 +490,10 @@ export default function ManageEventDashboard() {
                         currentItems.map((t, i) => (
                           <tr
                             key={i}
-                            className="hover:bg-slate-50/30 transition-colors group"
+                            className="hover:bg-yellow-50/30 transition-colors group"
                           >
                             <td className="px-8 py-5">
-                              <p className="font-black text-sm uppercase tracking-tight group-hover:text-blue-600 transition-colors">
+                              <p className="font-black text-sm uppercase tracking-tight group-hover:text-yellow-700 transition-colors">
                                 {t.buyerInfo.firstName} {t.buyerInfo.lastName}
                               </p>
                               <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase">
@@ -426,7 +507,7 @@ export default function ManageEventDashboard() {
                             </td>
                             <td className="px-8 py-5 text-right">
                               <span
-                                className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-full ${t.status === "used" ? "bg-blue-600/10 text-blue-600" : "bg-green-50 text-green-600"}`}
+                                className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-full ${t.status === "used" ? "bg-yellow-100 text-yellow-700" : "bg-green-50 text-green-600"}`}
                               >
                                 {t.status === "used"
                                   ? "Checked-In"
@@ -459,7 +540,7 @@ export default function ManageEventDashboard() {
                           setCurrentPage((p) => Math.max(p - 1, 1))
                         }
                         disabled={currentPage === 1}
-                        className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 disabled:opacity-30 hover:text-blue-600 transition-colors"
+                        className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 disabled:opacity-30 hover:text-yellow-600 transition-colors"
                       >
                         <ChevronLeft size={18} />
                       </button>
@@ -468,7 +549,7 @@ export default function ManageEventDashboard() {
                           setCurrentPage((p) => Math.min(p + 1, totalPages))
                         }
                         disabled={currentPage === totalPages}
-                        className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 disabled:opacity-30 hover:text-blue-600 transition-colors"
+                        className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 disabled:opacity-30 hover:text-yellow-600 transition-colors"
                       >
                         <ChevronRight size={18} />
                       </button>
@@ -481,7 +562,8 @@ export default function ManageEventDashboard() {
             <aside className="lg:col-span-4 space-y-6">
               <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                  <Shield size={16} className="text-blue-600" /> Access Control
+                  <Shield size={16} className="text-yellow-500" /> Access
+                  Control
                 </h3>
 
                 <div className="space-y-3 mb-8">
@@ -547,7 +629,7 @@ export default function ManageEventDashboard() {
                     </p>
                     <div className="flex gap-2">
                       <input
-                        className="flex-1 bg-slate-50 p-4 rounded-xl text-xs font-bold outline-none border border-transparent focus:border-blue-500/20 transition-all"
+                        className="flex-1 bg-slate-50 p-4 rounded-xl text-xs font-bold outline-none border border-transparent focus:border-yellow-500/20 transition-all"
                         placeholder="Enter email address"
                         value={coOrgEmail}
                         onChange={(e) => setCoOrgEmail(e.target.value)}
@@ -556,7 +638,7 @@ export default function ManageEventDashboard() {
                       <button
                         disabled={addingCoOrg}
                         onClick={handleAddCoOrg}
-                        className="bg-slate-900 text-white p-4 rounded-xl hover:bg-blue-600 transition-colors active:scale-95 disabled:opacity-50"
+                        className="bg-black text-white p-4 rounded-xl hover:bg-yellow-500 hover:text-black transition-colors active:scale-95 disabled:opacity-50"
                       >
                         {addingCoOrg ? (
                           <Loader2 size={18} className="animate-spin" />
@@ -570,15 +652,15 @@ export default function ManageEventDashboard() {
               </div>
 
               <div className="bg-[#0F172A] p-8 rounded-[2.5rem] text-white relative overflow-hidden">
-                <TrendingUp className="absolute -right-4 -bottom-4 text-blue-500/10 w-24 h-24" />
+                <TrendingUp className="absolute -right-4 -bottom-4 text-yellow-500/10 w-24 h-24" />
                 <h4 className="text-lg font-black uppercase tracking-tight relative z-10">
                   Expand Your Reach
                 </h4>
                 <p className="text-slate-400 text-xs mt-2 font-medium relative z-10 leading-relaxed uppercase">
-                  Moves with at least one co-organizer see 40% higher ticket
-                  sales on average in Port Harcourt.
+                  Moves with co-organizers see 40% higher ticket sales on
+                  average in Port Harcourt.
                 </p>
-                <button className="mt-6 text-[10px] font-black uppercase tracking-widest text-blue-400 relative z-10 hover:text-white transition-colors">
+                <button className="mt-6 text-[10px] font-black uppercase tracking-widest text-yellow-400 relative z-10 hover:text-white transition-colors">
                   Learn More
                 </button>
               </div>
@@ -590,32 +672,3 @@ export default function ManageEventDashboard() {
     </AuthGuard>
   );
 }
-
-const MetricCard = ({
-  label,
-  value,
-  icon,
-  trend,
-}: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-  trend?: string;
-}) => (
-  <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm group hover:border-blue-500/20 transition-all">
-    <div className="flex items-center justify-between mb-4">
-      <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-blue-50 group-hover:scale-110 transition-all duration-500">
-        {icon}
-      </div>
-      {trend && (
-        <span className="text-[9px] font-black uppercase text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
-          {trend}
-        </span>
-      )}
-    </div>
-    <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">
-      {label}
-    </p>
-    <p className="text-3xl font-black mt-1 tracking-tighter">{value}</p>
-  </div>
-);

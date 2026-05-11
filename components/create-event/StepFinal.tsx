@@ -17,7 +17,7 @@ const Toggle = ({ label, sub, value, field, updateForm }: any) => (
       type="button"
       onClick={() => updateForm(field, !value)}
       className="w-12 h-7 rounded-full transition-all relative"
-      style={{ backgroundColor: value ? KIVO_BLUE : "#374151" }}
+      style={{ backgroundColor: value ? KIVO_YELLOW : "#374151" }} // Updated to KIVO_YELLOW
     >
       <motion.div
         animate={{ x: value ? 22 : 4 }}
@@ -44,7 +44,7 @@ export const StepFinal = ({
             </h3>
             <label
               className="block h-80 bg-gray-50 rounded-[32px] border-4 border-dashed border-gray-100 cursor-pointer overflow-hidden relative group transition-colors"
-              style={{ "--hover-border": `${KIVO_BLUE}40` } as any}
+              style={{ "--hover-border": `${KIVO_YELLOW}40` } as any} // Updated to KIVO_YELLOW
             >
               {previewImage ? (
                 <Image
@@ -54,7 +54,9 @@ export const StepFinal = ({
                   className="object-cover"
                 />
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-gray-300 group-hover:text-blue-500 transition-colors">
+                <div className="h-full flex flex-col items-center justify-center text-gray-300 group-hover:text-[#FFD700] transition-colors">
+                  {" "}
+                  {/* Updated to KIVO_YELLOW */}
                   <ImageIcon
                     size={48}
                     strokeWidth={1.5}
@@ -110,8 +112,8 @@ export const StepFinal = ({
                 <select
                   value={formData.refundPolicy}
                   onChange={(e) => updateForm("refundPolicy", e.target.value)}
-                  className="w-full bg-gray-800 text-white p-4 rounded-2xl font-bold text-xs outline-none border border-gray-700 transition-all"
-                  style={{ focusBorderColor: KIVO_BLUE } as any}
+                  className="w-full bg-gray-800 text-white p-4 rounded-2xl font-bold text-xs outline-none border border-gray-700 transition-all focus:ring-2" // Added focus ring
+                  style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any} // Updated to KIVO_YELLOW
                 >
                   <option value="none">No Refunds</option>
                   <option value="24h">24h before event</option>
@@ -127,16 +129,21 @@ export const StepFinal = ({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-blue-50 border-2 border-blue-100 p-8 rounded-[40px] flex flex-col md:flex-row items-center gap-6"
+        className="bg-yellow-50 border-2 border-yellow-100 p-8 rounded-[40px] flex flex-col md:flex-row items-center gap-6" // Updated to yellow theme
       >
         <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-sm shrink-0">
-          <ShieldAlert size={32} className="text-blue-600" />
+          <ShieldAlert size={32} style={{ color: KIVO_YELLOW }} />{" "}
+          {/* Updated to KIVO_YELLOW */}
         </div>
         <div>
-          <h4 className="text-[12px] font-black uppercase text-blue-900 tracking-wider mb-1">
+          <h4 className="text-[12px] font-black uppercase text-yellow-900 tracking-wider mb-1">
+            {" "}
+            {/* Updated text color */}
             Kivo Moderation Process
           </h4>
-          <p className="text-xs font-bold text-blue-700/80 leading-relaxed uppercase">
+          <p className="text-xs font-bold text-yellow-800/80 leading-relaxed uppercase">
+            {" "}
+            {/* Updated text color */}
             To maintain quality in the Port Harcourt ecosystem, all new moves
             are reviewed by our team. Your event will be visible on the map and
             discovery feed within 1-12 hours once approved.
