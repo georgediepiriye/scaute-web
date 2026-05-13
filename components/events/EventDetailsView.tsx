@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import CheckoutPanel from "./CheckoutPanel"; // Adjust path as needed
+import CheckoutPanel from "./CheckoutPanel";
+import toast, { Toaster } from "react-hot-toast";
 
 const KIVO_BLUE = "#0052FF";
 
@@ -37,15 +38,18 @@ export default function EventDetailsView({ event }: EventViewProps) {
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/me`,
-          {
-            credentials: "include",
-          },
+          { credentials: "include" },
         );
+        const data = await res.json();
+
         if (res.ok) {
-          const data = await res.json();
           setUser(data.data?.user);
+        } else {
+          // If the API sends a message (e.g., "Session expired"), show it
+          console.warn("User not authenticated:", data.message);
         }
       } catch (e) {
+        toast.error("Could not connect to Kivo servers");
         console.error("Auth fetch failed:", e);
       }
     };
@@ -85,7 +89,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] pb-32">
-      {/* --- CHECKOUT PANEL INTEGRATION --- */}
+      <Toaster position="top-center" reverseOrder={false} />
       <CheckoutPanel
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}

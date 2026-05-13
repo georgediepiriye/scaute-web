@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Navigation, MapPin, Repeat } from "lucide-react";
+import {
+  Navigation,
+  MapPin,
+  Repeat,
+  Video,
+  Link as LinkIcon,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 
@@ -35,6 +41,9 @@ export const StepLogistics = ({
     updateForm("selectedDays", newDays);
   };
 
+  const isOnlineOrHybrid =
+    formData.eventFormat === "online" || formData.eventFormat === "hybrid";
+
   return (
     <motion.div
       initial={{ x: 20, opacity: 0 }}
@@ -46,6 +55,7 @@ export const StepLogistics = ({
         {["physical", "online", "hybrid"].map((f) => (
           <button
             key={f}
+            type="button"
             onClick={() => updateForm("eventFormat", f)}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${
               formData.eventFormat === f
@@ -113,7 +123,44 @@ export const StepLogistics = ({
         </div>
       </div>
 
-      {/* 3. Recurrence Section */}
+      {/* 3. Meeting Link Section (Conditional) */}
+      <AnimatePresence>
+        {isOnlineOrHybrid && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="pt-6 border-t border-gray-100 space-y-4 overflow-hidden"
+          >
+            <div className="flex items-center gap-2">
+              <Video size={16} style={{ color: KIVO_BLUE }} />
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                Meeting Link <span className="text-red-500">*</span>
+              </label>
+            </div>
+            <div className="relative">
+              <input
+                type="url"
+                required
+                placeholder="https://zoom.us/j/..., Google Meet, etc."
+                value={formData.meetingLink || ""}
+                onChange={(e) => updateForm("meetingLink", e.target.value)}
+                className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white focus:ring-2 transition-all shadow-sm pl-12"
+                style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+              />
+              <LinkIcon
+                size={16}
+                className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300"
+              />
+            </div>
+            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight ml-2">
+              Ensure attendees can access this link at the start time.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 4. Recurrence Section */}
       <div className="pt-6 border-t border-gray-100 space-y-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -125,6 +172,7 @@ export const StepLogistics = ({
             </p>
           </div>
           <button
+            type="button"
             onClick={() => updateForm("isRecurring", !formData.isRecurring)}
             className={`w-14 h-8 rounded-full transition-all relative ${formData.isRecurring ? "" : "bg-gray-200"}`}
             style={{ backgroundColor: formData.isRecurring ? KIVO_YELLOW : "" }}
@@ -209,6 +257,7 @@ export const StepLogistics = ({
                     {DAYS_OF_WEEK.map((day) => (
                       <button
                         key={day}
+                        type="button"
                         onClick={() => toggleDay(day)}
                         className={`w-12 h-12 rounded-xl text-[10px] font-black uppercase border-2 transition-all ${
                           formData.selectedDays?.includes(day)
@@ -235,12 +284,17 @@ export const StepLogistics = ({
         </AnimatePresence>
       </div>
 
-      {/* 4. Venue Section */}
+      {/* 5. Venue Section (Conditional) */}
       {formData.eventFormat !== "online" && (
         <div className="space-y-4 pt-6 border-t border-gray-100">
           <div className="flex justify-between items-center">
             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-              Venue
+              Venue{" "}
+              {formData.eventFormat === "hybrid" && (
+                <span className="lowercase font-medium italic opacity-70">
+                  (Optional)
+                </span>
+              )}
             </label>
             <button
               type="button"

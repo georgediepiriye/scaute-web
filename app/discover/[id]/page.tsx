@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
-import Link from "next/link"; // Added for similar events navigation
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import CheckoutPanel from "@/components/events/CheckoutPanel";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,7 +25,8 @@ import {
   UserPlus,
   Check,
   MessageSquare,
-  Sparkles, // Added for section icon
+  Sparkles,
+  Zap,
 } from "lucide-react";
 
 import Navbar from "@/components/layout/NavBar";
@@ -42,7 +43,7 @@ export default function EventDetailsPage() {
   const router = useRouter();
 
   const [event, setEvent] = useState<any>(null);
-  const [similarEvents, setSimilarEvents] = useState<any[]>([]); // State for similar events
+  const [similarEvents, setSimilarEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -50,7 +51,6 @@ export default function EventDetailsPage() {
   const [hasReserved, setHasReserved] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
-  // Fetch Event Details
   useEffect(() => {
     const fetchEventDetails = async () => {
       try {
@@ -64,8 +64,6 @@ export default function EventDetailsPage() {
           const data = result.data.event;
           data.isOnline = data.medium === "online" || data.isOnline === true;
           setEvent(data);
-
-          // Fetch similar events once we have the category
           fetchSimilarEvents(data.category, data._id);
         }
       } catch (error) {
@@ -78,7 +76,6 @@ export default function EventDetailsPage() {
     if (params.id) fetchEventDetails();
   }, [params.id]);
 
-  // Fetch Similar Events Logic
   const fetchSimilarEvents = async (category: string, currentId: string) => {
     try {
       const res = await fetch(
@@ -86,7 +83,6 @@ export default function EventDetailsPage() {
       );
       const result = await res.json();
       if (result.status === "success") {
-        // Filter out the current event from the list
         const filtered = result.data.events.filter(
           (e: any) => e._id !== currentId,
         );
@@ -212,7 +208,6 @@ export default function EventDetailsPage() {
         event={event}
       />
 
-      {/* EXTERNAL REDIRECT MODAL (Keep Existing Logic) */}
       <AnimatePresence>
         {showExternalModal && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center px-6">
@@ -260,7 +255,6 @@ export default function EventDetailsPage() {
 
       <main className="flex-1 pt-20 pb-12 md:pt-28">
         <div className="max-w-6xl mx-auto px-6">
-          {/* Back button and Share (Keep Existing) */}
           <div className="flex items-center justify-between mb-8">
             <button
               onClick={() => router.back()}
@@ -278,9 +272,7 @@ export default function EventDetailsPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            {/* Left Content (Keep Existing) */}
             <div className="lg:col-span-8 space-y-12">
-              {/* Image Banner */}
               <div className="relative aspect-[16/9] w-full rounded-[40px] overflow-hidden shadow-2xl border border-gray-100">
                 <Image
                   src={
@@ -307,11 +299,11 @@ export default function EventDetailsPage() {
                 </div>
               </div>
 
-              {/* Title & Organizer Section */}
               <div className="space-y-8">
                 <h1 className="text-4xl md:text-7xl font-black tracking-tighter text-gray-900 leading-[0.85] uppercase italic">
                   {event.title}
                 </h1>
+
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between p-8 bg-gray-50 rounded-[32px] gap-6 border border-gray-100/50">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-2xl bg-white shadow-sm overflow-hidden relative border border-gray-100">
@@ -376,7 +368,6 @@ export default function EventDetailsPage() {
                   </div>
                 </div>
 
-                {/* When & Where */}
                 <div className="flex flex-wrap gap-6 py-8 border-y border-gray-100">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-blue-600 border border-gray-100">
@@ -406,14 +397,14 @@ export default function EventDetailsPage() {
                       <p className="font-black text-gray-900">
                         {event.isOnline
                           ? "Virtual / Online"
-                          : `${event.location?.address || ""}, ${event.location?.neighborhood || "Location details upon registration"}`}
+                          : `${event.location?.address || ""}, ${event.location?.neighborhood || "Port Harcourt"}`}
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Overview (Keep Existing) */}
+              {/* OVERVIEW */}
               <div className="space-y-4">
                 <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
                   <Info size={20} className="text-blue-600" /> Overview
@@ -431,7 +422,7 @@ export default function EventDetailsPage() {
                 {event.description?.length > 350 && (
                   <button
                     onClick={() => setShowFullDescription(!showFullDescription)}
-                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 hover:scale-105 transition-transform"
+                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600"
                   >
                     {showFullDescription ? (
                       <>
@@ -445,32 +436,60 @@ export default function EventDetailsPage() {
                   </button>
                 )}
               </div>
+
+              {/* TICKET OPTIONS */}
+              {event.ticketTiers && event.ticketTiers.length > 0 && (
+                <div className="space-y-6 pt-12 border-t border-gray-100">
+                  <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
+                    <Ticket size={20} className="text-blue-600" /> Ticket
+                    Options
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {event.ticketTiers.map((tier: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="p-6 rounded-[32px] bg-white border border-gray-100 hover:border-blue-600 transition-all flex justify-between items-center group"
+                      >
+                        <div>
+                          <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest flex items-center gap-2">
+                            <Zap size={10} fill={KIVO_BLUE} /> {tier.name}
+                          </p>
+                          <p className="text-xs font-bold text-gray-400">
+                            {tier.capacity
+                              ? `${tier.capacity} Slots`
+                              : "Unlimited"}
+                          </p>
+                        </div>
+                        <p className="text-2xl font-black italic text-gray-900">
+                          {tier.price === 0
+                            ? "FREE"
+                            : `₦${tier.price.toLocaleString()}`}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Sidebar Checkout (Keep Existing) */}
+            {/* SIDEBAR */}
             <div className="lg:col-span-4 space-y-6">
               <div className="hidden lg:block sticky top-28 p-8 bg-white rounded-[40px] border border-gray-100 shadow-2xl shadow-black/5 space-y-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">
-                      Pricing
-                    </p>
-                    <p className="text-3xl font-black text-gray-900 uppercase italic">
-                      {displayPrice}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300">
-                    <Users size={20} />
-                  </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                    Pricing
+                  </p>
+                  <p className="text-3xl font-black text-gray-900 uppercase italic">
+                    {displayPrice}
+                  </p>
                 </div>
                 <button
                   onClick={handleCTA}
                   disabled={event.isCancelled || hasReserved}
-                  className={`w-full py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-xl ${event.isCancelled ? "bg-red-50 text-red-400 cursor-not-allowed" : "bg-black text-white hover:bg-blue-600 active:scale-95 shadow-blue-600/10"}`}
+                  className={`w-full py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-xl ${event.isCancelled ? "bg-red-50 text-red-400 cursor-not-allowed" : "bg-black text-white hover:bg-blue-600 shadow-blue-600/10"}`}
                 >
                   {getButtonContent()}
                 </button>
-                {/* Map Section */}
                 <div className="pt-8 border-t border-gray-100">
                   <div className="flex items-center justify-between mb-4">
                     <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">
@@ -486,20 +505,15 @@ export default function EventDetailsPage() {
                     )}
                   </div>
                   {!event.isOnline ? (
-                    <div className="space-y-4">
-                      <div className="h-56 rounded-[32px] overflow-hidden bg-gray-100 border border-gray-100">
-                        <EventMap
-                          latitude={event.location?.coordinates?.[1]}
-                          longitude={event.location?.coordinates?.[0]}
-                        />
-                      </div>
-                      <p className="text-xs font-bold text-gray-500 leading-relaxed px-2 italic">{`${event.location?.address || ""}, ${event.location?.neighborhood || "Location details provided upon registration."}`}</p>
+                    <div className="h-56 rounded-[32px] overflow-hidden border border-gray-100">
+                      <EventMap
+                        latitude={event.location?.coordinates?.[1]}
+                        longitude={event.location?.coordinates?.[0]}
+                      />
                     </div>
                   ) : (
-                    <div className="h-56 rounded-[32px] bg-blue-50 flex flex-col items-center justify-center text-center p-8 border border-blue-100">
-                      <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-blue-600 shadow-sm mb-4">
-                        <Monitor size={32} />
-                      </div>
+                    <div className="h-56 rounded-[32px] bg-blue-50 flex flex-col items-center justify-center p-8 border border-blue-100 text-center">
+                      <Monitor size={32} className="text-blue-600 mb-2" />
                       <p className="text-xs font-black uppercase text-blue-600 tracking-widest">
                         Virtual Move
                       </p>
@@ -509,7 +523,8 @@ export default function EventDetailsPage() {
               </div>
             </div>
           </div>
-          {/* SIMILAR EVENTS SECTION */}
+
+          {/* SIMILAR EVENTS */}
           {similarEvents.length > 0 && (
             <div className="mt-32 space-y-10 pb-20">
               <div className="flex items-center justify-between">
@@ -531,7 +546,7 @@ export default function EventDetailsPage() {
                   href="/explore"
                   className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black border-b-2 border-transparent hover:border-black transition-all"
                 >
-                  See All Events
+                  See All
                 </Link>
               </div>
 
@@ -543,9 +558,8 @@ export default function EventDetailsPage() {
                     className="group"
                   >
                     <div
-                      className="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 hover:-translate-y-2 group-hover:shadow-2xl"
+                      className="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 hover:-translate-y-2"
                       style={{
-                        // Subtle brand glow on hover
                         boxShadow: "0 20px 40px -20px rgba(255, 215, 0, 0.3)",
                       }}
                     >
@@ -568,7 +582,6 @@ export default function EventDetailsPage() {
                           </span>
                         </div>
                       </div>
-
                       <div className="p-8 space-y-4">
                         <div
                           className="flex items-center gap-2"
@@ -582,11 +595,9 @@ export default function EventDetailsPage() {
                             )}
                           </span>
                         </div>
-
-                        <h4 className="text-xl font-black uppercase italic tracking-tight line-clamp-1 group-hover:text-blue-600 transition-colors">
+                        <h4 className="text-xl font-black uppercase italic truncate group-hover:text-blue-600 transition-colors">
                           {similar.title}
                         </h4>
-
                         <div className="flex items-center justify-between pt-4 border-t border-gray-50">
                           <div className="flex items-center gap-2 text-gray-400">
                             <MapPin size={14} />

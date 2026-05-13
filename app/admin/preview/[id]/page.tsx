@@ -416,30 +416,79 @@ export default function ProfessionalReviewPage() {
             </div>
 
             {/* LOCATION MAP */}
+            {/* LOCATION OR MEETING LINK */}
             <section className="p-12 rounded-[48px] bg-slate-950 text-white flex flex-col md:flex-row gap-12 items-center">
               <div className="flex-1 space-y-8 w-full">
                 <h2 className="text-[11px] font-black uppercase text-yellow-500 tracking-[0.5em] mb-4">
-                  Location Engine
+                  {event.eventFormat === "online"
+                    ? "Digital Access"
+                    : "Location Engine"}
                 </h2>
+
                 <div className="grid grid-cols-1 gap-4">
-                  <div className="flex justify-between items-center p-5 bg-white/5 rounded-2xl border border-white/5">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                      Neighborhood
-                    </span>
-                    <span className="text-sm font-black uppercase text-white">
-                      {event.location.neighborhood}
-                    </span>
-                  </div>
-                  <CoordRow label="Lat" value={event.location.coordinates[1]} />
-                  <CoordRow label="Lng" value={event.location.coordinates[0]} />
+                  {event.eventFormat === "online" ? (
+                    // ONLINE VIEW
+                    <div className="space-y-4">
+                      <div className="p-6 bg-white/5 rounded-3xl border border-white/10 space-y-2">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                          Meeting Link
+                        </p>
+                        <p className="text-sm font-black text-blue-400 break-all underline underline-offset-4">
+                          {event.meetingLink || "No link provided"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 px-2">
+                        <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
+                          <Info size={14} />
+                        </div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase leading-snug">
+                          This is a digital move. Attendees will receive this
+                          link upon ticket confirmation.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    // PHYSICAL / HYBRID VIEW (With safety checks)
+                    <>
+                      <div className="flex justify-between items-center p-5 bg-white/5 rounded-2xl border border-white/5">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                          Neighborhood
+                        </span>
+                        <span className="text-sm font-black uppercase text-white">
+                          {event.location?.neighborhood || "Not Specified"}
+                        </span>
+                      </div>
+                      <CoordRow
+                        label="Lat"
+                        value={event.location?.coordinates?.[1] || "0.00"}
+                      />
+                      <CoordRow
+                        label="Lng"
+                        value={event.location?.coordinates?.[0] || "0.00"}
+                      />
+
+                      {event.eventFormat === "hybrid" && event.meetingLink && (
+                        <div className="mt-4 p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                          <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest">
+                            + Online Access Available
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
-              <div className="w-full md:w-[400px] h-[400px]">
-                <EventMap
-                  latitude={event.location.coordinates[1]}
-                  longitude={event.location.coordinates[0]}
-                />
-              </div>
+
+              {/* Only show map if it's not purely online */}
+              {event.eventFormat !== "online" &&
+                event.location?.coordinates && (
+                  <div className="w-full md:w-[400px] h-[400px]">
+                    <EventMap
+                      latitude={event.location.coordinates[1]}
+                      longitude={event.location.coordinates[0]}
+                    />
+                  </div>
+                )}
             </section>
           </div>
 

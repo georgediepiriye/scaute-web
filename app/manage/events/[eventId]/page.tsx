@@ -1,114 +1,43 @@
-/* eslint-disable @next/next/no-img-element */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  Users,
-  Ticket as TicketIcon,
-  TrendingUp,
-  Plus,
-  X,
-  Shield,
-  Settings,
-  ArrowLeft,
-  Search,
-  Mail,
-  Wallet,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  AlertTriangle,
-  SearchCheck,
-  ExternalLink,
-  Copy,
-} from "lucide-react";
+import { BarChart3, Users, Share2, ExternalLink } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+
+// Component Imports
 import Navbar from "@/components/layout/NavBar";
-import MobileNav from "@/components/layout/MobileNav";
 import AuthGuard from "@/components/auth/AuthGuard";
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-interface Attendee {
-  buyerInfo: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  tierName: string;
-  status: "used" | "valid";
-}
-
-export interface EventData {
-  event: {
-    id: string;
-    title: string;
-    organizer: string;
-    approvalStatus?: string;
-    slug?: string;
-    coOrganizers?: Array<{
-      email: string;
-      _id: string;
-      name?: string;
-      image?: string;
-    }>;
-  };
-  attendees: Attendee[];
-  metrics: {
-    totalRevenue: number;
-    totalTicketsSold: number;
-    checkInCount: number;
-  };
-}
-
-const MetricCard = ({
-  label,
-  value,
-  icon,
-  trend,
-}: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-  trend?: string;
-}) => (
-  <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm group hover:border-yellow-500/20 transition-all">
-    <div className="flex items-center justify-between mb-4">
-      <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-yellow-50 group-hover:scale-110 transition-all duration-500">
-        {icon}
-      </div>
-      {trend && (
-        <span className="text-[9px] font-black uppercase text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
-          {trend}
-        </span>
-      )}
-    </div>
-    <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">
-      {label}
-    </p>
-    <p className="text-3xl font-black mt-1 tracking-tighter">{value}</p>
-  </div>
-);
+import { DashboardHeader } from "@/components/manage/events/Header";
+import { OverviewTab } from "@/components/manage/events/Overview";
+import { SidebarAccess } from "@/components/manage/events/SidebarAccess";
+import { AttendeesTab } from "@/components/manage/events/AttendeesTab";
+import { MarketingTab } from "@/components/manage/events/MarketingTab";
 
 export default function ManageEventDashboard() {
   const params = useParams();
   const router = useRouter();
-  const id = params.eventId;
+  const id = params.eventId as string;
 
-  const [data, setData] = useState<EventData | null>(null);
+  // UI State
+  const [activeTab, setActiveTab] = useState("overview");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [data, setData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const [addingCoOrg, setAddingCoOrg] = useState(false);
-  const [removingId, setRemovingId] = useState<string | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [error, setError] = useState("");
-  const [coOrgEmail, setCoOrgEmail] = useState("");
+
+  // FIX: Added state for logged in user ID
+  const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
+
+  // Guest List State
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
 
+  // Access Control State
+  const [coOrgEmail, setCoOrgEmail] = useState("");
+  const [addingCoOrg, setAddingCoOrg] = useState(false);
+
+  // FIX: Restore local storage check to identify the organizer
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -127,18 +56,14 @@ export default function ManageEventDashboard() {
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/manage`,
         { credentials: "include" },
       );
-
       const result = await response.json();
-
-      if (response.ok && result.status === "success") {
+      if (response.ok) {
         setData(result.data);
-      } else if (response.status === 401) {
-        router.replace("/auth/signin");
       } else {
-        setError(result.message || "Unauthorized access to this move.");
+        router.replace("/auth/signin");
       }
     } catch (err) {
-      setError("Unable to connect to Kivo servers.");
+      toast.error("Unable to connect to Kivo servers.");
     } finally {
       setLoading(false);
     }
@@ -148,36 +73,16 @@ export default function ManageEventDashboard() {
     if (id) fetchDashboardData();
   }, [id, fetchDashboardData]);
 
-  const handleCopyLink = () => {
-    const eventSlug = (data?.event as any)?.slug || id;
-    const url = `https://kivo-isca.onrender.com/e/${eventSlug}`;
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
-    navigator.clipboard.writeText(url);
-    toast.success("Move link copied to clipboard!", {
-      style: {
-        borderRadius: "16px",
-        background: "#0F172A",
-        color: "#fff",
-        fontSize: "12px",
-        fontWeight: "bold",
-        textTransform: "uppercase",
-      },
-    });
-  };
-
-  const isOrganizer = useMemo(() => {
-    if (!data || !loggedInUserId) return false;
-    return data.event.organizer === loggedInUserId;
-  }, [data, loggedInUserId]);
-
+  // FIX: Updated to use your original /co-organizers endpoint and PATCH method
   const handleAddCoOrg = async () => {
     if (!coOrgEmail) return toast.error("Please enter an email");
-
     setAddingCoOrg(true);
-    await sleep(800);
-
     try {
-      const response = await fetch(
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/co-organizers`,
         {
           method: "PATCH",
@@ -186,10 +91,8 @@ export default function ManageEventDashboard() {
           credentials: "include",
         },
       );
-
-      const result = await response.json();
-
-      if (response.ok) {
+      const result = await res.json();
+      if (res.ok) {
         toast.success("Partner added to the move!");
         setCoOrgEmail("");
         fetchDashboardData();
@@ -203,471 +106,108 @@ export default function ManageEventDashboard() {
     }
   };
 
-  const handleRemovePartner = async (partnerId: string) => {
-    setConfirmDeleteId(null);
-    setRemovingId(partnerId);
+  const filteredTickets = useMemo(() => {
+    const sourceList = data?.attendees || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return sourceList.filter((ticket: any) => {
+      const fullName =
+        `${ticket.buyerInfo.firstName} ${ticket.buyerInfo.lastName}`.toLowerCase();
+      const email = ticket.buyerInfo.email.toLowerCase();
+      const search = searchTerm.toLowerCase();
+      return fullName.includes(search) || email.includes(search);
+    });
+  }, [data?.attendees, searchTerm]);
 
-    await sleep(1000);
-
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/co-organizers/${partnerId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-      );
-
-      if (response.ok) {
-        toast.success("Access revoked successfully");
-        fetchDashboardData();
-      } else {
-        const result = await response.json();
-        toast.error(result.message || "Failed to remove partner");
-      }
-    } catch (err) {
-      toast.error("Connection error. Try again.");
-    } finally {
-      setRemovingId(null);
-    }
-  };
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-
-  const { currentItems, totalPages } = useMemo(() => {
-    if (!data) return { currentItems: [], totalPages: 0 };
-
-    const filtered = data.attendees.filter(
-      (a) =>
-        `${a.buyerInfo.firstName} ${a.buyerInfo.lastName}`
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        a.buyerInfo.email.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
-
+  const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
+  const currentItems = useMemo(() => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const current = filtered.slice(indexOfFirstItem, indexOfLastItem);
-    const total = Math.ceil(filtered.length / itemsPerPage);
+    return filteredTickets.slice(indexOfFirstItem, indexOfLastItem);
+  }, [filteredTickets, currentPage]);
 
-    return { currentItems: current, totalPages: total };
-  }, [data, searchTerm, currentPage]);
-
-  if (loading) {
-    return (
-      <div className="fixed inset-0 z-[200] bg-[#020817] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 border-4 border-yellow-500/10 rounded-3xl" />
-            <div className="absolute inset-0 border-4 border-t-yellow-500 rounded-3xl animate-spin" />
-          </div>
-          <p className="text-yellow-500 font-black text-[10px] uppercase tracking-[0.3em] animate-pulse">
-            Syncing Analytics
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white px-6">
-        <div className="bg-red-50 p-6 rounded-[2rem] text-center max-w-sm">
-          <X className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-black uppercase text-red-900">
-            Access Denied
-          </h2>
-          <p className="text-red-600/70 text-sm font-bold mt-2">{error}</p>
-          <button
-            onClick={() => router.back()}
-            className="mt-6 w-full py-4 bg-white border border-red-100 text-red-600 rounded-2xl font-black text-xs uppercase tracking-widest"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const { event, metrics } = data;
+  if (loading || !data) return null;
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans relative selection:bg-yellow-500/20">
-        <Toaster position="top-right" reverseOrder={false} />
-
-        {confirmDeleteId && (
-          <div className="fixed inset-0 z-[500] flex items-center justify-center px-6">
-            <div
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
-              onClick={() => setConfirmDeleteId(null)}
-            />
-            <div className="bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-2xl w-full max-w-sm relative z-10 animate-in fade-in zoom-in duration-200">
-              <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-6">
-                <AlertTriangle className="text-red-500" size={28} />
-              </div>
-              <h3 className="text-xl font-black uppercase tracking-tight text-red-900 leading-none">
-                Revoke Access?
-              </h3>
-              <p className="text-slate-500 text-xs font-bold mt-3 leading-relaxed">
-                This partner will immediately lose access to the guest list and
-                real-time metrics for{" "}
-                <span className="text-red-900">&quot;{event.title}&quot;</span>.
-              </p>
-              <div className="flex flex-col gap-3 mt-8">
-                <button
-                  onClick={() => handleRemovePartner(confirmDeleteId)}
-                  className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-700 active:scale-95 transition-all"
-                >
-                  Confirm Revoke
-                </button>
-                <button
-                  onClick={() => setConfirmDeleteId(null)}
-                  className="w-full py-4 bg-slate-50 text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all"
-                >
-                  Cancel Action
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
+      <div className="min-h-screen bg-[#FDFDFD] text-slate-900 selection:bg-yellow-200">
+        <Toaster position="top-right" />
         <Navbar />
 
-        <main
-          className={`max-w-7xl mx-auto px-4 md:px-8 pt-32 pb-24 transition-all duration-500 ${confirmDeleteId ? "blur-sm scale-[0.99] opacity-50 pointer-events-none" : ""}`}
-        >
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-            <div>
-              <button
-                onClick={() => router.back()}
-                className="flex items-center gap-2 text-slate-400 hover:text-yellow-600 transition-colors mb-4"
-              >
-                <ArrowLeft size={16} />
-                <span className="text-[10px] font-black uppercase tracking-widest">
-                  Back to Profile
-                </span>
-              </button>
-              <h1 className="text-4xl font-black uppercase tracking-tighter leading-none">
-                {event?.title}
-              </h1>
-              <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
-                <div className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2.5 rounded-2xl shadow-sm hover:border-yellow-500/20 transition-all group">
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0">
-                      Live Link:
-                    </span>
-                    <span className="text-xs font-bold text-slate-600 truncate max-w-[180px] sm:max-w-xs">
-                      kivo-isca.onrender.com/e/{(event as any).slug || id}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 border-l border-slate-100 ml-2 pl-2">
-                    <button
-                      onClick={handleCopyLink}
-                      className="p-1.5 hover:bg-yellow-50 rounded-lg transition-colors group/btn"
-                      title="Copy URL"
-                    >
-                      <Copy
-                        size={14}
-                        className="text-slate-400 group-hover/btn:text-yellow-600"
-                      />
-                    </button>
-                    <a
-                      href={`https://kivo-isca.onrender.com/e/${(event as any).slug || id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1.5 hover:bg-slate-50 rounded-lg transition-colors"
-                    >
-                      <ExternalLink
-                        size={14}
-                        className="text-slate-400 hover:text-slate-900"
-                      />
-                    </a>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-3 mt-4">
-                <span className="px-3 py-1 bg-yellow-400/10 text-yellow-700 rounded-full text-[10px] font-black uppercase tracking-widest">
-                  {isOrganizer ? "Main Organizer" : "Partner Access"}
-                </span>
+        <main className="max-w-7xl mx-auto px-4 md:px-8 pt-32 pb-24">
+          <DashboardHeader event={data.event} id={id} router={router} />
 
-                <div
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${
-                    event.approvalStatus === "approved"
-                      ? "bg-green-50 text-green-600 border-green-100"
-                      : "bg-amber-50 text-amber-600 border-amber-100"
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div className="lg:col-span-2 space-y-2">
+              {[
+                { id: "overview", label: "Insights", icon: BarChart3 },
+                { id: "attendees", label: "Guest List", icon: Users },
+                { id: "marketing", label: "Growth", icon: Share2 },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    activeTab === item.id
+                      ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
+                      : "text-slate-400 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
-                  <SearchCheck size={12} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">
-                    {event.approvalStatus || "Pending"}
-                  </span>
-                </div>
-
-                <span className="text-slate-300 hidden md:inline">•</span>
-                <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                  ID: {id?.toString().slice(-6)}
-                </span>
-              </div>
+                  <item.icon size={16} /> {item.label}
+                </button>
+              ))}
             </div>
 
-            {isOrganizer && (
-              <div className="flex gap-3">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    router.push(`/manage/events/settings/${event?.id}`);
-                  }}
-                  className="flex-1 md:flex-none px-6 py-4 bg-yellow-400 text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-yellow-500 transition-all flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-                >
-                  <Settings size={14} /> Edit Move
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <MetricCard
-                  label="Total Revenue"
-                  value={`₦${metrics.totalRevenue.toLocaleString()}`}
-                  icon={<Wallet className="text-yellow-600" size={18} />}
-                  trend="Kivo Balance"
+            <div className="lg:col-span-7">
+              {activeTab === "overview" && (
+                <OverviewTab metrics={data.metrics} />
+              )}
+              {activeTab === "attendees" && (
+                <AttendeesTab
+                  currentItems={currentItems}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  setCurrentPage={setCurrentPage}
                 />
-                <MetricCard
-                  label="Tickets Sold"
-                  value={metrics.totalTicketsSold.toString()}
-                  icon={<TicketIcon className="text-yellow-600" size={18} />}
-                />
-                <MetricCard
-                  label="Check-In Rate"
-                  value={`${Math.round((metrics.checkInCount / (metrics.totalTicketsSold || 1)) * 100)}%`}
-                  icon={<Users className="text-yellow-600" size={18} />}
-                  trend={`${metrics.checkInCount} scanned`}
-                />
-              </div>
-
-              <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden flex flex-col">
-                <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                    <Users size={16} className="text-yellow-500" /> Guest List
-                  </h3>
-                  <div className="relative">
-                    <Search
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"
-                      size={14}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Search guests..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 pr-4 py-3 bg-slate-50 border border-transparent focus:border-yellow-500/20 focus:bg-white rounded-xl text-xs font-bold transition-all outline-none w-full md:w-64"
-                    />
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50/50">
-                        <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                          Attendee
-                        </th>
-                        <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                          Access Tier
-                        </th>
-                        <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {currentItems.length > 0 ? (
-                        currentItems.map((t, i) => (
-                          <tr
-                            key={i}
-                            className="hover:bg-yellow-50/30 transition-colors group"
-                          >
-                            <td className="px-8 py-5">
-                              <p className="font-black text-sm uppercase tracking-tight group-hover:text-yellow-700 transition-colors">
-                                {t.buyerInfo.firstName} {t.buyerInfo.lastName}
-                              </p>
-                              <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase">
-                                {t.buyerInfo.email}
-                              </p>
-                            </td>
-                            <td className="px-8 py-5">
-                              <span className="text-[10px] font-black uppercase px-3 py-1 bg-slate-100 rounded-lg text-slate-600">
-                                {t.tierName}
-                              </span>
-                            </td>
-                            <td className="px-8 py-5 text-right">
-                              <span
-                                className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-full ${t.status === "used" ? "bg-yellow-100 text-yellow-700" : "bg-green-50 text-green-600"}`}
-                              >
-                                {t.status === "used"
-                                  ? "Checked-In"
-                                  : "Valid Pass"}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={3} className="py-20 text-center">
-                            <p className="text-[10px] font-black uppercase text-slate-300 tracking-[0.3em]">
-                              No matching guests found
-                            </p>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {totalPages > 1 && (
-                  <div className="p-6 bg-slate-50/50 border-t border-slate-50 flex items-center justify-between">
-                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                      Page {currentPage} of {totalPages}
-                    </p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() =>
-                          setCurrentPage((p) => Math.max(p - 1, 1))
-                        }
-                        disabled={currentPage === 1}
-                        className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 disabled:opacity-30 hover:text-yellow-600 transition-colors"
-                      >
-                        <ChevronLeft size={18} />
-                      </button>
-                      <button
-                        onClick={() =>
-                          setCurrentPage((p) => Math.min(p + 1, totalPages))
-                        }
-                        disabled={currentPage === totalPages}
-                        className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 disabled:opacity-30 hover:text-yellow-600 transition-colors"
-                      >
-                        <ChevronRight size={18} />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
+              {activeTab === "marketing" && (
+                <MarketingTab id={id} event={data.event} />
+              )}
             </div>
 
-            <aside className="lg:col-span-4 space-y-6">
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm">
-                <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                  <Shield size={16} className="text-yellow-500" /> Access
-                  Control
-                </h3>
+            <div className="lg:col-span-3 space-y-6">
+              {/* FIX: isOrganizer now correctly compares data from localStorage */}
+              <SidebarAccess
+                event={data.event}
+                isOrganizer={data.event.organizer === loggedInUserId}
+                coOrgEmail={coOrgEmail}
+                setCoOrgEmail={setCoOrgEmail}
+                adding={addingCoOrg}
+                onAdd={handleAddCoOrg}
+              />
 
-                <div className="space-y-3 mb-8">
-                  {event.coOrganizers?.length ? (
-                    event.coOrganizers.map((co) => (
-                      <div
-                        key={co._id}
-                        className="group flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-100 transition-all"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-100">
-                            {co.image ? (
-                              <img
-                                src={co.image}
-                                className="w-full h-full object-cover"
-                                alt="Partner"
-                              />
-                            ) : (
-                              <Mail size={12} className="text-slate-400" />
-                            )}
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[11px] font-black uppercase tracking-tight text-slate-900 leading-none">
-                              {co.name || "Kivo Member"}
-                            </span>
-                            <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">
-                              {co.email}
-                            </span>
-                          </div>
-                        </div>
-
-                        {isOrganizer && (
-                          <button
-                            disabled={!!removingId}
-                            onClick={() => setConfirmDeleteId(co._id)}
-                            className="text-slate-300 hover:text-red-500 transition-colors p-1 disabled:opacity-50"
-                          >
-                            {removingId === co._id ? (
-                              <Loader2
-                                size={14}
-                                className="animate-spin text-red-500"
-                              />
-                            ) : (
-                              <X size={14} />
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="py-4 text-center border-2 border-dashed border-slate-100 rounded-2xl">
-                      <p className="text-[10px] font-black uppercase text-slate-300">
-                        Solo Organizer
-                      </p>
-                    </div>
-                  )}
+              <div
+                className="bg-yellow-400 p-8 rounded-[2.5rem] shadow-xl shadow-yellow-100 group cursor-pointer relative overflow-hidden active:scale-95 transition-all"
+                onClick={() =>
+                  window.open(`/e/${data.event.slug || id}`, "_blank")
+                }
+              >
+                <div className="relative z-10">
+                  <h4 className="text-sm font-black uppercase tracking-tight text-black italic flex items-center gap-2">
+                    Live Preview <ExternalLink size={14} />
+                  </h4>
+                  <p className="text-[10px] font-bold text-black/60 mt-2 uppercase">
+                    View move as attendee
+                  </p>
                 </div>
-
-                {isOrganizer && (
-                  <div className="space-y-4">
-                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
-                      Add Co-Organizer
-                    </p>
-                    <div className="flex gap-2">
-                      <input
-                        className="flex-1 bg-slate-50 p-4 rounded-xl text-xs font-bold outline-none border border-transparent focus:border-yellow-500/20 transition-all"
-                        placeholder="Enter email address"
-                        value={coOrgEmail}
-                        onChange={(e) => setCoOrgEmail(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleAddCoOrg()}
-                      />
-                      <button
-                        disabled={addingCoOrg}
-                        onClick={handleAddCoOrg}
-                        className="bg-black text-white p-4 rounded-xl hover:bg-yellow-500 hover:text-black transition-colors active:scale-95 disabled:opacity-50"
-                      >
-                        {addingCoOrg ? (
-                          <Loader2 size={18} className="animate-spin" />
-                        ) : (
-                          <Plus size={18} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
+                  <BarChart3 size={120} />
+                </div>
               </div>
-
-              <div className="bg-[#0F172A] p-8 rounded-[2.5rem] text-white relative overflow-hidden">
-                <TrendingUp className="absolute -right-4 -bottom-4 text-yellow-500/10 w-24 h-24" />
-                <h4 className="text-lg font-black uppercase tracking-tight relative z-10">
-                  Expand Your Reach
-                </h4>
-                <p className="text-slate-400 text-xs mt-2 font-medium relative z-10 leading-relaxed uppercase">
-                  Moves with co-organizers see 40% higher ticket sales on
-                  average in Port Harcourt.
-                </p>
-                <button className="mt-6 text-[10px] font-black uppercase tracking-widest text-yellow-400 relative z-10 hover:text-white transition-colors">
-                  Learn More
-                </button>
-              </div>
-            </aside>
+            </div>
           </div>
         </main>
-        <MobileNav />
       </div>
     </AuthGuard>
   );

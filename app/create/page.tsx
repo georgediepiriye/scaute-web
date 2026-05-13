@@ -324,8 +324,6 @@ export default function CreateEventPage() {
       }
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/events`, {
         method: "POST",
-        // IMPORTANT: Remove 'Content-Type' header.
-        // The browser will automatically set it to 'multipart/form-data' with the boundary.
         credentials: "include",
         body: data,
       });

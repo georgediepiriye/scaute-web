@@ -171,8 +171,22 @@ export default function EventCard({
   }, [startDate, endDate]);
 
   const canShowParticipants = ticketingType === "internal";
-  const displayImages =
-    participantImages.length > 0 ? participantImages : [1, 2, 3];
+
+  // 1. Determine how many actual photos we have
+  const actualPhotoCount = participantImages?.length || 0;
+
+  // 2. Decide how many avatars to show (Capped at 3 or the number of attendees)
+  const slotsToShow = Math.min(attendees, 3);
+
+  // 3. Create the display array: Use actual photos first, then fill with placeholders
+  const displayImages = Array.from({ length: slotsToShow }).map((_, i) => {
+    if (i < actualPhotoCount) {
+      return participantImages[i];
+    }
+    // Return a unique seed for the fallback avatars
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${title}-guest-${i}`;
+  });
+
   const baseStatusScore = isBoosted
     ? (priorityLevel || 0) - 4
     : priorityLevel || 0;
@@ -300,20 +314,16 @@ export default function EventCard({
         {/* FOOTER SECTION */}
         <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto min-h-[52px]">
           <div className="flex items-center gap-2">
-            {canShowParticipants ? (
+            {canShowParticipants && attendees > 0 ? (
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
-                  {displayImages.slice(0, 3).map((img, i) => (
+                  {displayImages.map((img, i) => (
                     <div
                       key={i}
-                      className="w-6 h-6 relative rounded-full border-2 border-white overflow-hidden bg-gray-100"
+                      className="w-6 h-6 relative rounded-full border-2 border-white overflow-hidden bg-gray-100 shadow-sm"
                     >
                       <Image
-                        src={
-                          typeof img === "string"
-                            ? img
-                            : `https://api.dicebear.com/7.x/avataaars/svg?seed=${title}${i}`
-                        }
+                        src={img}
                         alt="participant"
                         fill
                         className="object-cover"
@@ -327,7 +337,7 @@ export default function EventCard({
               </div>
             ) : (
               <span className="text-[9px] font-black uppercase tracking-tight text-gray-400">
-                Public Event
+                {attendees > 0 ? `${attendees} Joined` : "Public Event"}
               </span>
             )}
           </div>

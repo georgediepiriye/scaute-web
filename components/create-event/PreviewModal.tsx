@@ -13,6 +13,8 @@ import {
   Info,
   Copy,
   Check,
+  Video, // Added for online moves
+  Globe, // Added for hybrid moves
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -38,7 +40,7 @@ export const PreviewModal = ({
     try {
       await navigator.clipboard.writeText(eventLink);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Failed to copy!", err);
     }
@@ -85,7 +87,6 @@ export const PreviewModal = ({
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         className="relative w-full max-w-lg bg-white rounded-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-50 p-2 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-white transition-colors"
@@ -93,7 +94,6 @@ export const PreviewModal = ({
           <X size={20} />
         </button>
 
-        {/* Scrollable Content Area */}
         <div className="overflow-y-auto custom-scrollbar">
           {/* 1. Image Preview Section */}
           <div className="relative aspect-video w-full bg-gray-100 shrink-0">
@@ -138,7 +138,6 @@ export const PreviewModal = ({
                       Custom Move Link
                     </p>
                   </div>
-                  {/* Copy Button */}
                   <button
                     onClick={handleCopy}
                     className="flex items-center gap-1.5 px-3 py-1 bg-white border border-blue-100 rounded-full shadow-sm hover:bg-blue-50 transition-colors group"
@@ -197,21 +196,43 @@ export const PreviewModal = ({
                 </div>
               </div>
 
+              {/* UPDATED: Venue/Link Section */}
               <div className="space-y-1.5">
                 <p className="text-[9px] font-black uppercase text-gray-400 flex items-center gap-1.5 tracking-widest">
-                  <MapPin size={12} style={{ color: KIVO_BLUE }} /> Venue
+                  {data.eventFormat === "online" ? (
+                    <Video size={12} style={{ color: KIVO_BLUE }} />
+                  ) : data.eventFormat === "hybrid" ? (
+                    <Globe size={12} style={{ color: KIVO_BLUE }} />
+                  ) : (
+                    <MapPin size={12} style={{ color: KIVO_BLUE }} />
+                  )}
+                  {data.eventFormat === "online" ? "Meeting Link" : "Venue"}
                 </p>
+
                 <div className="text-xs font-bold text-gray-900">
-                  <p className="line-clamp-2 leading-tight">
-                    {data.location || "Location not set"}
-                  </p>
-                  {data.neighborhood && (
-                    <p
-                      className="text-[9px] uppercase font-black mt-1 flex items-center gap-1"
-                      style={{ color: KIVO_BLUE }}
-                    >
-                      <Navigation size={8} /> {data.neighborhood}
+                  {data.eventFormat === "online" ? (
+                    <p className="text-blue-600 underline break-all line-clamp-2">
+                      {data.meetingLink || "Link not provided"}
                     </p>
+                  ) : (
+                    <>
+                      <p className="line-clamp-2 leading-tight">
+                        {data.location || "Location not set"}
+                      </p>
+                      {data.neighborhood && (
+                        <p
+                          className="text-[9px] uppercase font-black mt-1 flex items-center gap-1"
+                          style={{ color: KIVO_BLUE }}
+                        >
+                          <Navigation size={8} /> {data.neighborhood}
+                        </p>
+                      )}
+                      {data.eventFormat === "hybrid" && data.meetingLink && (
+                        <p className="mt-2 text-[10px] font-black text-blue-600 uppercase flex items-center gap-1">
+                          <Link2 size={10} /> + Online Link
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -244,7 +265,7 @@ export const PreviewModal = ({
           </div>
         </div>
 
-        {/* 3. Sticky Footer Action Buttons */}
+        {/* Footer Buttons */}
         <div className="p-5 sm:p-8 pt-0 flex flex-col sm:flex-row gap-3 bg-white shrink-0">
           <button
             onClick={onClose}
