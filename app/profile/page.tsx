@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/layout/NavBar";
 import MobileNav from "@/components/layout/MobileNav";
+import { useAuth } from "@/components/auth/AuthGuard";
 
 // BRAND CONSTANTS
 const KIVO_BLUE = "#0052FF";
@@ -32,31 +33,18 @@ const KIVO_YELLOW = "#FFD700";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<any>(null);
 
+  // Consume global authentication state from the primary workspace provider
+  const { user: profile, loading, logout } = useAuth();
+
+  // Handle implicit production client-side routing locks cleanly
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/users/profile`,
-          { method: "GET", credentials: "include" },
-        );
-        const result = await response.json();
+    if (loading) return;
 
-        if (response.ok && result.status === "success") {
-          setProfile(result.data);
-          setLoading(false);
-        } else {
-          router.replace("/auth/signin");
-        }
-      } catch (error) {
-        console.error("Profile Load Error:", error);
-        router.replace("/auth/signin");
-      }
-    };
-    fetchProfile();
-  }, [router]);
+    if (!profile) {
+      router.replace("/auth/signin");
+    }
+  }, [profile, loading, router]);
 
   const handleSignOut = async () => {
     try {
@@ -64,13 +52,15 @@ export default function ProfilePage() {
         method: "POST",
         credentials: "include",
       });
-      localStorage.clear();
-      window.location.href = "/";
+      logout(); // Cleanly wipes localStorage and updates runtime application states instantly
     } catch (err) {
-      console.error("Logout failed");
+      console.error("Logout failed:", err);
+      // Fallback local cleanup execution if server connection times out
+      logout();
     }
   };
 
+  // Render uniform full-screen blocker only while context hydration is settling
   if (loading || !profile) {
     return (
       <div className="fixed inset-0 z-[200] bg-white flex items-center justify-center">
@@ -345,7 +335,6 @@ export default function ProfilePage() {
                         event.organizer === profile._id ||
                         event.organizer?._id === profile._id;
 
-                      // Evaluate access controls if user is a co-organizer
                       const partnerRecord = event.coOrganizers?.find(
                         (coOrg: any) => {
                           const coOrgId =
@@ -356,7 +345,6 @@ export default function ProfilePage() {
 
                       const partnerPermissions =
                         partnerRecord?.permissions || [];
-                      // Safe fallback: If array exists but is completely empty, default to active scan permission
                       const finalPermissions =
                         partnerRecord && partnerPermissions.length === 0
                           ? ["scan_tickets"]
@@ -366,7 +354,6 @@ export default function ProfilePage() {
                         isMainOrganizer ||
                         finalPermissions.includes("scan_tickets");
 
-                      // --- DYNAMIC TIMELINE STATUS GENERATION ---
                       const getTimelineStatus = () => {
                         const now = new Date();
                         const start = new Date(event.startDate);
@@ -422,7 +409,6 @@ export default function ProfilePage() {
                                 {event.title}
                               </h4>
                               <div className="flex flex-wrap items-center gap-2 mt-1">
-                                {/* DYNAMIC ORGANIZER LEVEL STATUS BADGE */}
                                 {isMainOrganizer ? (
                                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-600 text-white font-black text-[8px] uppercase tracking-wider">
                                     <Crown
@@ -443,7 +429,6 @@ export default function ProfilePage() {
 
                                 <span className="text-slate-300">•</span>
 
-                                {/* APPROVAL STATUS BADGE */}
                                 <div
                                   className={`flex items-center gap-1 px-2 py-0.5 rounded-md border ${
                                     event.approvalStatus === "approved"
@@ -477,7 +462,6 @@ export default function ProfilePage() {
                           </div>
 
                           <div className="flex items-center gap-3 mt-4 sm:mt-0 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-50 pt-3 sm:pt-0">
-                            {/* ENFORCED SCAN PRIVILEGES ENGINE */}
                             {event.ticketTiers &&
                               event.ticketTiers.length > 0 && (
                                 <>
