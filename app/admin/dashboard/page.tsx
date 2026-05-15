@@ -21,7 +21,6 @@ import toast from "react-hot-toast";
 import Navbar from "@/components/layout/NavBar";
 import { ModerationTable } from "@/components/admin/ModerationTable";
 import { UserManagementTable } from "@/components/admin/UserManagementTable";
-import AuthGuard from "@/components/auth/AuthGuard";
 import { PulseAnalytics } from "@/components/admin/PulseAnalytics";
 
 type AdminTab = "events" | "users" | "analytics";
@@ -148,14 +147,7 @@ export default function AdminDashboard() {
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-    if (activeTab === "events") {
-      fetchEvents();
-    } else if (activeTab === "users") {
-      fetchUsers();
-    }
-  }, [activeTab, eventPage, eventFilter, eventSearch, userPage, userSearch]);
-  // ADD THIS TO AdminDashboard.tsx
+  // Debounce hook handling updates cleanly across tabs without executing reduntant requests
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (activeTab === "events") {
@@ -166,212 +158,200 @@ export default function AdminDashboard() {
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [eventSearch, userSearch, eventFilter, activeTab]);
+  }, [eventSearch, userSearch, eventFilter, eventPage, userPage, activeTab]);
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-[#FDFDFD]">
-        <Navbar />
-        <main className="max-w-7xl mx-auto px-4 pt-32 pb-20">
-          {/* TAB NAVIGATION & SEARCH BAR */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-            <div className="flex gap-1 bg-gray-100 p-1 rounded-[20px] w-fit">
-              <TabButton
-                active={activeTab === "events"}
-                onClick={() => setActiveTab("events")}
-                icon={<CalendarDays size={14} />}
-                label="Events"
-              />
-              <TabButton
-                active={activeTab === "users"}
-                onClick={() => setActiveTab("users")}
-                icon={<Users size={14} />}
-                label="Users"
-              />
-              <TabButton
-                active={activeTab === "analytics"}
-                onClick={() => setActiveTab("analytics")}
-                icon={<BarChart3 size={14} />}
-                label="Pulse"
-              />
-            </div>
-
-            <div className="relative group">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                size={16}
-              />
-              <input
-                type="text"
-                placeholder={
-                  activeTab === "events"
-                    ? "Find an event..."
-                    : "Search users..."
-                }
-                value={activeTab === "events" ? eventSearch : userSearch}
-                onChange={(e) =>
-                  activeTab === "events"
-                    ? setEventSearch(e.target.value)
-                    : setUserSearch(e.target.value)
-                }
-                className="bg-white border border-gray-100 rounded-[20px] py-3 pl-12 pr-6 text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-600 transition-all w-full md:w-[300px]"
-              />
-            </div>
+    <div className="min-h-screen bg-[#FDFDFD]">
+      <Navbar />
+      <main className="max-w-7xl mx-auto px-4 pt-32 pb-20">
+        {/* TAB NAVIGATION & SEARCH BAR */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+          <div className="flex gap-1 bg-gray-100 p-1 rounded-[20px] w-fit">
+            <TabButton
+              active={activeTab === "events"}
+              onClick={() => setActiveTab("events")}
+              icon={<CalendarDays size={14} />}
+              label="Events"
+            />
+            <TabButton
+              active={activeTab === "users"}
+              onClick={() => setActiveTab("users")}
+              icon={<Users size={14} />}
+              label="Users"
+            />
+            <TabButton
+              active={activeTab === "analytics"}
+              onClick={() => setActiveTab("analytics")}
+              icon={<BarChart3 size={14} />}
+              label="Pulse"
+            />
           </div>
 
-          {/* PAGE HEADER & TOP LEVEL STATS */}
-          <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-black text-gray-900 uppercase tracking-tighter italic">
-                {activeTab === "events" && (
-                  <>
-                    {eventFilter} <span className="text-blue-600">Moves</span>
-                  </>
-                )}
-                {activeTab === "users" && (
-                  <>
-                    Community <span className="text-blue-600">Leads</span>
-                  </>
-                )}
-                {activeTab === "analytics" && (
-                  <>
-                    Vibe <span className="text-blue-600">Pulse</span>
-                  </>
-                )}
-              </h1>
-              <p className="text-[10px] font-bold text-gray-400 uppercase mt-2 tracking-widest">
-                PH City Operations
-              </p>
-            </div>
+          <div className="relative group">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              size={16}
+            />
+            <input
+              type="text"
+              placeholder={
+                activeTab === "events" ? "Find an event..." : "Search users..."
+              }
+              value={activeTab === "events" ? eventSearch : userSearch}
+              onChange={(e) =>
+                activeTab === "events"
+                  ? setEventSearch(e.target.value)
+                  : setUserSearch(e.target.value)
+              }
+              className="bg-white border border-gray-100 rounded-[20px] py-3 pl-12 pr-6 text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-600 transition-all w-full md:w-[300px]"
+            />
+          </div>
+        </div>
 
-            <div className="grid grid-cols-2 lg:flex gap-3">
-              <StatCard
-                label="Pending"
-                value={eventStats.pending}
-                color="blue"
-                icon={<ShieldAlert size={14} />}
-              />
-              <StatCard
-                label="Approved"
-                value={eventStats.approved}
-                color="white"
-                icon={<Activity size={14} />}
-              />
-              <StatCard
-                label="Total Users"
-                value={eventStats.totalUsers}
-                color="white"
-                icon={<Users size={14} />}
-              />
-              <StatCard
-                label="Revenue"
-                value="₦0.00"
-                color="white"
-                icon={<Wallet size={14} />}
-              />
-            </div>
-          </header>
+        {/* PAGE HEADER & TOP LEVEL STATS */}
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-black text-gray-900 uppercase tracking-tighter italic">
+              {activeTab === "events" && (
+                <>
+                  {eventFilter} <span className="text-blue-600">Moves</span>
+                </>
+              )}
+              {activeTab === "users" && (
+                <>
+                  Community <span className="text-blue-600">Leads</span>
+                </>
+              )}
+              {activeTab === "analytics" && (
+                <>
+                  Vibe <span className="text-blue-600">Pulse</span>
+                </>
+              )}
+            </h1>
+            <p className="text-[10px] font-bold text-gray-400 uppercase mt-2 tracking-widest">
+              PH City Operations
+            </p>
+          </div>
 
-          <AnimatePresence mode="wait">
-            {activeTab === "events" && (
-              <motion.section
-                key="events"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="space-y-6"
-              >
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div className="flex bg-white border border-gray-100 p-1 rounded-xl shadow-sm overflow-x-auto max-w-full">
-                    {(
-                      [
-                        "pending",
-                        "approved",
-                        "rejected",
-                        "all",
-                      ] as EventStatus[]
-                    ).map((status) => (
-                      <button
-                        key={status}
-                        onClick={() => {
-                          setEventFilter(status);
-                          setEventPage(1);
-                        }}
-                        className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all whitespace-nowrap ${eventFilter === status ? "bg-blue-600 text-white shadow-md" : "text-gray-400 hover:text-gray-600"}`}
-                      >
-                        {status} (
-                        {status === "pending"
-                          ? eventStats.pending
-                          : status === "approved"
-                            ? eventStats.approved
-                            : status === "rejected"
-                              ? eventStats.rejected
-                              : eventStats.all}
-                        )
-                      </button>
-                    ))}
-                  </div>
+          <div className="grid grid-cols-2 lg:flex gap-3">
+            <StatCard
+              label="Pending"
+              value={eventStats.pending}
+              color="blue"
+              icon={<ShieldAlert size={14} />}
+            />
+            <StatCard
+              label="Approved"
+              value={eventStats.approved}
+              color="white"
+              icon={<Activity size={14} />}
+            />
+            <StatCard
+              label="Total Users"
+              value={eventStats.totalUsers}
+              color="white"
+              icon={<Users size={14} />}
+            />
+            <StatCard
+              label="Revenue"
+              value="₦0.00"
+              color="white"
+              icon={<Wallet size={14} />}
+            />
+          </div>
+        </header>
 
-                  {eventTotalPages > 1 && (
-                    <Pagination
-                      current={eventPage}
-                      total={eventTotalPages}
-                      onPageChange={setEventPage}
-                    />
-                  )}
+        <AnimatePresence mode="wait">
+          {activeTab === "events" && (
+            <motion.section
+              key="events"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-6"
+            >
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex bg-white border border-gray-100 p-1 rounded-xl shadow-sm overflow-x-auto max-w-full">
+                  {(
+                    ["pending", "approved", "rejected", "all"] as EventStatus[]
+                  ).map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => {
+                        setEventFilter(status);
+                        setEventPage(1);
+                      }}
+                      className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all whitespace-nowrap ${eventFilter === status ? "bg-blue-600 text-white shadow-md" : "text-gray-400 hover:text-gray-600"}`}
+                    >
+                      {status} (
+                      {status === "pending"
+                        ? eventStats.pending
+                        : status === "approved"
+                          ? eventStats.approved
+                          : status === "rejected"
+                            ? eventStats.rejected
+                            : eventStats.all}
+                      )
+                    </button>
+                  ))}
                 </div>
 
-                {loading ? (
-                  <div className="h-64 flex items-center justify-center bg-white rounded-[40px] border border-gray-100">
-                    <Loader2 className="animate-spin text-blue-600" />
-                  </div>
-                ) : (
-                  <ModerationTable
-                    events={events}
-                    onStatusUpdate={fetchEvents}
+                {eventTotalPages > 1 && (
+                  <Pagination
+                    current={eventPage}
+                    total={eventTotalPages}
+                    onPageChange={setEventPage}
                   />
                 )}
-              </motion.section>
-            )}
+              </div>
 
-            {activeTab === "users" && (
-              <motion.section
-                key="users"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="space-y-6"
-              >
-                <div className="flex justify-between items-center">
-                  <h3 className="text-[10px] font-black uppercase text-gray-400 tracking-widest italic flex items-center gap-2">
-                    <Filter size={12} /> Directory
-                  </h3>
-                  {userTotalPages > 1 && (
-                    <Pagination
-                      current={userPage}
-                      total={userTotalPages}
-                      onPageChange={setUserPage}
-                    />
-                  )}
+              {loading ? (
+                <div className="h-64 flex items-center justify-center bg-white rounded-[40px] border border-gray-100">
+                  <Loader2 className="animate-spin text-blue-600" />
                 </div>
-                <div className="bg-white rounded-[40px] border border-gray-100 overflow-hidden shadow-sm">
-                  <UserManagementTable users={users} onVerify={fetchUsers} />
-                </div>
-              </motion.section>
-            )}
+              ) : (
+                <ModerationTable events={events} onStatusUpdate={fetchEvents} />
+              )}
+            </motion.section>
+          )}
 
-            {activeTab === "analytics" && (
-              <motion.section
-                key="analytics"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full"
-              >
-                <PulseAnalytics data={pulseData || { eventStats }} />
-              </motion.section>
-            )}
-          </AnimatePresence>
-        </main>
-      </div>
-    </AuthGuard>
+          {activeTab === "users" && (
+            <motion.section
+              key="users"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-6"
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="text-[10px] font-black uppercase text-gray-400 tracking-widest italic flex items-center gap-2">
+                  <Filter size={12} /> Directory
+                </h3>
+                {userTotalPages > 1 && (
+                  <Pagination
+                    current={userPage}
+                    total={userTotalPages}
+                    onPageChange={setUserPage}
+                  />
+                )}
+              </div>
+              <div className="bg-white rounded-[40px] border border-gray-100 overflow-hidden shadow-sm">
+                <UserManagementTable users={users} onVerify={fetchUsers} />
+              </div>
+            </motion.section>
+          )}
+
+          {activeTab === "analytics" && (
+            <motion.section
+              key="analytics"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full"
+            >
+              <PulseAnalytics data={pulseData || { eventStats }} />
+            </motion.section>
+          )}
+        </AnimatePresence>
+      </main>
+    </div>
   );
 }
 

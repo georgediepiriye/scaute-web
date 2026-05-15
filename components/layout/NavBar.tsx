@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HiMenu, HiX } from "react-icons/hi";
 import { motion, AnimatePresence } from "framer-motion";
+
 import {
   Zap,
   Bell,
@@ -16,16 +17,12 @@ import {
   MapPin,
   ShieldCheck,
 } from "lucide-react";
+import { useAuth } from "../auth/AuthGuard";
 
 export default function Navbar() {
   const router = useRouter();
+  const { user, loading } = useAuth();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const [authState, setAuthState] = useState({
-    isLoggedIn: false,
-    isMounted: false,
-    user: null as any,
-  });
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -39,60 +36,17 @@ export default function Navbar() {
     };
   }, [isMobileMenuOpen]);
 
-  const checkAuth = useCallback(async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/me`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        },
-      );
-
-      if (response.ok) {
-        const result = await response.json();
-        setAuthState({
-          isLoggedIn: result.authenticated,
-          isMounted: true,
-          user: result.user,
-        });
-        localStorage.setItem("user", JSON.stringify(result.user));
-      } else {
-        throw new Error("Unauthorized");
-      }
-    } catch (error) {
-      setAuthState({
-        isLoggedIn: false,
-        isMounted: true,
-        user: null,
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    checkAuth();
-    const handleUpdate = () => checkAuth();
-    window.addEventListener("storage", handleUpdate);
-    window.addEventListener("auth-change", handleUpdate);
-    return () => {
-      window.removeEventListener("storage", handleUpdate);
-      window.removeEventListener("auth-change", handleUpdate);
-    };
-  }, [checkAuth]);
-
   const handleSignOut = async () => {
     try {
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
-      localStorage.removeItem("token");
       localStorage.removeItem("user");
-      setAuthState({ isLoggedIn: false, isMounted: true, user: null });
       setMobileMenuOpen(false);
-      router.push("/auth/signin");
-      router.refresh();
+
+      // Perform a full hard refresh or push so the AuthProvider session re-triggers
+      window.location.href = "/auth/signin";
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -134,12 +88,13 @@ export default function Navbar() {
 
         {/* ACTIONS */}
         <div className="flex items-center gap-4">
-          {authState.isMounted && (
+          {/* Only render action layout fields once AuthProvider completes its check */}
+          {!loading && (
             <>
-              {authState.isLoggedIn ? (
+              {user ? (
                 <div className="flex items-center gap-4">
                   {/* ADMIN LINK - DESKTOP */}
-                  {authState.user?.role === "admin" && (
+                  {user?.role === "admin" && (
                     <Link
                       href="/admin/dashboard"
                       className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-950 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all"
@@ -157,9 +112,9 @@ export default function Navbar() {
                     href="/profile"
                     className="w-11 h-11 rounded-2xl overflow-hidden relative border-2 border-slate-100 hover:border-blue-600 transition-all bg-slate-50 flex items-center justify-center"
                   >
-                    {authState.user?.image ? (
+                    {user?.image ? (
                       <Image
-                        src={authState.user.image}
+                        src={user.image}
                         alt="Profile"
                         fill
                         className="object-cover"
@@ -217,12 +172,12 @@ export default function Navbar() {
           >
             <div className="flex-1 overflow-y-auto px-8 pb-12 flex flex-col">
               {/* User Section */}
-              {authState.isLoggedIn && (
+              {!loading && user && (
                 <div className="py-8 flex items-center gap-5 border-b border-slate-100 mb-6">
                   <div className="w-16 h-16 rounded-[24px] bg-slate-100 relative overflow-hidden flex-shrink-0 border-2 border-slate-50">
-                    {authState.user?.image ? (
+                    {user?.image ? (
                       <Image
-                        src={authState.user.image}
+                        src={user.image}
                         alt="User"
                         fill
                         className="object-cover"
@@ -236,7 +191,7 @@ export default function Navbar() {
                   </div>
                   <div className="flex-1">
                     <p className="font-black text-2xl tracking-tight leading-none mb-1 text-slate-950">
-                      {authState.user?.name || "Kivo User"}
+                      {user?.name || "Kivo User"}
                     </p>
                     <div className="flex items-center gap-3">
                       <Link
@@ -246,7 +201,7 @@ export default function Navbar() {
                       >
                         My Dashboard
                       </Link>
-                      {authState.user?.role === "admin" && (
+                      {user?.role === "admin" && (
                         <>
                           <span className="text-slate-300">•</span>
                           <Link
@@ -290,30 +245,34 @@ export default function Navbar() {
 
               {/* Bottom Actions */}
               <div className="mt-auto pt-12 space-y-4">
-                {authState.isLoggedIn ? (
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full py-6 rounded-[32px] bg-red-50 text-red-500 font-black text-center text-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
-                  >
-                    <LogOut size={20} /> Sign Out
-                  </button>
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    <Link
-                      href="/auth/signup"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full py-6 rounded-[32px] bg-blue-600 text-white font-black text-center text-xl shadow-2xl shadow-blue-200 active:scale-95 transition-all"
-                    >
-                      Join the Vibe
-                    </Link>
-                    <Link
-                      href="/auth/signin"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full py-6 rounded-[32px] bg-slate-900 text-white font-black text-center text-xl active:scale-95 transition-all"
-                    >
-                      Sign In
-                    </Link>
-                  </div>
+                {!loading && (
+                  <>
+                    {user ? (
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full py-6 rounded-[32px] bg-red-50 text-red-500 font-black text-center text-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
+                      >
+                        <LogOut size={20} /> Sign Out
+                      </button>
+                    ) : (
+                      <div className="flex flex-col gap-4">
+                        <Link
+                          href="/auth/signup"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block w-full py-6 rounded-[32px] bg-blue-600 text-white font-black text-center text-xl shadow-2xl shadow-blue-200 active:scale-95 transition-all"
+                        >
+                          Join the Vibe
+                        </Link>
+                        <Link
+                          href="/auth/signin"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block w-full py-6 rounded-[32px] bg-slate-900 text-white font-black text-center text-xl active:scale-95 transition-all"
+                        >
+                          Sign In
+                        </Link>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Location Footer */}

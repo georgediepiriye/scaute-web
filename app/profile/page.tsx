@@ -251,6 +251,7 @@ export default function ProfilePage() {
                 </h3>
                 {userDisplay.ticketsCount > 0 && (
                   <button
+                    onClick={() => router.push("/tickets")}
                     className="text-[10px] font-black uppercase hover:underline flex items-center gap-1"
                     style={{ color: KIVO_BLUE }}
                   >
@@ -280,7 +281,7 @@ export default function ProfilePage() {
                               className="text-[10px] font-mono font-bold uppercase"
                               style={{ color: KIVO_BLUE }}
                             >
-                              {ticket.ticketCode}
+                              {ticket.checkInCode || "KIVO-PASS"}
                             </span>
                           </div>
                         </div>

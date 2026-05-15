@@ -1,63 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, createContext, useContext } from "react";
 
-// BRAND COLOR CONSTANTS
-const KIVO_BLUE = "#0052FF";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const AuthUserContext = createContext<any>(null);
 
-export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState(false);
+export default function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkSession = async () => {
+    const bootstrapSession = async () => {
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/me`,
-          { method: "GET", credentials: "include" },
+          {
+            method: "GET",
+            credentials: "include",
+          },
         );
-
-        if (!response.ok) {
-          // Not logged in? Kick them to login
-          router.replace("/auth/signin");
-        } else {
-          setIsAuthorized(true);
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
         }
-      } catch (error) {
-        console.error("Auth Guard Error:", error);
-        router.replace("/auth/signin");
+      } catch (err) {
+        console.error("Session bootstrap failed", err);
+      } finally {
+        setLoading(false);
       }
     };
+    bootstrapSession();
+  }, []);
 
-    checkSession();
-  }, [router]);
-
-  if (!isAuthorized) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative w-12 h-12">
-            {/* Background Ring */}
-            <div className="absolute inset-0 border-4 border-gray-100 rounded-2xl" />
-            {/* Animated Spinner */}
-            <div
-              className="absolute inset-0 border-4 border-t-transparent rounded-2xl animate-spin"
-              style={{ borderTopColor: KIVO_BLUE }}
-            />
-          </div>
-          <div className="text-center space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-900 animate-pulse">
-              Securing Kivo Session
-            </p>
-            <p className="text-[8px] font-bold uppercase tracking-widest text-gray-400">
-              Verifying Credentials...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
+  return (
+    <AuthUserContext.Provider value={{ user, loading }}>
+      {children}
+    </AuthUserContext.Provider>
+  );
 }
+
+export const useAuth = () => useContext(AuthUserContext);

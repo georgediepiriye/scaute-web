@@ -8,7 +8,6 @@ import { motion } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
 import Navbar from "@/components/layout/NavBar";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import GuestGuard from "@/components/auth/GuestGuard";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -68,8 +67,6 @@ export default function SignUpPage() {
         JSON.stringify(data.user || data.data?.user),
       );
 
-      window.dispatchEvent(new Event("auth-change"));
-
       return data;
     };
 
@@ -79,9 +76,9 @@ export default function SignUpPage() {
         loading: "Creating your Kivo account...",
         success: () => {
           setLoading(false);
-          setTimeout(() => {
-            window.location.href = "/profile";
-          }, 1200);
+
+          // Force a hard navigation so AuthProvider instantiates fresh user state instantly
+          window.location.href = "/profile";
           return `Welcome to Kivo, ${formData.firstName}!`;
         },
         error: (err) => {
@@ -105,215 +102,212 @@ export default function SignUpPage() {
   };
 
   return (
-    <GuestGuard>
-      <div className="flex h-screen w-full bg-white font-sans text-gray-900 overflow-hidden">
-        <Toaster position="top-center" reverseOrder={false} />
-        <Navbar />
+    <div className="flex h-screen w-full bg-white font-sans text-gray-900 overflow-hidden">
+      <Toaster position="top-center" reverseOrder={false} />
+      <Navbar />
 
-        {/* LEFT SIDE: BRAND/VISUAL - FIXED ON DESKTOP */}
-        <div className="hidden lg:flex lg:w-1/2 relative bg-[#F8FAFC] items-center justify-center p-12 overflow-hidden">
-          <div className="absolute top-[-5%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/5 blur-3xl" />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="relative z-10 text-center max-w-md w-full"
+      {/* LEFT SIDE: BRAND/VISUAL - FIXED ON DESKTOP */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#F8FAFC] items-center justify-center p-12 overflow-hidden">
+        <div className="absolute top-[-5%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/5 blur-3xl" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative z-10 text-center max-w-md w-full"
+        >
+          <div className="relative w-full aspect-square mb-10">
+            <Image
+              src="https://res.cloudinary.com/dzhfiblg7/image/upload/f_auto,q_auto,w_800/v1778054500/kivo_events/inhouse/park.png"
+              alt="Join Kivo"
+              fill
+              className="drop-shadow-2xl rounded-[40px] object-cover border-4 border-white shadow-blue-600/10"
+              priority
+            />
+          </div>
+          <h1 className="text-4xl font-black tracking-tighter text-gray-900 leading-tight uppercase">
+            Explore the <br /> <span className="text-blue-600">the vibe.</span>
+          </h1>
+        </motion.div>
+      </div>
+
+      {/* RIGHT SIDE: SIGN UP FORM - INDEPENDENT SCROLL */}
+      <div className="w-full lg:w-1/2 flex flex-col items-center relative h-screen overflow-y-auto pt-32 pb-20 px-6 md:px-20">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-sm"
+        >
+          <div className="mb-8 text-center lg:text-left">
+            <h2 className="text-3xl font-black tracking-tight mb-2 uppercase">
+              Join the Scene
+            </h2>
+            <p className="text-gray-400 text-sm font-medium">
+              Be the first to know where the move is in Port Harcourt.
+            </p>
+          </div>
+
+          {/* GOOGLE SIGN UP */}
+          <button
+            type="button"
+            onClick={() =>
+              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/google`)
+            }
+            className="w-full py-4 px-6 border-2 border-gray-100 rounded-2xl flex items-center justify-center gap-4 font-black text-[10px] uppercase tracking-widest text-gray-700 hover:bg-gray-50 hover:border-blue-600 transition-all active:scale-[0.98] mb-8"
           >
-            <div className="relative w-full aspect-square mb-10">
-              <Image
-                src="https://res.cloudinary.com/dzhfiblg7/image/upload/f_auto,q_auto,w_800/v1778054500/kivo_events/inhouse/park.png"
-                alt="Join Kivo"
-                fill
-                className="drop-shadow-2xl rounded-[40px] object-cover border-4 border-white shadow-blue-600/10"
-                priority
-              />
+            <Image
+              src="/images/google_icon.png"
+              alt="Google"
+              width={20}
+              height={20}
+              className="w-5 h-5"
+            />
+            Join with Google
+          </button>
+
+          <div className="relative mb-8 text-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-100"></div>
             </div>
-            <h1 className="text-4xl font-black tracking-tighter text-gray-900 leading-tight uppercase">
-              Explore the <br />{" "}
-              <span className="text-blue-600">garden city.</span>
-            </h1>
-          </motion.div>
-        </div>
+            <span className="relative bg-white px-4 text-[10px] font-black uppercase text-gray-300 tracking-widest">
+              or use email
+            </span>
+          </div>
 
-        {/* RIGHT SIDE: SIGN UP FORM - INDEPENDENT SCROLL */}
-        <div className="w-full lg:w-1/2 flex flex-col items-center relative h-screen overflow-y-auto pt-32 pb-20 px-6 md:px-20">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-sm"
-          >
-            <div className="mb-8 text-center lg:text-left">
-              <h2 className="text-3xl font-black tracking-tight mb-2 uppercase">
-                Join the Scene
-              </h2>
-              <p className="text-gray-400 text-sm font-medium">
-                Be the first to know where the move is in Port Harcourt.
-              </p>
+          {/* ROLE SELECTION */}
+          <div className="mb-8">
+            <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-3 block">
+              I am joining as...
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleRoleSelect("user")}
+                className={`py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border-2 ${
+                  formData.role === "user"
+                    ? "border-blue-600 bg-blue-50 text-blue-600"
+                    : "border-gray-50 text-gray-400 hover:border-gray-200"
+                }`}
+              >
+                Normal User
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRoleSelect("organizer")}
+                className={`py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border-2 ${
+                  formData.role === "organizer"
+                    ? "border-blue-600 bg-blue-50 text-blue-600"
+                    : "border-gray-50 text-gray-400 hover:border-gray-200"
+                }`}
+              >
+                Organizer/Host
+              </button>
             </div>
+          </div>
 
-            {/* GOOGLE SIGN UP */}
-            <button
-              type="button"
-              onClick={() =>
-                (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/google`)
-              }
-              className="w-full py-4 px-6 border-2 border-gray-100 rounded-2xl flex items-center justify-center gap-4 font-black text-[10px] uppercase tracking-widest text-gray-700 hover:bg-gray-50 hover:border-blue-600 transition-all active:scale-[0.98] mb-8"
-            >
-              <Image
-                src="/images/google_icon.png"
-                alt="Google"
-                width={20}
-                height={20}
-                className="w-5 h-5"
-              />
-              Join with Google
-            </button>
-
-            <div className="relative mb-8 text-center">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-100"></div>
-              </div>
-              <span className="relative bg-white px-4 text-[10px] font-black uppercase text-gray-300 tracking-widest">
-                or use email
-              </span>
-            </div>
-
-            {/* ROLE SELECTION */}
-            <div className="mb-8">
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-3 block">
-                I am joining as...
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleRoleSelect("user")}
-                  className={`py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border-2 ${
-                    formData.role === "user"
-                      ? "border-blue-600 bg-blue-50 text-blue-600"
-                      : "border-gray-50 text-gray-400 hover:border-gray-200"
-                  }`}
-                >
-                  Normal User
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRoleSelect("organizer")}
-                  className={`py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border-2 ${
-                    formData.role === "organizer"
-                      ? "border-blue-600 bg-blue-50 text-blue-600"
-                      : "border-gray-50 text-gray-400 hover:border-gray-200"
-                  }`}
-                >
-                  Organizer/Host
-                </button>
-              </div>
-            </div>
-
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
-                    First Name
-                  </label>
-                  <input
-                    name="firstName"
-                    required
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    type="text"
-                    placeholder="John"
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
-                    Last Name
-                  </label>
-                  <input
-                    name="lastName"
-                    required
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    type="text"
-                    placeholder="Doe"
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base"
-                  />
-                </div>
-              </div>
-
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
-                  Email Address
+                  First Name
                 </label>
                 <input
-                  name="email"
+                  name="firstName"
                   required
-                  value={formData.email}
+                  value={formData.firstName}
                   onChange={handleChange}
-                  type="email"
-                  placeholder="name@example.com"
+                  type="text"
+                  placeholder="John"
                   className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base"
                 />
               </div>
-
               <div>
                 <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
-                  Password
+                  Last Name
                 </label>
-                <div className="relative">
-                  <input
-                    name="password"
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Create a password"
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base pr-12"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
+                <input
+                  name="lastName"
+                  required
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  type="text"
+                  placeholder="Doe"
+                  className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base"
+                />
               </div>
+            </div>
 
-              <div className="pt-2">
+            <div>
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
+                Email Address
+              </label>
+              <input
+                name="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                type="email"
+                placeholder="name@example.com"
+                className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  name="password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a password"
+                  className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base pr-12"
+                />
                 <button
-                  disabled={loading}
-                  className="w-full py-5 bg-black text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-600/10 hover:bg-blue-600 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
                 >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      Joining...
-                    </>
-                  ) : (
-                    "Create Account"
-                  )}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-            </form>
+            </div>
 
-            <p className="mt-8 text-center text-sm text-gray-400 font-medium pb-10">
-              Already a member?{" "}
-              <Link
-                href="/auth/signin"
-                className="text-blue-600 font-black hover:underline underline-offset-4 uppercase text-[10px]"
+            <div className="pt-2">
+              <button
+                disabled={loading}
+                className="w-full py-5 bg-black text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-600/10 hover:bg-blue-600 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
               >
-                Sign In
-              </Link>
-            </p>
-          </motion.div>
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Joining...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
+              </button>
+            </div>
+          </form>
 
-          <div className="hidden sm:block absolute bottom-8 text-center">
-            <p className="text-[10px] text-gray-300 font-black uppercase tracking-tighter">
-              © 2026 Kivo Social. All rights reserved.
-            </p>
-          </div>
+          <p className="mt-8 text-center text-sm text-gray-400 font-medium pb-10">
+            Already a member?{" "}
+            <Link
+              href="/auth/signin"
+              className="text-blue-600 font-black hover:underline underline-offset-4 uppercase text-[10px]"
+            >
+              Sign In
+            </Link>
+          </p>
+        </motion.div>
+
+        <div className="hidden sm:block absolute bottom-8 text-center">
+          <p className="text-[10px] text-gray-300 font-black uppercase tracking-tighter">
+            © 2026 Kivo Social. All rights reserved.
+          </p>
         </div>
       </div>
-    </GuestGuard>
+    </div>
   );
 }
