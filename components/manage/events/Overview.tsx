@@ -1,34 +1,55 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Wallet, Users, BarChart3 } from "lucide-react";
+import React from "react";
+import { Wallet, Users, BarChart3, EyeOff } from "lucide-react";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const OverviewTab = ({ metrics }: any) => (
+interface OverviewTabProps {
+  metrics: any;
+  canViewRevenue: boolean;
+}
+
+export const OverviewTab = ({ metrics, canViewRevenue }: OverviewTabProps) => (
   <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm">
-        <div className="flex items-center gap-2 mb-6">
-          <Wallet size={16} className="text-yellow-500" />
-          <h3 className="text-xs font-black uppercase tracking-[0.2em]">
-            Financial Status
-          </h3>
+      {/* FINANCIAL STATUS CARD */}
+      <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm relative overflow-hidden">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Wallet size={16} className="text-yellow-500" />
+            <h3 className="text-xs font-black uppercase tracking-[0.2em]">
+              Financial Status
+            </h3>
+          </div>
+          {!canViewRevenue && (
+            <span className="flex items-center gap-1 bg-slate-100 px-2.5 py-1 rounded-full text-[8px] font-black text-slate-400 uppercase tracking-wider">
+              <EyeOff size={10} /> Hidden
+            </span>
+          )}
         </div>
+
         <p className="text-4xl font-black tracking-tighter">
-          ₦{metrics?.totalRevenue?.toLocaleString()}
+          {canViewRevenue
+            ? `₦${metrics?.totalRevenue?.toLocaleString()}`
+            : "••••••"}
         </p>
         <p className="text-[10px] font-black text-slate-400 uppercase mt-1">
           Gross Sales Revenue
         </p>
+
         <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-slate-50">
           <div>
             <p className="text-sm font-black italic text-yellow-600">
-              ₦{metrics?.totalRevenue?.toLocaleString()}
+              {canViewRevenue
+                ? `₦${metrics?.totalRevenue?.toLocaleString()}`
+                : "••••••"}
             </p>
             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
               In Escrow
             </p>
           </div>
           <div>
-            <p className="text-sm font-black italic">₦0.00</p>
+            <p className="text-sm font-black italic">
+              {canViewRevenue ? "₦0.00" : "••••••"}
+            </p>
             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
               Processed
             </p>
@@ -36,6 +57,7 @@ export const OverviewTab = ({ metrics }: any) => (
         </div>
       </div>
 
+      {/* ATTENDANCE LIFECYCLE CARD */}
       <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm">
         <div className="flex items-center gap-2 mb-6">
           <Users size={16} className="text-yellow-500" />
@@ -66,7 +88,7 @@ export const OverviewTab = ({ metrics }: any) => (
       </div>
     </div>
 
-    {/* New Section: Ticket Tier Sales */}
+    {/* TICKET TIER SALES BREAKDOWN MATRIX */}
     <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm">
       <div className="flex items-center gap-2 mb-8">
         <BarChart3 size={16} className="text-yellow-500" />
@@ -119,7 +141,9 @@ export const OverviewTab = ({ metrics }: any) => (
                   Remaining: {tier.capacity - tier.sold}
                 </p>
                 <p className="text-[8px] font-bold text-slate-400 uppercase">
-                  ₦{tier.revenue?.toLocaleString()}
+                  {canViewRevenue
+                    ? `₦${tier.revenue?.toLocaleString()}`
+                    : "••••••"}
                 </p>
               </div>
             </div>

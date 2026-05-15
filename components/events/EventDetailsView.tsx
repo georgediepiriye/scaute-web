@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   MapPin,
   Share2,
@@ -11,6 +11,7 @@ import {
   Copy,
   Check,
   MessageSquare,
+  Lock,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,8 +27,6 @@ interface EventViewProps {
 export default function EventDetailsView({ event }: EventViewProps) {
   const [copied, setCopied] = useState(false);
   const [user, setUser] = useState<any>(null);
-
-  // --- CHECKOUT STATE ---
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   const startDate = new Date(event.startDate);
@@ -45,7 +44,6 @@ export default function EventDetailsView({ event }: EventViewProps) {
         if (res.ok) {
           setUser(data.data?.user);
         } else {
-          // If the API sends a message (e.g., "Session expired"), show it
           console.warn("User not authenticated:", data.message);
         }
       } catch (e) {
@@ -55,6 +53,52 @@ export default function EventDetailsView({ event }: EventViewProps) {
     };
     fetchUser();
   }, []);
+
+  /**
+   * GLOBAL REFINED SOLD OUT DETECTOR ENGINE
+   */
+  const isSoldOut = useMemo(() => {
+    if (!event) return false;
+    if (event.isSoldOut) return true;
+
+    if (event.ticketingType === "internal" && event.ticketTiers?.length > 0) {
+      return event.ticketTiers.every((tier: any) => {
+        const manualSoldOut = tier.isSoldOut === true;
+        const capacityReached = tier.capacity > 0 && tier.sold >= tier.capacity;
+        return manualSoldOut || capacityReached;
+      });
+    }
+    return false;
+  }, [event]);
+
+  /**
+   * AVAILABLE MINIMUM PRICE RANGE MATRIX CALCULATOR
+   */
+  const displayPrice = useMemo(() => {
+    if (!event) return "";
+    if (isSoldOut) return "Sold Out";
+    if (event.ticketingType === "none" || event.isFree) return "Free";
+
+    if (event.ticketTiers && event.ticketTiers.length > 0) {
+      const availableTiers = event.ticketTiers.filter((t: any) => {
+        const tierFull = t.capacity > 0 && t.sold >= t.capacity;
+        return !t.isSoldOut && !tierFull;
+      });
+
+      const TiersToEvaluate =
+        availableTiers.length > 0 ? availableTiers : event.ticketTiers;
+      const prices = TiersToEvaluate.map((t: any) => t.price);
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+
+      if (min === 0 && max > 0) return "Free +";
+      if (min === 0 && max === 0) return "Free";
+      if (min === max) return `₦${min.toLocaleString()}`;
+      return `From ₦${min.toLocaleString()}`;
+    }
+
+    return event.externalTicketLink ? "Paid" : "Invite Only";
+  }, [event, isSoldOut]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(eventLink);
@@ -151,7 +195,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
         </div>
       </div>
 
-      {/* 2. CONTENT */}
+      {/* 2. CONTENT CONTAINER */}
       <div className="max-w-7xl mx-auto px-4 -mt-32 relative z-20">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="flex-1 space-y-6">
@@ -261,36 +305,69 @@ export default function EventDetailsView({ event }: EventViewProps) {
                 </h3>
 
                 <div className="space-y-3 relative z-10">
-                  {event.ticketTiers?.map((tier: any) => (
-                    <div
-                      key={tier.name}
-                      className="flex items-center justify-between p-5 rounded-2xl bg-gray-50/50 border border-gray-100"
-                    >
-                      <div>
-                        <p className="font-black text-gray-900 uppercase text-[10px]">
-                          {tier.name}
-                        </p>
-                        <p className="text-xs font-bold text-blue-600">
-                          {tier.price === 0
-                            ? "FREE"
-                            : `₦${tier.price.toLocaleString()}`}
-                        </p>
+                  {event.ticketTiers?.map((tier: any) => {
+                    // Compute specific individual operational status parameters inside mapping context
+                    const isTierManualSoldOut = tier.isSoldOut === true;
+                    const isTierCapacityReached =
+                      tier.capacity > 0 && tier.sold >= tier.capacity;
+                    const isTierSoldOut =
+                      isTierManualSoldOut || isTierCapacityReached;
+
+                    return (
+                      <div
+                        key={tier.name}
+                        className={`flex items-center justify-between p-5 rounded-2xl border transition-all ${
+                          isTierSoldOut
+                            ? "bg-slate-50 border-slate-200/60 opacity-60 select-none"
+                            : "bg-gray-50/50 border-gray-100"
+                        }`}
+                      >
+                        <div>
+                          <p
+                            className={`font-black uppercase text-[10px] ${isTierSoldOut ? "text-slate-400 line-through" : "text-gray-900"}`}
+                          >
+                            {tier.name}
+                          </p>
+                          <p
+                            className={`text-xs font-bold ${isTierSoldOut ? "text-slate-400" : "text-blue-600"}`}
+                          >
+                            {isTierSoldOut
+                              ? "SOLD OUT"
+                              : tier.price === 0
+                                ? "FREE"
+                                : `₦${tier.price.toLocaleString()}`}
+                          </p>
+                        </div>
+                        <div
+                          className={`h-2 w-2 rounded-full ${isTierSoldOut ? "bg-slate-300" : "bg-[#FFD700]"}`}
+                        />
                       </div>
-                      <div className="h-2 w-2 rounded-full bg-[#FFD700]" />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
-                <button
-                  onClick={() => setIsCheckoutOpen(true)}
-                  style={{ backgroundColor: KIVO_BLUE }}
-                  className="hidden lg:block w-full mt-8 py-5 rounded-[24px] text-white font-black text-[11px] uppercase tracking-[0.3em] shadow-xl shadow-blue-200 hover:brightness-110 active:scale-[0.98] transition-all"
-                >
-                  Confirm Spot
-                </button>
+                {/* PRIMARY DESKTOP BOOKING CTA BUTTON */}
+                {isSoldOut ? (
+                  <button
+                    disabled
+                    className="hidden lg:flex w-full mt-8 py-5 rounded-[24px] bg-slate-100 border border-slate-200 text-slate-400 font-black text-[11px] uppercase tracking-[0.3em] items-center justify-center gap-2 cursor-not-allowed"
+                  >
+                    <Lock size={12} /> Sold Out
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setIsCheckoutOpen(true)}
+                    style={{ backgroundColor: KIVO_BLUE }}
+                    className="hidden lg:block w-full mt-8 py-5 rounded-[24px] text-white font-black text-[11px] uppercase tracking-[0.3em] shadow-xl shadow-blue-200 hover:brightness-110 active:scale-[0.98] transition-all"
+                  >
+                    Confirm Spot
+                  </button>
+                )}
 
                 <p className="lg:hidden text-[8px] font-bold text-gray-400 uppercase text-center mt-6 tracking-widest">
-                  Select pass below to continue
+                  {isSoldOut
+                    ? "This move is filled up"
+                    : "Select pass below to continue"}
                 </p>
               </div>
 
@@ -319,21 +396,27 @@ export default function EventDetailsView({ event }: EventViewProps) {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-50 p-5 z-[100] flex items-center justify-between shadow-[0_-15px_40px_rgba(0,0,0,0.08)]">
         <div>
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
-            Entry from
+            Entry status
           </p>
-          <p className="text-xl font-black text-gray-900">
-            {event.ticketTiers?.[0]?.price === 0
-              ? "FREE"
-              : `₦${event.ticketTiers?.[0]?.price.toLocaleString()}`}
-          </p>
+          <p className="text-xl font-black text-gray-900">{displayPrice}</p>
         </div>
-        <button
-          onClick={() => setIsCheckoutOpen(true)}
-          style={{ backgroundColor: KIVO_BLUE }}
-          className="px-10 py-4 rounded-2xl text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-blue-100 active:scale-95 transition-all"
-        >
-          Secure Pass
-        </button>
+
+        {isSoldOut ? (
+          <button
+            disabled
+            className="px-10 py-4 rounded-2xl bg-slate-100 border border-slate-200 text-slate-400 font-black text-[11px] uppercase tracking-[0.2em] cursor-not-allowed flex items-center gap-1.5"
+          >
+            <Lock size={12} /> Full
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsCheckoutOpen(true)}
+            style={{ backgroundColor: KIVO_BLUE }}
+            className="px-10 py-4 rounded-2xl text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-blue-100 active:scale-95 transition-all"
+          >
+            Secure Pass
+          </button>
+        )}
       </div>
     </div>
   );

@@ -22,7 +22,7 @@ export default async function SlugEventPage({ params }: PageProps) {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/v1/events/slug/${slug}`,
       {
-        next: { revalidate: 30 }, // ISR: Cache for 30 seconds
+        next: { revalidate: 30 },
         signal: controller.signal,
         headers: {
           "Content-Type": "application/json",

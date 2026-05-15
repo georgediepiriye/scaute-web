@@ -8,7 +8,19 @@ import {
   Filter,
   RotateCcw,
   UserPlus,
+  Lock,
 } from "lucide-react";
+
+interface AttendeesTabProps {
+  currentItems: any[];
+  searchTerm: string;
+  setSearchTerm: (value: string) => void;
+  currentPage: number;
+  totalPages: number;
+  setCurrentPage: React.Dispatch<React.SetStateAction<number>> | any;
+  onRefund: (ticketCode: string) => Promise<void>;
+  canIssueRefunds: boolean; // Receives capability state cleanly from parent workspace
+}
 
 export const AttendeesTab = ({
   currentItems,
@@ -18,10 +30,11 @@ export const AttendeesTab = ({
   totalPages,
   setCurrentPage,
   onRefund,
-}: any) => {
+  canIssueRefunds,
+}: AttendeesTabProps) => {
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Local filtering based on your expanded TICKET_STATUS
+  // Local filtering based on expanded TICKET_STATUS
   const filteredItems = currentItems.filter((item: any) => {
     if (statusFilter === "all") return true;
     if (statusFilter === "checked-in") return item.status === "used";
@@ -95,7 +108,7 @@ export const AttendeesTab = ({
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table Area */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -186,15 +199,26 @@ export const AttendeesTab = ({
                         {t.status === "valid" ? "Valid Pass" : t.status}
                       </span>
 
-                      {/* Refund Action - Only show if not already refunded/cancelled */}
+                      {/* CONDITIONAL REFUND ACTION CAPABILITY MATRIX */}
                       {t.status !== "refunded" && t.status !== "cancelled" && (
-                        <button
-                          onClick={() => onRefund && onRefund(t.ticketCode)}
-                          className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                          title="Issue Refund"
-                        >
-                          <RotateCcw size={14} />
-                        </button>
+                        <>
+                          {canIssueRefunds ? (
+                            <button
+                              onClick={() => onRefund && onRefund(t.ticketCode)}
+                              className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                              title="Issue Refund"
+                            >
+                              <RotateCcw size={14} />
+                            </button>
+                          ) : (
+                            <div
+                              className="p-2 text-slate-200 cursor-not-allowed"
+                              title="Refund Privileges Required"
+                            >
+                              <Lock size={12} />
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </td>
@@ -213,7 +237,7 @@ export const AttendeesTab = ({
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination Container */}
       {totalPages > 1 && (
         <div className="p-6 bg-slate-50/50 border-t border-slate-50 flex items-center justify-between">
           <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">

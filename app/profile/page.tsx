@@ -19,6 +19,9 @@ import {
   Calendar,
   Camera,
   SearchCheck,
+  Crown,
+  Users2,
+  Lock,
 } from "lucide-react";
 import Navbar from "@/components/layout/NavBar";
 import MobileNav from "@/components/layout/MobileNav";
@@ -68,7 +71,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (loading) {
+  if (loading || !profile) {
     return (
       <div className="fixed inset-0 z-[200] bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-6">
@@ -90,6 +93,16 @@ export default function ProfilePage() {
     );
   }
 
+  // Calculate specific metrics splits dynamically
+  const mainHostedCount =
+    profile.organizedEvents?.filter((event: any) => {
+      const organizerId = event.organizer?._id || event.organizer;
+      return organizerId === profile._id;
+    }).length || 0;
+
+  const partnerManagedCount =
+    (profile.organizedEvents?.length || 0) - mainHostedCount;
+
   const userDisplay = {
     name: profile?.name || "Kivo User",
     handle: `@${profile?.name?.toLowerCase().replace(/\s/g, "") || "kivo_member"}`,
@@ -106,7 +119,6 @@ export default function ProfilePage() {
         ? profile.interests.slice(0, 5)
         : ["Live Music", "Networking"],
     ticketsCount: profile?.tickets?.length || 0,
-    organizedCount: profile?.organizedEvents?.length || 0,
   };
 
   return (
@@ -163,21 +175,30 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mt-8">
-                <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
-                  <p className="text-xl font-black">
+              {/* SPLIT DIFFERENTIATED HOUSING MATRIX METRICS */}
+              <div className="grid grid-cols-3 gap-1.5 mt-8">
+                <div className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100">
+                  <p className="text-lg font-black">
                     {userDisplay.ticketsCount}
                   </p>
-                  <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">
+                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider">
                     Passes
                   </p>
                 </div>
-                <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
-                  <p className="text-xl font-black">
-                    {userDisplay.organizedCount}
+                <div className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100">
+                  <p className="text-lg font-black text-blue-600">
+                    {mainHostedCount}
                   </p>
-                  <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">
+                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider">
                     Hosted
+                  </p>
+                </div>
+                <div className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100">
+                  <p className="text-lg font-black text-slate-800">
+                    {partnerManagedCount}
+                  </p>
+                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider">
+                    Partner
                   </p>
                 </div>
               </div>
@@ -242,7 +263,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* ACTIVE PASSES */}
+            {/* AUTOMATED PASSES TILES */}
             <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden">
               <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
@@ -300,12 +321,12 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* HOSTED MOVES */}
+            {/* HOSTED / CO-ORGANIZED MOVES */}
             <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden">
               <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                  <LayoutGrid size={16} style={{ color: KIVO_BLUE }} /> Hosted
-                  Moves
+                  <LayoutGrid size={16} style={{ color: KIVO_BLUE }} /> Hosted &
+                  Managed Moves
                 </h3>
                 <button
                   onClick={() => router.push("/create")}
@@ -319,93 +340,185 @@ export default function ProfilePage() {
               <div className="px-2 pb-4">
                 {profile?.organizedEvents?.length > 0 ? (
                   <div className="space-y-1">
-                    {profile.organizedEvents.map((event: any) => (
-                      <div
-                        key={event._id}
-                        onClick={() =>
-                          router.push(`/manage/events/${event._id}`)
+                    {profile.organizedEvents.map((event: any) => {
+                      const isMainOrganizer =
+                        event.organizer === profile._id ||
+                        event.organizer?._id === profile._id;
+
+                      // Evaluate access controls if user is a co-organizer
+                      const partnerRecord = event.coOrganizers?.find(
+                        (coOrg: any) => {
+                          const coOrgId =
+                            coOrg.user?._id || coOrg.user?.id || coOrg.user;
+                          return coOrgId === profile._id;
+                        },
+                      );
+
+                      const partnerPermissions =
+                        partnerRecord?.permissions || [];
+                      // Safe fallback: If array exists but is completely empty, default to active scan permission
+                      const finalPermissions =
+                        partnerRecord && partnerPermissions.length === 0
+                          ? ["scan_tickets"]
+                          : partnerPermissions;
+
+                      const canScanTickets =
+                        isMainOrganizer ||
+                        finalPermissions.includes("scan_tickets");
+
+                      // --- DYNAMIC TIMELINE STATUS GENERATION ---
+                      const getTimelineStatus = () => {
+                        const now = new Date();
+                        const start = new Date(event.startDate);
+                        const end = new Date(event.endDate || event.startDate);
+
+                        if (now < start) {
+                          return {
+                            label: "Upcoming",
+                            styles: "bg-blue-50 text-blue-600 border-blue-100",
+                          };
+                        } else if (now >= start && now <= end) {
+                          return {
+                            label: "Live",
+                            styles:
+                              "bg-red-50 text-red-600 border-red-200 animate-pulse font-black",
+                          };
+                        } else {
+                          return {
+                            label: "Past",
+                            styles:
+                              "bg-slate-100 text-slate-400 border-slate-200 line-through decoration-transparent",
+                          };
                         }
-                        className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between group hover:bg-slate-50/50 rounded-[1.8rem] transition-all border border-transparent hover:border-slate-100 cursor-pointer"
-                      >
-                        <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
-                          <div className="relative w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-100 shadow-sm">
-                            {event.image ? (
-                              <Image
-                                src={event.image}
-                                alt={event.title}
-                                fill
-                                className="object-cover group-hover:scale-110 transition-transform duration-500"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                <Calendar size={20} />
-                              </div>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-black text-sm truncate uppercase tracking-tight text-slate-800">
-                              {event.title}
-                            </h4>
-                            <div className="flex flex-wrap items-center gap-2 mt-1">
-                              {/* APPROVAL STATUS BADGE */}
-                              <div
-                                className={`flex items-center gap-1 px-2 py-0.5 rounded-md border ${
-                                  event.approvalStatus === "approved"
-                                    ? "bg-green-50 text-green-600 border-green-100"
-                                    : "bg-amber-50 text-amber-600 border-amber-100"
-                                }`}
-                              >
-                                <SearchCheck size={10} />
-                                <span className="text-[9px] font-black uppercase">
-                                  {event.approvalStatus || "Pending"}
+                      };
+
+                      const timeline = getTimelineStatus();
+
+                      return (
+                        <div
+                          key={event._id}
+                          onClick={() =>
+                            router.push(`/manage/events/${event._id}`)
+                          }
+                          className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between group hover:bg-slate-50/50 rounded-[1.8rem] transition-all border border-transparent hover:border-slate-100 cursor-pointer"
+                        >
+                          <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
+                            <div className="relative w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-100 shadow-sm">
+                              {event.image ? (
+                                <Image
+                                  src={event.image}
+                                  alt={event.title}
+                                  fill
+                                  className="object-cover group-hover:scale-110 transition-transform duration-500"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                  <Calendar size={20} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-black text-sm truncate uppercase tracking-tight text-slate-800">
+                                {event.title}
+                              </h4>
+                              <div className="flex flex-wrap items-center gap-2 mt-1">
+                                {/* DYNAMIC ORGANIZER LEVEL STATUS BADGE */}
+                                {isMainOrganizer ? (
+                                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-600 text-white font-black text-[8px] uppercase tracking-wider">
+                                    <Crown
+                                      size={8}
+                                      className="text-yellow-300 fill-yellow-300"
+                                    />
+                                    <span>Host</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900 text-white font-black text-[8px] uppercase tracking-wider">
+                                    <Users2
+                                      size={8}
+                                      className="text-yellow-400"
+                                    />
+                                    <span>Partner</span>
+                                  </div>
+                                )}
+
+                                <span className="text-slate-300">•</span>
+
+                                {/* APPROVAL STATUS BADGE */}
+                                <div
+                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-md border ${
+                                    event.approvalStatus === "approved"
+                                      ? "bg-green-50 text-green-600 border-green-100"
+                                      : "bg-amber-50 text-amber-600 border-amber-100"
+                                  }`}
+                                >
+                                  <SearchCheck size={10} />
+                                  <span className="text-[9px] font-black uppercase">
+                                    {event.approvalStatus || "Pending"}
+                                  </span>
+                                </div>
+
+                                <span className="text-slate-300">•</span>
+
+                                <span
+                                  className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${timeline.styles}`}
+                                >
+                                  {timeline.label}
+                                </span>
+
+                                <span className="text-slate-300 hidden sm:inline">
+                                  •
+                                </span>
+
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                  {event.attendees || 0} Sold
                                 </span>
                               </div>
+                            </div>
+                          </div>
 
-                              <span className="text-slate-300">•</span>
+                          <div className="flex items-center gap-3 mt-4 sm:mt-0 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-50 pt-3 sm:pt-0">
+                            {/* ENFORCED SCAN PRIVILEGES ENGINE */}
+                            {event.ticketTiers &&
+                              event.ticketTiers.length > 0 && (
+                                <>
+                                  {canScanTickets ? (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        router.push(
+                                          `/manage/scanner/${event._id}`,
+                                        );
+                                      }}
+                                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-gray-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] hover:bg-blue-600 active:scale-95 transition-all shadow-md"
+                                    >
+                                      <Camera
+                                        size={14}
+                                        style={{ color: KIVO_YELLOW }}
+                                      />
+                                      <span>Scan</span>
+                                    </button>
+                                  ) : (
+                                    <div
+                                      className="flex items-center gap-1 text-[9px] font-black text-slate-300 uppercase tracking-widest px-3 py-2 border border-slate-100 bg-slate-50 rounded-xl cursor-not-allowed"
+                                      title="Scan privileges required for this partner workspace"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <Lock size={10} /> Limited
+                                    </div>
+                                  )}
+                                </>
+                              )}
 
-                              <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">
-                                {event.status || "Live"}
-                              </span>
-
-                              <span className="text-slate-300 hidden sm:inline">
-                                •
-                              </span>
-
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                {event.attendees || 0} Sold
-                              </span>
+                            <div className="flex items-center gap-1">
+                              <ChevronRight
+                                size={18}
+                                className="text-slate-200 group-hover:translate-x-1 transition-transform hidden sm:block"
+                              />
                             </div>
                           </div>
                         </div>
-
-                        <div className="flex items-center gap-3 mt-4 sm:mt-0 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-50 pt-3 sm:pt-0">
-                          {/* ✅ SCAN BUTTON LOGIC */}
-                          {event.ticketTiers &&
-                            event.ticketTiers.length > 0 && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  router.push(`/manage/scanner/${event._id}`);
-                                }}
-                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-gray-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] hover:bg-blue-600 active:scale-95 transition-all shadow-md"
-                              >
-                                <Camera
-                                  size={14}
-                                  style={{ color: KIVO_YELLOW }}
-                                />
-                                <span>Scan</span>
-                              </button>
-                            )}
-
-                          <div className="flex items-center gap-1">
-                            <ChevronRight
-                              size={18}
-                              className="text-slate-200 group-hover:translate-x-1 transition-transform hidden sm:block"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="py-12 text-center text-slate-400 uppercase tracking-widest font-black text-[10px]">

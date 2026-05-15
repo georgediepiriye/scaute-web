@@ -1,7 +1,22 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React from "react";
 import { ArrowLeft, SearchCheck, QrCode } from "lucide-react";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const DashboardHeader = ({ event, id, router }: any) => (
+interface DashboardHeaderProps {
+  event: any;
+  id: string;
+  router: any;
+  isOrganizer: boolean; // Evaluates if user is the main creator
+  canScanTickets: boolean; // Evaluates "scan_tickets" string privilege matrix
+}
+
+export const DashboardHeader = ({
+  event,
+  id,
+  router,
+  isOrganizer,
+  canScanTickets,
+}: DashboardHeaderProps) => (
   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
     <div>
       <button
@@ -36,21 +51,25 @@ export const DashboardHeader = ({ event, id, router }: any) => (
     </div>
 
     <div className="flex gap-3 w-full md:w-auto">
-      {/* Updated Scanner Link */}
-      <button
-        onClick={() => router.push(`/manage/scanner/${id}`)}
-        className="flex-1 md:flex-none px-6 py-4 bg-white border border-slate-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
-      >
-        <QrCode size={14} /> Scanner Mode
-      </button>
+      {/* CONDITIONAL SCANNER MODE LINK */}
+      {canScanTickets && (
+        <button
+          onClick={() => router.push(`/manage/scanner/${id}`)}
+          className="flex-1 md:flex-none px-6 py-4 bg-white border border-slate-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+        >
+          <QrCode size={14} /> Scanner Mode
+        </button>
+      )}
 
-      {/* Updated Edit Event Link */}
-      <button
-        onClick={() => router.push(`/manage/events/settings/${id}`)}
-        className="flex-1 md:flex-none px-6 py-4 bg-yellow-400 text-black rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-yellow-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1"
-      >
-        Edit Event
-      </button>
+      {/* CONDITIONAL EDIT EVENT LINK (RESTRICTED TO SYSTEM ORGANIZER) */}
+      {isOrganizer && (
+        <button
+          onClick={() => router.push(`/manage/events/settings/${id}`)}
+          className="flex-1 md:flex-none px-6 py-4 bg-yellow-400 text-black rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-yellow-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1"
+        >
+          Edit Event
+        </button>
+      )}
     </div>
   </div>
 );
