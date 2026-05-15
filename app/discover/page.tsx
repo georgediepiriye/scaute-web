@@ -465,9 +465,18 @@ export default function DiscoverPage() {
                       location={
                         e.isOnline
                           ? "Online"
-                          : `${getKm(USER_LOCATION.lat, USER_LOCATION.lng, e.lat, e.lng)}km • Port Harcourt`
+                          : e.location?.neighborhood || "Port Harcourt"
                       }
-                      time={formatEventTime(e.startDate)}
+                      distance={
+                        !e.isOnline && e.lat && e.lng
+                          ? getKm(
+                              USER_LOCATION.lat,
+                              USER_LOCATION.lng,
+                              e.lat,
+                              e.lng,
+                            )
+                          : undefined
+                      }
                     />
                   </motion.div>
                 ))}

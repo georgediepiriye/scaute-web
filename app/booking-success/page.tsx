@@ -22,8 +22,10 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  const ticketCode =
+    searchParams.get("ticketCode") || searchParams.get("ref") || "KIVO-PASS";
   // Retrieving reference and event info from searchParams
-  const ref = searchParams.get("ref") || "KIVO-PASS";
+
   const eventName = searchParams.get("event") || "Your Move";
 
   const handleSavePass = () => {
@@ -74,7 +76,7 @@ function SuccessContent() {
             {/* QR Code */}
             <div className="bg-white p-4 border-2 border-black rounded-3xl">
               <QRCodeSVG
-                value={ref}
+                value={ticketCode}
                 size={160}
                 level="H"
                 includeMargin={false}
@@ -84,10 +86,10 @@ function SuccessContent() {
             {/* Ticket ID */}
             <div className="space-y-1 text-center">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Order Reference
+                Entry Code
               </p>
               <p className="text-xl font-mono font-black tracking-widest text-black uppercase">
-                {ref}
+                {ticketCode}
               </p>
             </div>
           </div>

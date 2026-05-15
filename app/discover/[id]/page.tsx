@@ -21,12 +21,12 @@ import {
   Monitor,
   ChevronDown,
   ChevronUp,
-  Users,
   UserPlus,
   Check,
   MessageSquare,
   Sparkles,
   Zap,
+  Lock,
 } from "lucide-react";
 
 import Navbar from "@/components/layout/NavBar";
@@ -93,6 +93,25 @@ export default function EventDetailsPage() {
     }
   };
 
+  /**
+   * REFINED SOLD OUT LOGIC
+   * 1. Check if the event has a top-level manual isSoldOut toggle.
+   * 2. If internal ticketing, check if EVERY single tier is sold out (manually or by capacity).
+   */
+  const isSoldOut = useMemo(() => {
+    if (!event) return false;
+    if (event.isSoldOut) return true;
+
+    if (event.ticketingType === "internal" && event.ticketTiers?.length > 0) {
+      return event.ticketTiers.every((tier: any) => {
+        const manualSoldOut = tier.isSoldOut === true;
+        const capacityReached = tier.capacity > 0 && tier.sold >= tier.capacity;
+        return manualSoldOut || capacityReached;
+      });
+    }
+    return false;
+  }, [event]);
+
   const timeStatus = useMemo(() => {
     if (!event) return null;
     const now = new Date().getTime();
@@ -104,12 +123,26 @@ export default function EventDetailsPage() {
     return "past";
   }, [event]);
 
+  /**
+   * REFINED PRICE DISPLAY
+   * We only calculate the "Starting from" price based on tiers that are actually available.
+   */
   const displayPrice = useMemo(() => {
     if (!event) return "";
+    if (isSoldOut) return "Sold Out";
     if (event.ticketingType === "none" || event.isFree) return "Free";
 
     if (event.ticketTiers && event.ticketTiers.length > 0) {
-      const prices = event.ticketTiers.map((t: any) => t.price);
+      const availableTiers = event.ticketTiers.filter((t: any) => {
+        const tierFull = t.capacity > 0 && t.sold >= t.capacity;
+        return !t.isSoldOut && !tierFull;
+      });
+
+      // If everything is sold out, this logic shouldn't hit due to isSoldOut check above,
+      // but we fallback to all tiers for the math if needed.
+      const tiersToUse =
+        availableTiers.length > 0 ? availableTiers : event.ticketTiers;
+      const prices = tiersToUse.map((t: any) => t.price);
       const min = Math.min(...prices);
       const max = Math.max(...prices);
 
@@ -120,10 +153,11 @@ export default function EventDetailsPage() {
     }
 
     return event.externalTicketLink || event.joinLink ? "Paid" : "Invite Only";
-  }, [event]);
+  }, [event, isSoldOut]);
 
   const getButtonContent = () => {
     if (event.isCancelled) return "Event Cancelled";
+    if (isSoldOut) return "Sold Out";
     if (hasReserved) return "Spot Reserved";
     if (event.externalTicketLink) return "Get External Tickets";
     if (event.isOnline) return "Join Event Online";
@@ -138,7 +172,7 @@ export default function EventDetailsPage() {
   };
 
   const handleCTA = () => {
-    if (event.isCancelled) return;
+    if (event.isCancelled || isSoldOut) return;
     if (event.externalTicketLink) {
       setShowExternalModal(true);
       return;
@@ -280,11 +314,23 @@ export default function EventDetailsPage() {
                   }
                   alt={event.title}
                   fill
-                  className="object-cover"
+                  className={`object-cover transition-all duration-700 ${isSoldOut ? "grayscale opacity-80" : ""}`}
                   priority
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
                 />
-                <div className="absolute top-6 left-6 flex gap-2">
+
+                {isSoldOut && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                    <div className="bg-white px-8 py-4 rounded-[24px] flex items-center gap-3 shadow-2xl scale-125 border border-white/50">
+                      <Lock size={20} className="text-red-500 fill-red-500" />
+                      <span className="font-black text-[14px] uppercase tracking-[0.2em] text-gray-900 italic">
+                        Move Sold Out
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="absolute top-6 left-6 flex gap-2 z-20">
                   <span className="px-5 py-2.5 bg-white/90 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase text-gray-900 shadow-sm">
                     {event.category}
                   </span>
@@ -333,14 +379,6 @@ export default function EventDetailsPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 px-6 py-4 bg-gray-900 text-white rounded-2xl transition-all group"
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = KIVO_YELLOW;
-                          e.currentTarget.style.color = "#000";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "#111827";
-                          e.currentTarget.style.color = "#fff";
-                        }}
                       >
                         <MessageSquare
                           size={16}
@@ -404,7 +442,6 @@ export default function EventDetailsPage() {
                 </div>
               </div>
 
-              {/* OVERVIEW */}
               <div className="space-y-4">
                 <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
                   <Info size={20} className="text-blue-600" /> Overview
@@ -437,7 +474,7 @@ export default function EventDetailsPage() {
                 )}
               </div>
 
-              {/* TICKET OPTIONS */}
+              {/* TICKET OPTIONS - UPDATED FOR INDIVIDUAL TIER SOLD OUT LOGIC */}
               {event.ticketTiers && event.ticketTiers.length > 0 && (
                 <div className="space-y-6 pt-12 border-t border-gray-100">
                   <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
@@ -445,50 +482,64 @@ export default function EventDetailsPage() {
                     Options
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {event.ticketTiers.map((tier: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className="p-6 rounded-[32px] bg-white border border-gray-100 hover:border-blue-600 transition-all flex justify-between items-center group"
-                      >
-                        <div>
-                          <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest flex items-center gap-2">
-                            <Zap size={10} fill={KIVO_BLUE} /> {tier.name}
-                          </p>
-                          <p className="text-xs font-bold text-gray-400">
-                            {tier.capacity
-                              ? `${tier.capacity} Slots`
-                              : "Unlimited"}
+                    {event.ticketTiers.map((tier: any, idx: number) => {
+                      const tierSoldOut =
+                        tier.isSoldOut === true ||
+                        (tier.capacity > 0 && tier.sold >= tier.capacity);
+                      return (
+                        <div
+                          key={idx}
+                          className={`p-6 rounded-[32px] bg-white border transition-all flex justify-between items-center group ${tierSoldOut ? "opacity-60 border-gray-100 grayscale bg-gray-50/50" : "border-gray-100 hover:border-blue-600"}`}
+                        >
+                          <div>
+                            <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest flex items-center gap-2">
+                              {tierSoldOut ? (
+                                <Lock size={10} className="text-gray-400" />
+                              ) : (
+                                <Zap size={10} fill={KIVO_BLUE} />
+                              )}{" "}
+                              {tier.name}
+                            </p>
+                            <p className="text-xs font-bold text-gray-400">
+                              {tierSoldOut
+                                ? "Sold Out"
+                                : tier.capacity
+                                  ? `${tier.capacity - tier.sold} Slots Left`
+                                  : "Unlimited"}
+                            </p>
+                          </div>
+                          <p className="text-2xl font-black italic text-gray-900">
+                            {tier.price === 0
+                              ? "FREE"
+                              : `₦${tier.price.toLocaleString()}`}
                           </p>
                         </div>
-                        <p className="text-2xl font-black italic text-gray-900">
-                          {tier.price === 0
-                            ? "FREE"
-                            : `₦${tier.price.toLocaleString()}`}
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* SIDEBAR */}
             <div className="lg:col-span-4 space-y-6">
               <div className="hidden lg:block sticky top-28 p-8 bg-white rounded-[40px] border border-gray-100 shadow-2xl shadow-black/5 space-y-8">
                 <div>
                   <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">
                     Pricing
                   </p>
-                  <p className="text-3xl font-black text-gray-900 uppercase italic">
+                  <p
+                    className={`text-3xl font-black uppercase italic ${isSoldOut ? "text-red-500" : "text-gray-900"}`}
+                  >
                     {displayPrice}
                   </p>
                 </div>
                 <button
                   onClick={handleCTA}
-                  disabled={event.isCancelled || hasReserved}
-                  className={`w-full py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-xl ${event.isCancelled ? "bg-red-50 text-red-400 cursor-not-allowed" : "bg-black text-white hover:bg-blue-600 shadow-blue-600/10"}`}
+                  disabled={event.isCancelled || hasReserved || isSoldOut}
+                  className={`w-full py-6 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-xl 
+                    ${event.isCancelled || isSoldOut ? "bg-gray-50 text-gray-400 cursor-not-allowed shadow-none" : "bg-black text-white hover:bg-blue-600 shadow-blue-600/10"}`}
                 >
-                  {getButtonContent()}
+                  {isSoldOut && <Lock size={14} />} {getButtonContent()}
                 </button>
                 <div className="pt-8 border-t border-gray-100">
                   <div className="flex items-center justify-between mb-4">
@@ -524,7 +575,6 @@ export default function EventDetailsPage() {
             </div>
           </div>
 
-          {/* SIMILAR EVENTS */}
           {similarEvents.length > 0 && (
             <div className="mt-32 space-y-10 pb-20">
               <div className="flex items-center justify-between">
@@ -626,9 +676,11 @@ export default function EventDetailsPage() {
       <div className="lg:hidden fixed bottom-6 left-6 right-6 z-[100]">
         <button
           onClick={handleCTA}
-          className="w-full py-5 bg-black text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all shadow-blue-600/20"
+          disabled={event.isCancelled || hasReserved || isSoldOut}
+          className={`w-full py-5 rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all 
+            ${event.isCancelled || isSoldOut ? "bg-gray-100 text-gray-400 shadow-none" : "bg-black text-white shadow-blue-600/20"}`}
         >
-          {getButtonContent()} — {displayPrice}
+          {getButtonContent()} {isSoldOut ? "" : `— ${displayPrice}`}
         </button>
       </div>
 

@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BarChart3, Users, Share2, ExternalLink } from "lucide-react";
+import {
+  BarChart3,
+  Users,
+  Share2,
+  ExternalLink,
+  Mail,
+  Shield,
+} from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
 // Component Imports
@@ -13,19 +20,18 @@ import { OverviewTab } from "@/components/manage/events/Overview";
 import { SidebarAccess } from "@/components/manage/events/SidebarAccess";
 import { AttendeesTab } from "@/components/manage/events/AttendeesTab";
 import { MarketingTab } from "@/components/manage/events/MarketingTab";
+import { BroadcastTab } from "@/components/manage/events/BroadcastTab";
+import { SettingsTab } from "@/components/manage/events/SettingsTab";
 
 export default function ManageEventDashboard() {
   const params = useParams();
   const router = useRouter();
   const id = params.eventId as string;
 
-  // UI State
   const [activeTab, setActiveTab] = useState("overview");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [data, setData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // FIX: Added state for logged in user ID
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
 
   // Guest List State
@@ -37,7 +43,6 @@ export default function ManageEventDashboard() {
   const [coOrgEmail, setCoOrgEmail] = useState("");
   const [addingCoOrg, setAddingCoOrg] = useState(false);
 
-  // FIX: Restore local storage check to identify the organizer
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -50,6 +55,10 @@ export default function ManageEventDashboard() {
     }
   }, []);
 
+  /**
+   * FETCH DATA & REFRESH UI
+   * This is your central "source of truth" fetcher.
+   */
   const fetchDashboardData = useCallback(async () => {
     try {
       const response = await fetch(
@@ -77,7 +86,6 @@ export default function ManageEventDashboard() {
     setCurrentPage(1);
   }, [searchTerm]);
 
-  // FIX: Updated to use your original /co-organizers endpoint and PATCH method
   const handleAddCoOrg = async () => {
     if (!coOrgEmail) return toast.error("Please enter an email");
     setAddingCoOrg(true);
@@ -106,6 +114,46 @@ export default function ManageEventDashboard() {
     }
   };
 
+  /**
+   * REFUND HANDLER
+   * Communicates with Paystack and invalidates the ticket
+   */
+  const handleRefund = async (ticketCode: string) => {
+    const isConfirmed = window.confirm(
+      "Are you sure? This will refund the guest's money via Paystack and invalidate this ticket.",
+    );
+
+    if (!isConfirmed) return;
+
+    const toastId = toast.loading("Processing refund...");
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/refund/${ticketCode}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // Includes cookies for AuthGuard/Passport session
+          credentials: "include",
+        },
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("Refund successful. Spot reopened.", { id: toastId });
+
+        // REFRESH DATA:
+        // We call fetchDashboardData() to sync the UI with the DB changes.
+        fetchDashboardData();
+      } else {
+        toast.error(result.message || "Refund failed", { id: toastId });
+      }
+    } catch (error) {
+      toast.error("Network error. Please try again.", { id: toastId });
+    }
+  };
+
   const filteredTickets = useMemo(() => {
     const sourceList = data?.attendees || [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -127,6 +175,8 @@ export default function ManageEventDashboard() {
 
   if (loading || !data) return null;
 
+  const isOrganizer = data.event.organizer === loggedInUserId;
+
   return (
     <AuthGuard>
       <div className="min-h-screen bg-[#FDFDFD] text-slate-900 selection:bg-yellow-200">
@@ -141,7 +191,9 @@ export default function ManageEventDashboard() {
               {[
                 { id: "overview", label: "Insights", icon: BarChart3 },
                 { id: "attendees", label: "Guest List", icon: Users },
+                { id: "broadcast", label: "Broadcast", icon: Mail },
                 { id: "marketing", label: "Growth", icon: Share2 },
+                { id: "settings", label: "Settings", icon: Shield },
               ].map((item) => (
                 <button
                   key={item.id}
@@ -169,18 +221,31 @@ export default function ManageEventDashboard() {
                   currentPage={currentPage}
                   totalPages={totalPages}
                   setCurrentPage={setCurrentPage}
+                  onRefund={handleRefund}
+                />
+              )}
+              {activeTab === "broadcast" && (
+                <BroadcastTab
+                  attendeesCount={data.metrics.totalTicketsSold}
+                  eventId={id}
                 />
               )}
               {activeTab === "marketing" && (
                 <MarketingTab id={id} event={data.event} />
               )}
+              {activeTab === "settings" && (
+                <SettingsTab
+                  event={data.event}
+                  isOrganizer={isOrganizer}
+                  onRefresh={fetchDashboardData}
+                />
+              )}
             </div>
 
             <div className="lg:col-span-3 space-y-6">
-              {/* FIX: isOrganizer now correctly compares data from localStorage */}
               <SidebarAccess
                 event={data.event}
-                isOrganizer={data.event.organizer === loggedInUserId}
+                isOrganizer={isOrganizer}
                 coOrgEmail={coOrgEmail}
                 setCoOrgEmail={setCoOrgEmail}
                 adding={addingCoOrg}

@@ -107,16 +107,17 @@ export default function CreateEventPage() {
     isPublic: true,
     allowAnonymous: true,
     refundPolicy: "none",
+    ageRestriction: "All Ages",
     isRecurring: false,
     recurrenceFrequency: "none",
     recurrenceInterval: 1,
     recurrenceEndDate: "",
+    selectedDays: [] as string[],
     imageFile: null as File | null,
   });
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // 1. Session Check
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -131,6 +132,7 @@ export default function CreateEventPage() {
         if (res.ok && result.authenticated) {
           setIsLoggedIn(true);
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         setIsLoggedIn(false);
       }
@@ -144,19 +146,28 @@ export default function CreateEventPage() {
     }
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-
   const handleRetrieve = (res: any) => {
     const feature = res.features[0];
     if (feature) {
-      const { coordinates } = feature.geometry;
+      const [lng, lat] = feature.geometry.coordinates;
+
       const placeName =
-        feature.properties.full_address || feature.properties.name;
-      const neighborhood = feature.properties.context?.neighborhood?.name || "";
+        feature.properties.full_address ||
+        feature.properties.name ||
+        feature.place_name;
+
+      const neighborhood =
+        feature.properties.context?.neighborhood?.name ||
+        feature.properties.context?.locality?.name ||
+        feature.context?.find((c: any) => c.id.startsWith("neighborhood"))
+          ?.text ||
+        feature.context?.find((c: any) => c.id.startsWith("locality"))?.text ||
+        "Port Harcourt";
 
       setFormData((prev) => ({
         ...prev,
         location: placeName,
-        locationCoords: { lng: coordinates[0], lat: coordinates[1] },
+        locationCoords: { lng: Number(lng), lat: Number(lat) },
         neighborhood: neighborhood,
       }));
     }
@@ -172,7 +183,6 @@ export default function CreateEventPage() {
       if (data.features && data.features.length > 0) {
         const feature = data.features[0];
         const placeName = feature.place_name;
-        // Look for neighborhood in the context array
         const neighborhood =
           feature.context?.find((c: any) => c.id.startsWith("neighborhood"))
             ?.text || "";
@@ -277,68 +287,106 @@ export default function CreateEventPage() {
           (k) => (EVENT_CATEGORIES as any)[k].label === formData.category,
         ) || formData.category;
 
-      // 1. Create FormData object
-      const data = new FormData();
+      const generatedSlug = formData.title
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, "") // Remove special characters
+        .replace(/[\s_-]+/g, "-") // Replace spaces/underscores with hyphens
+        .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
 
-      // 2. Append the image file if it exists
-      if (formData.imageFile) {
-        data.append("image", formData.imageFile);
-      }
-
-      // 3. Prepare the payload (similar to your existing logic)
+      // 1. Prepare the nested payload for Zod validation
       const payload = {
-        ...formData,
+        title: formData.title,
+        slug: generatedSlug,
+        description: formData.description,
         category: categoryKey,
-        tags: formData.tags
-          ? formData.tags.split(",").map((t: string) => t.trim())
-          : [],
+        type: formData.type,
+        eventFormat: formData.eventFormat,
+        isOnline: formData.eventFormat === "online",
+        // Format dates correctly for Zod
         startDate: new Date(
           `${formData.startDate}T${formData.startTime}`,
         ).toISOString(),
         endDate: new Date(
           `${formData.endDate}T${formData.endTime}`,
         ).toISOString(),
+        tags: formData.tags
+          ? formData.tags.split(",").map((t: string) => t.trim())
+          : [],
+
+        // NESTED LOCATION OBJECT
         location:
-          formData.eventFormat !== "online"
+          formData.eventFormat !== "online" && formData.locationCoords
             ? {
                 type: "Point",
                 coordinates: [
-                  formData.locationCoords?.lng,
-                  formData.locationCoords?.lat,
+                  Number(formData.locationCoords.lng),
+                  Number(formData.locationCoords.lat),
                 ],
                 address: formData.location,
                 neighborhood: formData.neighborhood || "Port Harcourt",
               }
             : null,
+
+        // NESTED RECURRENCE OBJECT
+        isRecurring: formData.isRecurring,
+        recurrence: {
+          frequency: formData.isRecurring
+            ? formData.recurrenceFrequency
+            : "none",
+          interval: Number(formData.recurrenceInterval) || 1,
+          daysOfWeek:
+            formData.isRecurring && formData.recurrenceFrequency === "weekly"
+              ? formData.selectedDays?.map((d: string) =>
+                  ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(d),
+                )
+              : [],
+          endDate:
+            formData.isRecurring && formData.recurrenceEndDate
+              ? new Date(formData.recurrenceEndDate).toISOString()
+              : undefined,
+        },
+
+        // TICKETING
+        ticketingType: formData.ticketingType,
+        ticketTiers: formData.ticketTiers.map((tier) => ({
+          ...tier,
+          price: Number(tier.price),
+          capacity: Number(tier.capacity),
+          sold: 0,
+        })),
+        externalTicketLink: formData.externalTicketLink || "",
+        meetingLink: formData.meetingLink || "",
+
+        // DEFAULTS
+        isPublic: formData.isPublic,
+        allowAnonymous: formData.allowAnonymous,
+        ageRestriction: formData.ageRestriction || "All Ages",
+        refundPolicy: formData.refundPolicy || "none",
+        organizerType: "individual", // Based on your profile summary
+        status: "casual",
       };
 
-      // 4. Remove the raw file from the text payload before appending
-      delete (payload as any).image;
-      delete (payload as any).imageFile;
+      // 2. Use FormData for Multer/Backend processing
+      const data = new FormData();
+      data.append("image", formData.imageFile);
 
-      // 5. Append the rest of the fields as a stringified object or individual fields
-      // Most Express setups prefer individual fields or a "data" field
+      // Send the validated payload as eventData
       data.append("eventData", JSON.stringify(payload));
-      for (const [key, value] of data.entries()) {
-        console.log(`${key}:`, value);
-      }
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/events`, {
         method: "POST",
         credentials: "include",
         body: data,
       });
+
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Broadcast failed.");
       }
 
-      toast.success("Move Submitted! Waiting for Kivo Team approval.", {
-        duration: 5000,
-      });
-
-      setTimeout(() => {
-        router.push("/profile");
-      }, 2500);
+      toast.success("Move Submitted! Waiting for Kivo Team approval.");
+      setTimeout(() => router.push("/profile"), 2500);
     } catch (e: any) {
       toast.error(e.message);
     } finally {

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   Tag,
   Percent,
@@ -13,6 +13,7 @@ import {
   Loader2,
   Calendar,
   Trash2,
+  Hash, // Added for usage limit icon
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -20,7 +21,6 @@ import { useRouter } from "next/navigation";
 export const MarketingTab = ({ id, event: initialEvent }: any) => {
   const router = useRouter();
 
-  // Use local state for discounts to enable true Optimistic UI
   const [discounts, setDiscounts] = useState(initialEvent.discounts || []);
   const [copied, setCopied] = useState(false);
   const [showAddCode, setShowAddCode] = useState(false);
@@ -30,6 +30,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
   const [formData, setFormData] = useState({
     code: "",
     discountPercentage: "",
+    usageLimit: "", // Added this field
     expiryDate: "",
     applicableTickets: [] as string[],
   });
@@ -59,6 +60,9 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
           body: JSON.stringify({
             code: formData.code.toUpperCase().trim(),
             discountPercentage: Number(formData.discountPercentage),
+            usageLimit: formData.usageLimit
+              ? Number(formData.usageLimit)
+              : null, // Send to backend
             expiryDate: formData.expiryDate || null,
             applicableTickets: formData.applicableTickets,
           }),
@@ -73,11 +77,11 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
       setFormData({
         code: "",
         discountPercentage: "",
+        usageLimit: "", // Reset field
         expiryDate: "",
         applicableTickets: [],
       });
 
-      // Update local state and sync with server
       setDiscounts(data.data.event.discounts);
       router.refresh();
     } catch (error: any) {
@@ -90,7 +94,6 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
   const handleDeleteDiscount = async (discountId: string) => {
     if (!confirm("Are you sure you want to delete this code?")) return;
 
-    // OPTIMISTIC UI: Remove from local state immediately
     const previousDiscounts = [...discounts];
     setDiscounts(discounts.filter((d: any) => d._id !== discountId));
     setIsDeleting(discountId);
@@ -106,7 +109,6 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
       toast.success("Discount removed");
       router.refresh();
     } catch (error: any) {
-      // Rollback on failure
       setDiscounts(previousDiscounts);
       toast.error(error.message);
     } finally {
@@ -125,7 +127,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* 1. Stats */}
+      {/* Stats Section stays the same */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           {
@@ -163,7 +165,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
         ))}
       </div>
 
-      {/* 2. Link Section */}
+      {/* Main Link Section stays the same */}
       <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
         <div className="relative z-10">
           <h3 className="text-xs font-black uppercase tracking-[0.2em] text-yellow-400 mb-4">
@@ -182,13 +184,9 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
             </button>
           </div>
         </div>
-        <Share2
-          className="absolute -right-8 -bottom-8 text-white/5"
-          size={200}
-        />
       </div>
 
-      {/* 3. Discounts Management */}
+      {/* Discounts Management */}
       <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden">
         <div className="p-8 border-b border-slate-50 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -208,7 +206,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
         <div className="p-8">
           {showAddCode && (
             <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 mb-6 animate-in zoom-in-95 duration-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">
                     Code Name
@@ -242,12 +240,28 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
                     className="w-full p-4 rounded-2xl bg-white border border-slate-100 text-[10px] font-bold outline-none focus:border-yellow-400"
                   />
                 </div>
+                {/* NEW USAGE LIMIT FIELD */}
                 <div>
                   <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">
-                    Expiry Date
+                    Usage Limit
                   </label>
                   <input
-                    type="date"
+                    type="number"
+                    value={formData.usageLimit}
+                    onChange={(e) =>
+                      setFormData({ ...formData, usageLimit: e.target.value })
+                    }
+                    placeholder="50"
+                    className="w-full p-4 rounded-2xl bg-white border border-slate-100 text-[10px] font-bold outline-none focus:border-yellow-400"
+                  />
+                </div>
+                {/* UPDATED DATE-TIME FIELD */}
+                <div>
+                  <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">
+                    Expiry Date & Time
+                  </label>
+                  <input
+                    type="datetime-local"
                     value={formData.expiryDate}
                     onChange={(e) =>
                       setFormData({ ...formData, expiryDate: e.target.value })
@@ -267,11 +281,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
                       key={ticket.name}
                       type="button"
                       onClick={() => toggleTicketTier(ticket.name)}
-                      className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase border transition-all ${
-                        formData.applicableTickets.includes(ticket.name)
-                          ? "bg-yellow-400 border-yellow-400 text-black"
-                          : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
-                      }`}
+                      className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase border transition-all ${formData.applicableTickets.includes(ticket.name) ? "bg-yellow-400 border-yellow-400 text-black" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"}`}
                     >
                       {ticket.name}
                     </button>
@@ -295,6 +305,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
             </div>
           )}
 
+          {/* List display logic stays the same */}
           <div className="space-y-3">
             {discounts.length > 0 ? (
               discounts.map((discount: any) => (
@@ -315,7 +326,11 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
                           {discount.discountPercentage}% OFF
                         </span>
                         <span>•</span>
-                        <span>{discount.usedCount || 0} uses</span>
+                        {/* Display Limit Info if it exists */}
+                        <span>
+                          {discount.usedCount || 0} /{" "}
+                          {discount.usageLimit || "∞"} uses
+                        </span>
                         {discount.applicableTickets?.length > 0 && (
                           <>
                             <span>•</span>

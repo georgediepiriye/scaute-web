@@ -116,6 +116,7 @@ function VerifyPaymentContent() {
 
   const verifyOrder = useCallback(
     async (ref: string) => {
+      // Only block if we are currently mid-fetch
       if (isVerifying.current) return;
       isVerifying.current = true;
 
@@ -132,16 +133,22 @@ function VerifyPaymentContent() {
 
         if (result.status === "success") {
           const { order, tickets } = result.data;
+
+          // 1. Set data FIRST
           setTicketData({
-            eventTitle: order.event.title,
+            eventTitle: order.event.title, // Ensure backend is populating 'event'
             tierName: order.tierName,
             quantity: order.quantity,
             ticketCode: tickets?.[0]?.checkInCode || "KIVO-PASS",
           });
+
+          // 2. Set status to success to trigger the UI switch
           setStatus("success");
           triggerCelebration();
-        } else if (result.status === "pending" && attempts < 15) {
+          // Reset flag so we don't block future renders/logic
           isVerifying.current = false;
+        } else if (result.status === "pending" && attempts < 15) {
+          isVerifying.current = false; // Reset flag to allow the next attempt
           setTimeout(() => setAttempts((prev) => prev + 1), 3000);
         } else {
           setStatus("error");
@@ -157,7 +164,7 @@ function VerifyPaymentContent() {
         }
       }
     },
-    [attempts],
+    [attempts], // This dependency is fine, but the flag management above is key
   );
 
   useEffect(() => {
@@ -242,7 +249,7 @@ function VerifyPaymentContent() {
           <p className="text-gray-500 font-medium">
             Ready for{" "}
             <span className="text-black font-black uppercase italic">
-              {ticketData?.eventTitle}
+              {ticketData?.eventTitle || "Your Move"}
             </span>
           </p>
         </div>
