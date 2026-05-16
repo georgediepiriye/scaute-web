@@ -60,9 +60,16 @@ export default function ManageEventDashboard() {
    */
   const fetchDashboardData = useCallback(async () => {
     try {
+      const token = localStorage.getItem("kivo_token");
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/manage`,
-        { credentials: "include" },
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        },
       );
       const result = await response.json();
       if (response.ok) {
@@ -92,16 +99,19 @@ export default function ManageEventDashboard() {
     if (!coOrgEmail) return toast.error("Please enter an email");
     setAddingCoOrg(true);
     try {
+      const token = localStorage.getItem("kivo_token");
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/co-organizers`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
           body: JSON.stringify({
             email: coOrgEmail,
             permissions: ["scan_tickets"],
           }),
-          credentials: "include",
         },
       );
       const result = await res.json();
@@ -129,11 +139,14 @@ export default function ManageEventDashboard() {
     if (!isConfirmed) return;
 
     try {
+      const token = localStorage.getItem("kivo_token");
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/co-organizers/${partnerId}`,
         {
           method: "DELETE",
-          credentials: "include",
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
         },
       );
       const result = await res.json();
@@ -161,12 +174,15 @@ export default function ManageEventDashboard() {
     const toastId = toast.loading("Processing refund...");
 
     try {
+      const token = localStorage.getItem("kivo_token");
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/refund/${ticketCode}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
         },
       );
 

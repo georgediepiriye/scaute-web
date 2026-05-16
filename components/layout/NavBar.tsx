@@ -21,7 +21,7 @@ import { useAuth } from "../auth/AuthGuard";
 
 export default function Navbar() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth(); // 💡 FIX 1: Access logout function hook from provider context
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Prevent body scroll when mobile menu is open
@@ -38,17 +38,33 @@ export default function Navbar() {
 
   const handleSignOut = async () => {
     try {
+      const token = localStorage.getItem("kivo_token");
+
+      // Execute explicit logout request to cleanup secondary server states if necessary
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/logout`, {
         method: "POST",
-        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
       });
+    } catch (error) {
+      console.error("Server cleanup during logout failed:", error);
+    } finally {
+      // 💡 FIX 2: Fully synchronize client memory teardowns across the system
+      localStorage.removeItem("kivo_token");
       localStorage.removeItem("user");
+
+      // Unlink auth session cookie so Next.js edge routers clear out protected frames instantly
+      document.cookie =
+        "kivo_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax;";
+
       setMobileMenuOpen(false);
 
-      // Perform a full hard refresh or push so the AuthProvider session re-triggers
+      if (logout) logout(); // Notify state provider tree
+
+      // Perform a full hard refresh to safely reset state trees across providers
       window.location.href = "/auth/signin";
-    } catch (error) {
-      console.error("Logout failed:", error);
     }
   };
 
@@ -88,7 +104,6 @@ export default function Navbar() {
 
         {/* ACTIONS */}
         <div className="flex items-center gap-4">
-          {/* Only render action layout fields once AuthProvider completes its check */}
           {!loading && (
             <>
               {user ? (
@@ -171,7 +186,6 @@ export default function Navbar() {
             className="fixed inset-0 w-full h-screen bg-white z-[100] md:hidden flex flex-col pt-28"
           >
             <div className="flex-1 overflow-y-auto px-8 pb-12 flex flex-col">
-              {/* User Section */}
               {!loading && user && (
                 <div className="py-8 flex items-center gap-5 border-b border-slate-100 mb-6">
                   <div className="w-16 h-16 rounded-[24px] bg-slate-100 relative overflow-hidden flex-shrink-0 border-2 border-slate-50">
@@ -191,95 +205,61 @@ export default function Navbar() {
                   </div>
                   <div className="flex-1">
                     <p className="font-black text-2xl tracking-tight leading-none mb-1 text-slate-950">
-                      {user?.name || "Kivo User"}
+                      {user.name}
                     </p>
-                    <div className="flex items-center gap-3">
-                      <Link
-                        href="/profile"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="text-blue-600 text-[11px] font-black uppercase tracking-widest"
-                      >
-                        My Dashboard
-                      </Link>
-                      {user?.role === "admin" && (
-                        <>
-                          <span className="text-slate-300">•</span>
-                          <Link
-                            href="/admin/dashboard"
-                            onClick={() => setMobileMenuOpen(false)}
-                            className="text-slate-950 text-[11px] font-black uppercase tracking-widest flex items-center gap-1"
-                          >
-                            Admin Console
-                          </Link>
-                        </>
-                      )}
-                    </div>
+                    <p className="text-[11px] font-black uppercase text-blue-600 tracking-wider">
+                      View Profile
+                    </p>
                   </div>
                 </div>
               )}
 
-              {/* Links */}
-              <div className="flex flex-col gap-2">
-                {navLinks.map((link, i) => (
-                  <motion.div
+              {/* Mobile links collection mapping */}
+              <div className="flex flex-col gap-6 my-auto">
+                {navLinks.map((link) => (
+                  <Link
                     key={link.href}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-slate-950 font-black text-3xl tracking-tighter uppercase flex items-center justify-between group"
                   >
-                    <Link
-                      href={link.href}
-                      className="group flex items-center justify-between py-6 border-b border-slate-50"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <span className="text-3xl font-black tracking-tighter text-slate-900 group-hover:text-blue-600 transition-colors">
-                        {link.label}
-                      </span>
-                      <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
-                        <ChevronRight size={20} />
-                      </div>
-                    </Link>
-                  </motion.div>
+                    <span>{link.label}</span>
+                    <ChevronRight
+                      size={24}
+                      className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"
+                    />
+                  </Link>
                 ))}
               </div>
 
-              {/* Bottom Actions */}
-              <div className="mt-auto pt-12 space-y-4">
-                {!loading && (
-                  <>
-                    {user ? (
-                      <button
-                        onClick={handleSignOut}
-                        className="w-full py-6 rounded-[32px] bg-red-50 text-red-500 font-black text-center text-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
-                      >
-                        <LogOut size={20} /> Sign Out
-                      </button>
-                    ) : (
-                      <div className="flex flex-col gap-4">
-                        <Link
-                          href="/auth/signup"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="block w-full py-6 rounded-[32px] bg-blue-600 text-white font-black text-center text-xl shadow-2xl shadow-blue-200 active:scale-95 transition-all"
-                        >
-                          Join the Vibe
-                        </Link>
-                        <Link
-                          href="/auth/signin"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="block w-full py-6 rounded-[32px] bg-slate-900 text-white font-black text-center text-xl active:scale-95 transition-all"
-                        >
-                          Sign In
-                        </Link>
-                      </div>
-                    )}
-                  </>
+              {/* Action Buttons footer layout block inside overlay view */}
+              <div className="mt-auto pt-8 border-t border-slate-100">
+                {user ? (
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full py-4 bg-red-50 hover:bg-red-100 text-red-600 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 transition-all"
+                  >
+                    <LogOut size={16} />
+                    Sign Out Account
+                  </button>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <Link
+                      href="/auth/signin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="py-4 text-center text-slate-950 font-black text-xs uppercase tracking-widest bg-slate-50 rounded-2xl"
+                    >
+                      Log In
+                    </Link>
+                    <Link
+                      href="/auth/signup"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="py-4 text-center bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-100"
+                    >
+                      Join Kivo
+                    </Link>
+                  </div>
                 )}
-
-                {/* Location Footer */}
-                <div className="flex items-center justify-center gap-2 py-6 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
-                  <MapPin size={12} />
-                  Port Harcourt, Nigeria
-                </div>
               </div>
             </div>
           </motion.div>

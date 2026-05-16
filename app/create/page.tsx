@@ -19,6 +19,7 @@ import { StepFinal } from "@/components/create-event/StepFinal";
 import { PreviewModal } from "@/components/create-event/PreviewModal";
 import { EVENT_CATEGORIES } from "@/lib/categories";
 import CreateEventMap from "@/components/map/CreateEventMap";
+import { useAuth } from "@/components/auth/AuthGuard";
 
 // --- AUTH GUARD MODAL COMPONENT ---
 const AuthGuardModal = ({
@@ -56,7 +57,9 @@ const AuthGuardModal = ({
         </p>
         <div className="space-y-3">
           <button
-            onClick={() => router.push("/auth/signin")}
+            onClick={() =>
+              router.push("/auth/signin?callbackUrl=%2Fcreate-event")
+            }
             className="w-full py-5 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-600/10 active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-blue-600"
           >
             Sign In Now <ArrowRight size={14} />
@@ -75,6 +78,10 @@ const AuthGuardModal = ({
 
 export default function CreateEventPage() {
   const router = useRouter();
+
+  // 💡 FIX 1: Extract global authenticated context state cleanly
+  const { user, loading: authLoading } = useAuth();
+
   const [step, setStep] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
   const [showMapPicker, setShowMapPicker] = useState(false);
@@ -82,7 +89,6 @@ export default function CreateEventPage() {
   const [submitting, setSubmitting] = useState(false);
 
   // Auth States
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showAuthGuard, setShowAuthGuard] = useState(false);
 
   // Form State
@@ -118,27 +124,8 @@ export default function CreateEventPage() {
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/me`,
-          {
-            method: "GET",
-            credentials: "include",
-          },
-        );
-        const result = await res.json();
-        if (res.ok && result.authenticated) {
-          setIsLoggedIn(true);
-        }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
-        setIsLoggedIn(false);
-      }
-    };
-    checkSession();
-  }, []);
+  // 💡 FIX 2: Derive authorization flags directly from your global bootstrap state
+  const isLoggedIn = !!user;
 
   const updateForm = (field: string, value: any) => {
     if (field === "recurrenceInterval" && value !== "" && parseInt(value) < 1) {
@@ -146,6 +133,7 @@ export default function CreateEventPage() {
     }
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
   const handleRetrieve = (res: any) => {
     const feature = res.features[0];
     if (feature) {
@@ -208,7 +196,6 @@ export default function CreateEventPage() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
-        // Fetch the real address name
         await reverseGeocode(latitude, longitude);
         setIsLocating(false);
         toast.success("Location detected");
@@ -290,11 +277,10 @@ export default function CreateEventPage() {
       const generatedSlug = formData.title
         .toLowerCase()
         .trim()
-        .replace(/[^\w\s-]/g, "") // Remove special characters
-        .replace(/[\s_-]+/g, "-") // Replace spaces/underscores with hyphens
-        .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
+        .replace(/[^\w\s-]/g, "")
+        .replace(/[\s_-]+/g, "-")
+        .replace(/^-+|-+$/g, "");
 
-      // 1. Prepare the nested payload for Zod validation
       const payload = {
         title: formData.title,
         slug: generatedSlug,
@@ -303,7 +289,6 @@ export default function CreateEventPage() {
         type: formData.type,
         eventFormat: formData.eventFormat,
         isOnline: formData.eventFormat === "online",
-        // Format dates correctly for Zod
         startDate: new Date(
           `${formData.startDate}T${formData.startTime}`,
         ).toISOString(),
@@ -313,8 +298,6 @@ export default function CreateEventPage() {
         tags: formData.tags
           ? formData.tags.split(",").map((t: string) => t.trim())
           : [],
-
-        // NESTED LOCATION OBJECT
         location:
           formData.eventFormat !== "online" && formData.locationCoords
             ? {
@@ -327,8 +310,6 @@ export default function CreateEventPage() {
                 neighborhood: formData.neighborhood || "Port Harcourt",
               }
             : null,
-
-        // NESTED RECURRENCE OBJECT
         isRecurring: formData.isRecurring,
         recurrence: {
           frequency: formData.isRecurring
@@ -346,8 +327,6 @@ export default function CreateEventPage() {
               ? new Date(formData.recurrenceEndDate).toISOString()
               : undefined,
         },
-
-        // TICKETING
         ticketingType: formData.ticketingType,
         ticketTiers: formData.ticketTiers.map((tier) => ({
           ...tier,
@@ -357,26 +336,29 @@ export default function CreateEventPage() {
         })),
         externalTicketLink: formData.externalTicketLink || "",
         meetingLink: formData.meetingLink || "",
-
-        // DEFAULTS
         isPublic: formData.isPublic,
         allowAnonymous: formData.allowAnonymous,
         ageRestriction: formData.ageRestriction || "All Ages",
         refundPolicy: formData.refundPolicy || "none",
-        organizerType: "individual", // Based on your profile summary
+        organizerType: "individual",
         status: "casual",
       };
 
-      // 2. Use FormData for Multer/Backend processing
       const data = new FormData();
       data.append("image", formData.imageFile);
-
-      // Send the validated payload as eventData
       data.append("eventData", JSON.stringify(payload));
+
+      // 💡 FIX 3: Use dynamic authentication headers derived out of client local disk
+      // instead of raw non-credential background fetch chains.
+      const token = localStorage.getItem("kivo_token");
+      const headers: HeadersInit = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/events`, {
         method: "POST",
-        credentials: "include",
+        headers,
         body: data,
       });
 
@@ -396,18 +378,17 @@ export default function CreateEventPage() {
 
   const handleImageChange = async (event: any) => {
     const imageFile = event.target.files[0];
+    if (!imageFile) return;
 
     const options = {
-      maxSizeMB: 0.8, // Keep it under 1MB
+      maxSizeMB: 0.8,
       maxWidthOrHeight: 1200,
       useWebWorker: true,
     };
 
     try {
       const compressedFile = await imageCompression(imageFile, options);
-      // 1. Create preview for the UI
       setPreviewImage(URL.createObjectURL(compressedFile));
-      // 2. Store the compressed file in your formData to upload later
       updateForm("imageFile", compressedFile);
     } catch (error) {
       console.log(error);
@@ -415,6 +396,15 @@ export default function CreateEventPage() {
   };
 
   const totalSteps = 4;
+
+  // Render minimal layout shell while the core initialization boots up
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-gray-900 pb-32">
@@ -478,7 +468,6 @@ export default function CreateEventPage() {
           )}
         </AnimatePresence>
 
-        {/* NAVIGATION BUTTONS */}
         {step > 0 && (
           <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t md:relative md:bg-transparent md:border-none md:mt-12 z-50">
             <div className="max-w-4xl mx-auto flex justify-between gap-4">
@@ -515,11 +504,8 @@ export default function CreateEventPage() {
         )}
       </main>
 
-      {/* MAP PICKER INTERFACE */}
-
       {showMapPicker && (
         <div className="fixed inset-0 z-[700] bg-white flex flex-col">
-          {/* Header with Close Button */}
           <div className="absolute top-6 left-6 right-6 z-[710] flex justify-between items-center pointer-events-none">
             <div className="bg-white/90 backdrop-blur px-6 py-3 rounded-2xl border border-gray-100 shadow-xl pointer-events-auto">
               <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">
@@ -536,20 +522,16 @@ export default function CreateEventPage() {
             </button>
           </div>
 
-          {/* THE ACTUAL MAP */}
           <div className="flex-1 w-full h-full">
             <CreateEventMap
               selectedCoords={formData.locationCoords}
               onSelect={(coords) => {
-                // This updates the pin immediately
                 updateForm("locationCoords", coords);
-                // This fetches the real address for the "Venue" field
                 reverseGeocode(coords.lat, coords.lng);
               }}
             />
           </div>
 
-          {/* Bottom Confirmation Button */}
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[710] w-full max-w-xs px-4">
             <button
               onClick={() => setShowMapPicker(false)}

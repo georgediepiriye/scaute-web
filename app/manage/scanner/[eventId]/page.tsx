@@ -51,7 +51,6 @@ export default function TicketScannerPage() {
     const gain = ctx.createGain();
 
     osc.type = "sine";
-    // High pitch for success, low for error
     osc.frequency.setValueAtTime(
       type === "success" ? 880 : 220,
       ctx.currentTime,
@@ -67,22 +66,30 @@ export default function TicketScannerPage() {
     osc.stop(ctx.currentTime + 0.2);
   };
 
-  // --- SYNC ENGINE (MANUAL ONLY) ---
+  // --- SYNC ENGINE (MANUAL & INITIAL MOUNT) ---
   const performSync = useCallback(
     async (manual = false) => {
       if (!params.eventId || syncStatus === "syncing") return;
       setSyncStatus("syncing");
 
       try {
-        // Get the last updated timestamp from our local DB to fetch only NEW tickets
         const lastTicket = await db.tickets.orderBy("updatedAt").last();
         const since = lastTicket?.updatedAt
           ? new Date(lastTicket.updatedAt).getTime()
           : 0;
 
+        // Retrieve explicitly stored auth string token
+        const token = localStorage.getItem("kivo_token");
+
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/event/${params.eventId}/sync?since=${since}`,
-          { credentials: "include" },
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          },
         );
 
         const result = await res.json();
@@ -91,7 +98,7 @@ export default function TicketScannerPage() {
           await db.tickets.bulkPut(
             result.data.map((t: any) => ({
               id: t._id,
-              eventId: params.eventId, // <-- IMPORTANT: Store the eventId
+              eventId: params.eventId,
               checkInCode: t.checkInCode,
               guestName: t.buyerInfo
                 ? `${t.buyerInfo.firstName} ${t.buyerInfo.lastName}`
@@ -162,17 +169,22 @@ export default function TicketScannerPage() {
           // 1. Update Local Database (Offline-First)
           await db.tickets.update(ticket.id, { status: "used" });
 
+          // Retrieve explicitly stored token for the check-in request
+          const token = localStorage.getItem("kivo_token");
+
           // 2. Push to Server (Background)
           fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/check-in/${params.eventId}`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
               body: JSON.stringify({ checkInCode: cleanCode }),
-              credentials: "include",
             },
           ).catch(async () => {
-            // 3. If fetch fails, queue in outbox for background retry
+            // 3. If fetch fails completely, queue in outbox for retry worker
             await db.outbox.add({
               checkInCode: cleanCode,
               eventId: params.eventId as string,
@@ -185,7 +197,6 @@ export default function TicketScannerPage() {
       } finally {
         setIsProcessing(false);
         setManualCode("");
-        // Cooldown to prevent accidental double-scanning
         setTimeout(() => {
           processingRef.current = false;
         }, 2000);

@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -9,8 +9,21 @@ import Navbar from "@/components/layout/NavBar";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
+// External store helpers to sync localStorage safely with SSR
+const subscribe = () => () => {};
+const getSnapshot = () => localStorage.getItem("kivo_token");
+
+// The server snapshot returns a sentinel object indicating it's rendering on the server
+const getServerSnapshot = () => "SERVER_RENDER";
+
 export default function SignInPage() {
   const router = useRouter();
+
+  // Safely tracks token status.
+  // On the server, this is always "SERVER_RENDER".
+  // On the client initial mount, it automatically evaluates to the actual token string or null.
+  const token = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -18,12 +31,18 @@ export default function SignInPage() {
     password: "",
   });
 
+  // Handle auto-routing as a pure side-effect when a valid token is found on the client
+  useEffect(() => {
+    if (token && token !== "SERVER_RENDER") {
+      router.replace("/profile");
+    }
+  }, [token, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     const loginAction = async () => {
-      // Small delay for UX feel
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       const response = await fetch(
@@ -31,7 +50,6 @@ export default function SignInPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
           body: JSON.stringify(formData),
         },
       );
@@ -44,8 +62,10 @@ export default function SignInPage() {
         );
       }
 
-      // If your Express backend sends the user object inside data.data.user,
-      // map it correctly here: data.data?.user || data.user
+      if (data.token) {
+        localStorage.setItem("kivo_token", data.token);
+      }
+
       const userData = data.data?.user || data.user;
       localStorage.setItem("user", JSON.stringify(userData));
 
@@ -58,8 +78,6 @@ export default function SignInPage() {
         loading: "Authenticating...",
         success: () => {
           setIsLoading(false);
-
-          // Force a hard navigation so AuthProvider completely recalculates state from scratch
           window.location.href = "/profile";
           return "Welcome back to Kivo!";
         },
@@ -83,6 +101,18 @@ export default function SignInPage() {
     );
   };
 
+  // 1. If it's the server rendering, or if the client has loaded and a token exists,
+  // render the loader fallback. This creates a perfect match between SSR and the client's first paint.
+  if (token === "SERVER_RENDER" || token !== null) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <Loader2 className="w-10 h-10 animate-spin text-[#0052FF]" />
+      </div>
+    );
+  }
+
+  // 2. If token is explicitly null on the client, it means the user is not authenticated.
+  // We can safely paint the sign-in forms without layout shifts or console warnings.
   return (
     <div className="min-h-screen w-full flex bg-white font-sans text-gray-900 overflow-x-hidden">
       <Toaster position="top-center" reverseOrder={false} />
@@ -231,7 +261,7 @@ export default function SignInPage() {
           <p className="mt-10 text-center text-sm text-gray-400 font-medium pb-10 lg:pb-0">
             Don&apos;t have an account?{" "}
             <Link
-              href="/auth/signup"
+              href="/signup"
               className="text-blue-600 font-black hover:underline underline-offset-4 uppercase text-[10px]"
             >
               Create an account

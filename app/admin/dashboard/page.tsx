@@ -64,9 +64,18 @@ export default function AdminDashboard() {
         ...(eventSearch && { title: eventSearch }),
       });
 
+      // Retrieve explicitly stored auth string token
+      const token = localStorage.getItem("kivo_token");
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/events?${query}`,
-        { credentials: "include" },
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        },
       );
       if (!res.ok) throw new Error("Sync failed");
       const result = await res.json();
@@ -99,9 +108,18 @@ export default function AdminDashboard() {
         ...(userSearch && { name: userSearch }),
       });
 
+      // Retrieve explicitly stored auth string token
+      const token = localStorage.getItem("kivo_token");
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/users?${query}`,
-        { credentials: "include" },
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        },
       );
       if (!res.ok) throw new Error("User sync failed");
       const result = await res.json();
@@ -119,10 +137,17 @@ export default function AdminDashboard() {
   const fetchPulse = async () => {
     setLoading(true);
     try {
+      // Retrieve explicitly stored auth string token
+      const token = localStorage.getItem("kivo_token");
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/pulse`,
         {
-          credentials: "include",
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
         },
       );
       const result = await res.json();
@@ -147,7 +172,7 @@ export default function AdminDashboard() {
     fetchUsers();
   }, []);
 
-  // Debounce hook handling updates cleanly across tabs without executing reduntant requests
+  // Debounce hook handling updates cleanly across tabs without executing redundant requests
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (activeTab === "events") {

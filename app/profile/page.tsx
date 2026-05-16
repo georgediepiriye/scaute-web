@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -27,41 +27,52 @@ import Navbar from "@/components/layout/NavBar";
 import MobileNav from "@/components/layout/MobileNav";
 import { useAuth } from "@/components/auth/AuthGuard";
 
-// BRAND CONSTANTS
 const KIVO_BLUE = "#0052FF";
 const KIVO_YELLOW = "#FFD700";
 
 export default function ProfilePage() {
   const router = useRouter();
-
-  // Consume global authentication state from the primary workspace provider
   const { user: profile, loading, logout } = useAuth();
 
-  // Handle implicit production client-side routing locks cleanly
-  useEffect(() => {
-    if (loading) return;
+  const [isMounted, setIsMounted] = useState(false);
+  // 💡 FIX 1: Add a local transition flag to avoid falling backward into the splash loader trap
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
-    if (!profile) {
-      router.replace("/auth/signin");
-    }
-  }, [profile, loading, router]);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleSignOut = async () => {
     try {
+      setIsSigningOut(true); // Flag the transition state immediately
+      const token = localStorage.getItem("kivo_token");
+
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/logout`, {
         method: "POST",
-        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
       });
-      logout(); // Cleanly wipes localStorage and updates runtime application states instantly
     } catch (err) {
-      console.error("Logout failed:", err);
-      // Fallback local cleanup execution if server connection times out
+      console.error("Logout backend notification skipped:", err);
+    } finally {
+      // Clean up storage values
+      localStorage.removeItem("kivo_token");
+      localStorage.removeItem("user");
+
+      // Remove cookie immediately to prevent proxy layout leaks
+      document.cookie =
+        "kivo_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax;";
+
       logout();
+      // Hard routing redirect guarantees cleaner global store context flush
+      window.location.href = "/auth/signin";
     }
   };
 
-  // Render uniform full-screen blocker only while context hydration is settling
-  if (loading || !profile) {
+  // 💡 FIX 2: Check against `isSigningOut`. If true, bypass this blocking return!
+  if (!isMounted || loading || (!profile && !isSigningOut)) {
     return (
       <div className="fixed inset-0 z-[200] bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-6">
@@ -83,7 +94,9 @@ export default function ProfilePage() {
     );
   }
 
-  // Calculate specific metrics splits dynamically
+  // Fallback structural initialization check if user data goes clean while updating routing frames
+  if (!profile) return null;
+
   const mainHostedCount =
     profile.organizedEvents?.filter((event: any) => {
       const organizerId = event.organizer?._id || event.organizer;
@@ -165,7 +178,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* SPLIT DIFFERENTIATED HOUSING MATRIX METRICS */}
               <div className="grid grid-cols-3 gap-1.5 mt-8">
                 <div className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100">
                   <p className="text-lg font-black">
@@ -253,7 +265,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* AUTOMATED PASSES TILES */}
             <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden">
               <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
@@ -311,7 +322,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* HOSTED / CO-ORGANIZED MOVES */}
             <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden">
               <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">

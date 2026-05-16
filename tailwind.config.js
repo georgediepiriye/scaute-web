@@ -2,7 +2,6 @@
 module.exports = {
   content: ["./app/**/*.{js,ts,jsx,tsx}", "./components/**/*.{js,ts,jsx,tsx}"],
 
-  // 🔥 ADD THIS BLOCK
   safelist: [
     "bg-yellow-100",
     "text-yellow-800",
@@ -38,6 +37,11 @@ module.exports = {
 
   theme: {
     extend: {
+      // 💡 Added your font family mapping here
+      fontFamily: {
+        sans: ["var(--font-inter)", "sans-serif"], // Maps to your Inter body text
+        heading: ["var(--font-jakarta)", "sans-serif"], // Maps to your Plus Jakarta Sans titles
+      },
       colors: {
         primary: "#715800",
         "primary-container": "#f8d472",
@@ -49,16 +53,18 @@ module.exports = {
         surface: "#f5f6f7",
         "on-surface": "#2c2f30",
       },
-    },
-    keyframes: {
-      shimmer: {
-        "100%": {
-          transform: "translateX(100%)",
+      // Moved keyframes and animation inside extend so you don't overwrite
+      // Tailwind's built-in animations (like animate-pulse or animate-spin)
+      keyframes: {
+        shimmer: {
+          "100%": {
+            transform: "translateX(100%)",
+          },
         },
       },
-    },
-    animation: {
-      shimmer: "shimmer 2s infinite",
+      animation: {
+        shimmer: "shimmer 2s infinite",
+      },
     },
   },
 

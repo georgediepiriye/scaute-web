@@ -59,9 +59,18 @@ export default function ProfessionalReviewPage() {
   useEffect(() => {
     const fetchEventData = async () => {
       try {
+        // Retrieve explicitly stored auth string token
+        const token = localStorage.getItem("kivo_token");
+
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/events/${id}`,
-          { credentials: "include" },
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          },
         );
         if (!res.ok) throw new Error("Fetch failed");
         const result = await res.json();
@@ -88,13 +97,18 @@ export default function ProfessionalReviewPage() {
     const loadingToast = toast.loading(`Processing decision...`);
 
     try {
+      // Retrieve explicitly stored auth string token
+      const token = localStorage.getItem("kivo_token");
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/events/${id}/status`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify({ status: pendingStatus }),
-          credentials: "include",
         },
       );
 

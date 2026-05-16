@@ -86,10 +86,15 @@ export default function EventSettingsPage() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
+        const token = localStorage.getItem("kivo_token");
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${params.eventId}`,
           {
-            credentials: "include",
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
           },
         );
         const result = await res.json();
@@ -174,7 +179,9 @@ export default function EventSettingsPage() {
     try {
       const payload = {
         ...formData,
-        startDate: new Date(formData.startDate).toISOString(),
+        startDate: formData.startDate
+          ? new Date(formData.startDate).toISOString()
+          : undefined,
         endDate: formData.endDate
           ? new Date(formData.endDate).toISOString()
           : undefined,
@@ -188,12 +195,15 @@ export default function EventSettingsPage() {
         },
       };
 
+      const token = localStorage.getItem("kivo_token");
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${params.eventId}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
           body: JSON.stringify(payload),
         },
       );

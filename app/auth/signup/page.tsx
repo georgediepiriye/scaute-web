@@ -51,7 +51,7 @@ export default function SignUpPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          credentials: "include", // Keeps compatibility active with your development setup
           body: JSON.stringify(payload),
         },
       );
@@ -60,6 +60,11 @@ export default function SignUpPage() {
 
       if (!response.ok) {
         throw new Error(data.message || "Signup failed");
+      }
+
+      // 💡 FIX: Safely parse and store the token string into localStorage on successful signup
+      if (data.token) {
+        localStorage.setItem("kivo_token", data.token);
       }
 
       localStorage.setItem(
