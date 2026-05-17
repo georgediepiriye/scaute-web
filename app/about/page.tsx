@@ -12,7 +12,6 @@ import {
   Layers,
 } from "lucide-react";
 import Navbar from "@/components/layout/NavBar";
-import MobileNav from "@/components/layout/MobileNav";
 import Footer from "@/components/layout/Footer";
 
 // BRAND COLOR CONSTANTS
@@ -183,8 +182,6 @@ function AboutPageContent() {
       </main>
 
       <Footer />
-
-      <MobileNav />
     </div>
   );
 }

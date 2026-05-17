@@ -24,7 +24,6 @@ import {
   Lock,
 } from "lucide-react";
 import Navbar from "@/components/layout/NavBar";
-import MobileNav from "@/components/layout/MobileNav";
 import { useAuth } from "@/components/auth/AuthGuard";
 
 const KIVO_BLUE = "#0052FF";
@@ -537,7 +536,6 @@ export default function ProfilePage() {
           </section>
         </div>
       </main>
-      <MobileNav />
     </div>
   );
 }

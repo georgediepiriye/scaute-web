@@ -17,7 +17,6 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import Navbar from "@/components/layout/NavBar";
-import MobileNav from "@/components/layout/MobileNav";
 import toast from "react-hot-toast";
 import { TICKET_STATUS } from "@/lib/constants";
 
@@ -272,8 +271,6 @@ export default function TicketDetailsPage() {
           </p>
         </div>
       </main>
-
-      <MobileNav />
     </div>
   );
 }

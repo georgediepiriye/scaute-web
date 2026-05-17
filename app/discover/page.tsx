@@ -8,7 +8,6 @@ import { Search, ChevronRight, ChevronLeft, Calendar } from "lucide-react";
 import { EVENT_CATEGORIES } from "@/lib/categories";
 import EventCard from "@/components/cards/EventCard";
 import Navbar from "@/components/layout/NavBar";
-import MobileNav from "@/components/layout/MobileNav";
 import Footer from "@/components/layout/Footer";
 import HotListSection from "@/components/discover/HotListSection";
 import ProfessionalSection from "@/components/discover/ProfessionalSection";
@@ -531,7 +530,6 @@ export default function DiscoverPage() {
         )}
       </main>
       <CreateEventCTA />
-      <MobileNav />
       <Footer />
     </div>
   );

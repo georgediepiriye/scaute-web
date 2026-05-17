@@ -27,7 +27,6 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 
 import Navbar from "@/components/layout/NavBar";
-import MobileNav from "@/components/layout/MobileNav";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import MapGuide from "@/components/onboarding/MapGuide";
 import { useAuth } from "@/components/auth/AuthGuard";
@@ -501,7 +500,6 @@ export default function MapPage() {
           )}
         </AnimatePresence>
       </div>
-      <MobileNav />
     </div>
   );
 }

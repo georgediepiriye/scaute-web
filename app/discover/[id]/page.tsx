@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 
 import Navbar from "@/components/layout/NavBar";
-import MobileNav from "@/components/layout/MobileNav";
 import Footer from "@/components/layout/Footer";
 import EventMap from "@/components/map/EventMap";
 import toast, { Toaster } from "react-hot-toast";
@@ -683,8 +682,6 @@ export default function EventDetailsPage() {
           {getButtonContent()} {isSoldOut ? "" : `— ${displayPrice}`}
         </button>
       </div>
-
-      <MobileNav />
       <Footer />
     </div>
   );
