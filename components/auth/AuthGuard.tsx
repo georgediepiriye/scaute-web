@@ -1,7 +1,13 @@
 "use client";
 
 import { API } from "@/lib/api";
-import { useEffect, useState, createContext, useContext } from "react";
+import {
+  useEffect,
+  useState,
+  createContext,
+  useContext,
+  Suspense,
+} from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 // Simple client-side helper to set cookies so the Next.js middleware can read them
@@ -26,6 +32,37 @@ interface AuthContextType {
 
 const AuthUserContext = createContext<AuthContextType | null>(null);
 
+// 1. ISOLATED REDIRECTION ENGINE
+// Moving searchParams evaluation down into a dedicated sub-component
+// wrapped in Suspense protects the root layout from static bailout crashes.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function AuthRedirectListener({
+  user,
+  loading,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  user: any;
+  loading: boolean;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (
+      !loading &&
+      user &&
+      (pathname === "/auth/signin" || pathname === "/auth/signup")
+    ) {
+      const callbackUrl = searchParams.get("callbackUrl") || "/profile";
+      router.push(callbackUrl);
+    }
+  }, [user, loading, pathname, searchParams, router]);
+
+  return null;
+}
+
+// 2. MAIN PROVIDER COMPONENT
 export default function AuthProvider({
   children,
 }: {
@@ -34,10 +71,6 @@ export default function AuthProvider({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const bootstrapSession = async () => {
@@ -51,7 +84,6 @@ export default function AuthProvider({
 
         if (API) {
           const response = await API.get("/v1/auth/me");
-          // Safely target your backend structured output footprint
           freshUser = response.data?.data?.user || response.data?.user;
         } else {
           const token = localStorage.getItem("kivo_token");
@@ -78,8 +110,6 @@ export default function AuthProvider({
           setUser(freshUser);
           localStorage.setItem("user", JSON.stringify(freshUser));
 
-          // 💡 FIX 1: If a user token is found inside the Axios instance during verification,
-          // extract it or mirror it directly to cookies so proxy.ts stays in sync.
           const token = localStorage.getItem("kivo_token");
           if (token) setClientCookie("kivo_token", token, 7);
         }
@@ -108,20 +138,6 @@ export default function AuthProvider({
     bootstrapSession();
   }, []);
 
-  // 💡 FIX 2: Breakout Redirection Hook
-  // If the validation completes, a valid user exists, and they are stuck on /auth/signin,
-  // instantly redirect them out to their intended callback URL or /profile
-  useEffect(() => {
-    if (
-      !loading &&
-      user &&
-      (pathname === "/auth/signin" || pathname === "/auth/signup")
-    ) {
-      const callbackUrl = searchParams.get("callbackUrl") || "/profile";
-      router.push(callbackUrl);
-    }
-  }, [user, loading, pathname, searchParams, router]);
-
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
@@ -138,6 +154,10 @@ export default function AuthProvider({
 
   return (
     <AuthUserContext.Provider value={{ user, loading, logout, updateUser }}>
+      {/* 3. SAFETY BOUNDARY INJECTION */}
+      <Suspense fallback={null}>
+        <AuthRedirectListener user={user} loading={loading} />
+      </Suspense>
       {children}
     </AuthUserContext.Provider>
   );
