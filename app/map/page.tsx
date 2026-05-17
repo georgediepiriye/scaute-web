@@ -35,6 +35,7 @@ import MapFilters from "@/components/map/MapFilters";
 import MapControls from "@/components/map/MapControls";
 import HotspotModal from "@/components/map/HotspotModal";
 import EventDetailsModal from "@/components/map/EventDetailsModal";
+import Link from "next/link.js";
 
 const RealMap = dynamic(() => import("@/components/map/RealMap"), {
   ssr: false,
@@ -314,9 +315,15 @@ export default function MapPage() {
               className="fixed right-0 top-0 h-full w-[300px] bg-white z-[160] md:hidden shadow-2xl flex flex-col p-8"
             >
               <div className="flex justify-between items-center mb-6">
-                <span className="font-black italic text-xl tracking-tighter text-blue-600 uppercase">
+                {/* 💡 Wrap in Link and hook up the onClick state modifier to collapse the menu */}
+                <Link
+                  href="/"
+                  onClick={() => setMenuOpen(false)}
+                  className="font-black italic text-xl tracking-tighter text-blue-600 uppercase cursor-pointer hover:opacity-80 transition-opacity"
+                >
                   KIVO
-                </span>
+                </Link>
+
                 <button
                   onClick={() => setMenuOpen(false)}
                   className="p-2 bg-gray-50 rounded-full"

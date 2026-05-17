@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HiMenu, HiX } from "react-icons/hi";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
 import {
   Zap,
@@ -41,10 +41,9 @@ export default function Navbar() {
     try {
       const token = localStorage.getItem("kivo_token");
 
-      // 💡 This API call goes to Express, which fires the clearance code above
       if (token) {
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/logout`, {
-          method: "POST", // Or GET, depending on your backend route definition
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -54,7 +53,6 @@ export default function Navbar() {
     } catch (error) {
       console.error("Server cleanup during logout failed:", error);
     } finally {
-      // Client-side state cleanup happens AFTER the backend successfully drops the httpOnly cookie
       if (logout) {
         logout();
       } else {
@@ -73,9 +71,24 @@ export default function Navbar() {
     { href: "/contact", label: "Support" },
   ];
 
+  const containerVariants: Variants = {
+    open: {
+      transition: { staggerChildren: 0.05, delayChildren: 0.1 },
+    },
+  };
+
+  const itemVariants: Variants = {
+    close: { opacity: 0, x: -15 },
+    open: {
+      opacity: 1,
+      x: 0,
+      transition: { type: "spring", stiffness: 260, damping: 22 },
+    },
+  };
+
   return (
     <nav className="fixed top-0 w-full z-[500] bg-white/80 backdrop-blur-2xl border-b border-slate-100">
-      <div className="max-w-7xl mx-auto px-6 md:px-8 py-5 flex justify-between items-center relative z-[110]">
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-5 flex justify-between items-center relative z-[600]">
         {/* LOGO */}
         <Link href="/" className="flex items-center gap-2 cursor-pointer group">
           <div className="relative flex items-center justify-center w-10 h-10 bg-blue-600 rounded-2xl rotate-3 group-hover:rotate-0 transition-transform duration-300">
@@ -100,7 +113,7 @@ export default function Navbar() {
         </div>
 
         {/* ACTIONS */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 relative z-[610]">
           {!loading && (
             <>
               {user ? (
@@ -164,83 +177,105 @@ export default function Navbar() {
             </>
           )}
 
+          {/* MOBILE MENU TOGGLE BUTTON */}
           <button
-            className="md:hidden w-12 h-12 flex items-center justify-center bg-slate-950 rounded-2xl text-white transition-all active:scale-90 shadow-lg"
+            className={`md:hidden w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-300 active:scale-90 shadow-sm border ${
+              isMobileMenuOpen
+                ? "bg-slate-950 text-white border-slate-950 rotate-90"
+                : "bg-white text-slate-950 border-slate-200 hover:bg-slate-50"
+            }`}
             onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <HiX size={26} /> : <HiMenu size={26} />}
+            {isMobileMenuOpen ? <HiX size={24} /> : <HiMenu size={24} />}
           </button>
         </div>
       </div>
 
-      {/* MOBILE OVERLAY */}
+      {/* LIGHT SYSTEM MOBILE OVERLAY */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 w-full h-screen bg-white z-[100] md:hidden flex flex-col pt-28"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 w-full h-[100dvh] bg-white/95 backdrop-blur-3xl z-[500] md:hidden flex flex-col"
           >
-            <div className="flex-1 overflow-y-auto px-8 pb-12 flex flex-col">
-              {!loading && user && (
-                <div className="py-8 flex items-center gap-5 border-b border-slate-100 mb-6">
-                  <div className="w-16 h-16 rounded-[24px] bg-slate-100 relative overflow-hidden flex-shrink-0 border-2 border-slate-50">
-                    {user?.image ? (
-                      <Image
-                        src={user.image}
-                        alt="User"
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <UserIcon
-                        className="m-auto mt-5 text-slate-300"
-                        size={24}
-                      />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-black text-2xl tracking-tight leading-none mb-1 text-slate-950">
-                      {user.name}
-                    </p>
-                    <Link
-                      href="/profile"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="text-[11px] font-black uppercase text-blue-600 tracking-wider"
-                    >
-                      View Profile
-                    </Link>
-                  </div>
-                </div>
-              )}
+            {/* Soft Ambient Background Highlights */}
+            <div className="absolute top-0 left-[-10%] w-[60%] h-[40%] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-0 right-[-10%] w-[50%] h-[35%] bg-amber-500/5 blur-[90px] rounded-full pointer-events-none" />
 
-              {/* Mobile links collection mapping */}
-              <div className="flex flex-col gap-6 my-auto">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="text-slate-950 font-black text-3xl tracking-tighter uppercase flex items-center justify-between group"
-                  >
-                    <span>{link.label}</span>
-                    <ChevronRight
-                      size={24}
-                      className="text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"
-                    />
-                  </Link>
-                ))}
+            {/* Main Scrolling Canvas Frame */}
+            <div className="flex-1 flex flex-col justify-between pt-28 px-8 pb-8 overflow-y-auto relative z-10">
+              <div>
+                {/* Profile Widget */}
+                {!loading && user && (
+                  <div className="pb-6 flex items-center gap-4 border-b border-slate-100 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-slate-50 relative overflow-hidden flex-shrink-0 border border-slate-200">
+                      {user?.image ? (
+                        <Image
+                          src={user.image}
+                          alt="User"
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <UserIcon
+                          className="m-auto mt-3 text-slate-400"
+                          size={18}
+                        />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-black text-lg tracking-tight text-slate-950 leading-tight">
+                        {user.name}
+                      </p>
+                      <Link
+                        href="/profile"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="text-[10px] font-black uppercase text-blue-600 tracking-widest inline-flex items-center gap-1 mt-0.5"
+                      >
+                        Dashboard <ChevronRight size={10} />
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {/* Nav Links List */}
+                <motion.div
+                  variants={containerVariants}
+                  initial="close"
+                  animate="open"
+                  className="flex flex-col gap-5 py-2"
+                >
+                  {navLinks.map((link) => (
+                    <motion.div key={link.href} variants={itemVariants}>
+                      <Link
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="text-slate-900 font-black text-3xl tracking-tighter uppercase flex items-center justify-between group transition-colors hover:text-blue-600"
+                      >
+                        <span className="transition-transform duration-200 group-hover:translate-x-1">
+                          {link.label}
+                        </span>
+                        <ChevronRight
+                          size={20}
+                          className="text-slate-300 group-hover:text-blue-600 transition-colors"
+                        />
+                      </Link>
+                    </motion.div>
+                  ))}
+                </motion.div>
               </div>
 
-              {/* Action Buttons footer layout block inside overlay view */}
-              <div className="mt-auto pt-8 border-t border-slate-100">
+              {/* Light Fixed Footer Block */}
+              <div className="mt-8 pt-6 border-t border-slate-100 bg-white/60 backdrop-blur-md sticky bottom-0">
                 {user ? (
                   <button
                     onClick={handleSignOut}
-                    className="w-full py-4 bg-red-50 hover:bg-red-100 text-red-600 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 transition-all"
+                    className="w-full py-4 bg-slate-50 border border-red-100 text-red-600 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] hover:bg-red-50"
                   >
-                    <LogOut size={16} />
+                    <LogOut size={15} />
                     Sign Out Account
                   </button>
                 ) : (
@@ -248,14 +283,14 @@ export default function Navbar() {
                     <Link
                       href="/auth/signin"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="py-4 text-center text-slate-950 font-black text-xs uppercase tracking-widest bg-slate-50 rounded-2xl"
+                      className="py-4 text-center text-slate-950 border border-slate-200 font-black text-xs uppercase tracking-widest bg-slate-50 rounded-2xl active:scale-[0.98] transition-all hover:bg-slate-100"
                     >
                       Log In
                     </Link>
                     <Link
                       href="/auth/signup"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="py-4 text-center bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-100"
+                      className="py-4 text-center bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-md shadow-blue-100 active:scale-[0.98] transition-all hover:bg-slate-950 hover:shadow-none"
                     >
                       Join Kivo
                     </Link>
