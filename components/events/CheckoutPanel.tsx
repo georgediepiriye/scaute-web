@@ -460,7 +460,8 @@ export default function CheckoutPanel({
                           }
                           disabled={!!appliedDiscount}
                           placeholder="PROMO20"
-                          className="flex-1 px-5 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-black text-[14px] font-bold outline-none uppercase"
+                          /* 💡 FIX: Changed text-[14px] to text-base (16px) to kill the mobile auto-zoom completely */
+                          className="flex-1 px-5 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-black text-base font-bold outline-none uppercase placeholder:text-gray-400"
                         />
                         <button
                           onClick={
@@ -475,7 +476,11 @@ export default function CheckoutPanel({
                             isValidatingCode ||
                             (!discountCode && !appliedDiscount)
                           }
-                          className={`px-6 rounded-2xl font-black text-[10px] uppercase transition-all ${appliedDiscount ? "bg-red-50 text-red-500" : "bg-yellow-400 text-black hover:bg-yellow-300"}`}
+                          className={`px-6 rounded-2xl font-black text-[10px] uppercase transition-all ${
+                            appliedDiscount
+                              ? "bg-red-50 text-red-500"
+                              : "bg-yellow-400 text-black hover:bg-yellow-300"
+                          }`}
                         >
                           {isValidatingCode ? (
                             <Loader2 size={16} className="animate-spin" />
