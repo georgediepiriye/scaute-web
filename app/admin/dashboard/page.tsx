@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+// Force Next.js to handle this admin page entirely at runtime
+// skipping static compilation checks that choke on search utilities
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect, Suspense } from "react";
 import {
   Users,
@@ -427,8 +431,6 @@ function Pagination({ current, total, onPageChange }: any) {
   );
 }
 
-// Global default export wrapped in a clean Suspense boundary
-// to fully resolve Next.js dynamic pre-render bailouts.
 export default function AdminDashboard() {
   return (
     <Suspense
