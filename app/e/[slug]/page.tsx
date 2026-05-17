@@ -5,6 +5,10 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+// Next.js 15 instruction: Prevents Next.js from crashing during the build phase
+// by deferring ungenerated dynamic event paths to be resolved at server runtime.
+export const dynamicParams = true;
+
 /**
  * Kivo Event Slug Page
  * Optimized for Next.js 15 with strict error handling and
@@ -38,7 +42,7 @@ export default async function SlugEventPage({ params }: PageProps) {
     }
 
     if (!res.ok) {
-      // For 500s or other errors, we throw to the nearest error.tsx
+      // For 500s or other severe errors, throw to the nearest error.tsx boundary
       throw new Error(`Event fetch failed with status: ${res.status}`);
     }
 
@@ -59,16 +63,24 @@ export default async function SlugEventPage({ params }: PageProps) {
   } catch (error: any) {
     clearTimeout(timeoutId);
 
+    // 5. Short-circuit: Let Next.js's internal HTTP error handling run its redirect logic
+    // without triggering false alarms in your server logging framework.
+    if (
+      error.message?.includes("NEXT_HTTP_ERROR_FALLBACK") ||
+      error.digest?.includes("NEXT_HTTP_ERROR_FALLBACK")
+    ) {
+      throw error;
+    }
+
     // Handle AbortError (Timeout)
     if (error.name === "AbortError") {
       console.error(`Fetch timed out for slug: ${slug}`);
-      // You can decide to show notFound or a specific Timeout Error UI
       return notFound();
     }
 
     console.error("API Fetch Error:", error);
 
-    // In production, triggering notFound is safer than a crash
+    // In production, triggering a fallback 404 is safer than crashing the app
     return notFound();
   }
 }
