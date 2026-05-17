@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Image from "next/image";
 import {
   Zap,
@@ -18,7 +19,8 @@ import Footer from "@/components/layout/Footer";
 const KIVO_BLUE = "#0052FF";
 const KIVO_YELLOW = "#FFD700";
 
-export default function AboutPage() {
+// 1. ISOLATED INNER CONTENT COMPONENT
+function AboutPageContent() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-slate-900 font-sans selection:bg-blue-100">
       <Navbar />
@@ -184,5 +186,27 @@ export default function AboutPage() {
 
       <MobileNav />
     </div>
+  );
+}
+
+// 2. MAIN DEFAULT EXPORT WRAPPED IN SUSPENSE BOUNDARY
+export default function AboutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center">
+          <div className="animate-pulse flex flex-col items-center">
+            <span
+              className="text-lg font-black uppercase tracking-widest italic"
+              style={{ color: KIVO_BLUE }}
+            >
+              Kivo
+            </span>
+          </div>
+        </div>
+      }
+    >
+      <AboutPageContent />
+    </Suspense>
   );
 }
