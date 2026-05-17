@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import {
   Users,
   Activity,
@@ -26,7 +26,7 @@ import { PulseAnalytics } from "@/components/admin/PulseAnalytics";
 type AdminTab = "events" | "users" | "analytics";
 type EventStatus = "pending" | "approved" | "rejected" | "all";
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const [activeTab, setActiveTab] = useState<AdminTab>("events");
   const [events, setEvents] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -64,7 +64,6 @@ export default function AdminDashboard() {
         ...(eventSearch && { title: eventSearch }),
       });
 
-      // Retrieve explicitly stored auth string token
       const token = localStorage.getItem("kivo_token");
 
       const res = await fetch(
@@ -108,7 +107,6 @@ export default function AdminDashboard() {
         ...(userSearch && { name: userSearch }),
       });
 
-      // Retrieve explicitly stored auth string token
       const token = localStorage.getItem("kivo_token");
 
       const res = await fetch(
@@ -137,7 +135,6 @@ export default function AdminDashboard() {
   const fetchPulse = async () => {
     setLoading(true);
     try {
-      // Retrieve explicitly stored auth string token
       const token = localStorage.getItem("kivo_token");
 
       const res = await fetch(
@@ -172,7 +169,6 @@ export default function AdminDashboard() {
     fetchUsers();
   }, []);
 
-  // Debounce hook handling updates cleanly across tabs without executing redundant requests
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (activeTab === "events") {
@@ -428,5 +424,24 @@ function Pagination({ current, total, onPageChange }: any) {
         <ChevronRight size={16} />
       </button>
     </div>
+  );
+}
+
+// Global default export wrapped in a clean Suspense boundary
+// to fully resolve Next.js dynamic pre-render bailouts.
+export default function AdminDashboard() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen w-full flex flex-col items-center justify-center bg-[#FDFDFD]">
+          <div className="font-black text-3xl text-gray-900 mb-4 tracking-tighter italic uppercase">
+            Kivo <span className="text-blue-600">Ops</span>
+          </div>
+          <Loader2 className="animate-spin text-blue-600" size={24} />
+        </div>
+      }
+    >
+      <AdminDashboardContent />
+    </Suspense>
   );
 }
