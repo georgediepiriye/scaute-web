@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { Search, MapPin, ArrowLeft, Clock, ShieldAlert } from "lucide-react";
 import { motion } from "framer-motion";
@@ -7,7 +8,8 @@ import { motion } from "framer-motion";
 const KIVO_BLUE = "#0052FF";
 const KIVO_YELLOW = "#FFD700";
 
-export default function NotFound() {
+// 1. ISOLATED INNER NOT-FOUND LAYOUT
+function NotFoundContent() {
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-white overflow-hidden px-6">
       {/* Background Decorative Grid */}
@@ -104,5 +106,22 @@ export default function NotFound() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+// 2. MAIN SYSTEM DELEGATE WRAPPED IN SUSPENSE
+export default function NotFound() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white flex flex-col items-center justify-center">
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 animate-pulse">
+            Loading...
+          </p>
+        </div>
+      }
+    >
+      <NotFoundContent />
+    </Suspense>
   );
 }
