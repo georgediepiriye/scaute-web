@@ -11,9 +11,6 @@ API.interceptors.request.use(
     const token =
       typeof window !== "undefined" ? localStorage.getItem("kivo_token") : null;
 
-    // Log the ACTUAL variable value, not a string literal
-    console.log("AXIOS_INTERCEPTOR_TOKEN:", token);
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
