@@ -31,47 +31,105 @@ const KIVO_YELLOW = "#FFD700";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user: profile, loading, logout } = useAuth();
 
+  // 💡 Hook directly back into your master Auth Provider to utilize its global route guards
+  const { user: authUser, loading: authLoading, logout } = useAuth();
+
+  // Unified dynamic dataset state (combining user data + relational data)
+  const [extendedProfile, setExtendedProfile] = useState<any>(null);
+  const [dataLoading, setDataLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
-  // 💡 FIX 1: Add a local transition flag to avoid falling backward into the splash loader trap
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  // 💡 Sync profile collections only after the Auth Guard certifies the session is ready
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!authUser) {
+      // If the global provider definitively confirms no user exists, route to gateway
+      if (!isSigningOut) {
+        window.location.href = "/auth/signin";
+      }
+      return;
+    }
+
+    const syncCompletePortfolio = async () => {
+      try {
+        const token = localStorage.getItem("kivo_token");
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/v1/users/profile`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          },
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.status === "success" && result.data) {
+            setExtendedProfile(result.data);
+          } else {
+            // Fallback gracefully to base auth data if payload is misformed
+            setExtendedProfile(authUser);
+          }
+        } else {
+          // If endpoint fails but session is valid, fall back to avoid locking the UI
+          setExtendedProfile(authUser);
+        }
+      } catch (error) {
+        console.error("Failed to compile extended profile portfolios:", error);
+        setExtendedProfile(authUser);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    syncCompletePortfolio();
+  }, [authUser, authLoading, isSigningOut]);
+
   const handleSignOut = async () => {
     try {
-      setIsSigningOut(true); // Flag the transition state immediately
+      setIsSigningOut(true);
       const token = localStorage.getItem("kivo_token");
 
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
+      if (token) {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/logout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
     } catch (err) {
       console.error("Logout backend notification skipped:", err);
     } finally {
-      // Clean up storage values
+      // Clean up storage tokens
       localStorage.removeItem("kivo_token");
       localStorage.removeItem("user");
 
-      // Remove cookie immediately to prevent proxy layout leaks
+      // Wipe routing layout proxy cookies immediately
       document.cookie =
         "kivo_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax;";
 
       logout();
-      // Hard routing redirect guarantees cleaner global store context flush
       window.location.href = "/auth/signin";
     }
   };
 
-  // 💡 FIX 2: Check against `isSigningOut`. If true, bypass this blocking return!
-  if (!isMounted || loading || (!profile && !isSigningOut)) {
+  // 💡 Comprehensive Guard: Prevents UI flickering or endless spinner deadlocks
+  const currentLoadingState =
+    !isMounted || authLoading || (dataLoading && !isSigningOut);
+
+  if (currentLoadingState) {
     return (
       <div className="fixed inset-0 z-[200] bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-6">
@@ -86,41 +144,41 @@ export default function ProfilePage() {
             className="font-black text-[10px] uppercase tracking-[0.3em] animate-pulse"
             style={{ color: KIVO_BLUE }}
           >
-            Authenticating Kivo ID
+            Synchronizing Portfolios
           </p>
         </div>
       </div>
     );
   }
 
-  // Fallback structural initialization check if user data goes clean while updating routing frames
-  if (!profile) return null;
+  if (!extendedProfile) return null;
 
+  // Calculate distinct event metrics using our new populated dataset arrays
   const mainHostedCount =
-    profile.organizedEvents?.filter((event: any) => {
+    extendedProfile.organizedEvents?.filter((event: any) => {
       const organizerId = event.organizer?._id || event.organizer;
-      return organizerId === profile._id;
+      return organizerId === extendedProfile._id;
     }).length || 0;
 
   const partnerManagedCount =
-    (profile.organizedEvents?.length || 0) - mainHostedCount;
+    (extendedProfile.organizedEvents?.length || 0) - mainHostedCount;
 
   const userDisplay = {
-    name: profile?.name || "Kivo User",
-    handle: `@${profile?.name?.toLowerCase().replace(/\s/g, "") || "kivo_member"}`,
-    location: profile?.location?.city || "Port Harcourt",
-    image: profile?.image || "/images/profile.jpg",
-    joined: profile?.createdAt
-      ? new Date(profile.createdAt).toLocaleDateString("en-GB", {
+    name: extendedProfile?.name || "Kivo User",
+    handle: `@${extendedProfile?.name?.toLowerCase().replace(/\s/g, "") || "kivo_member"}`,
+    location: extendedProfile?.location?.city || "Port Harcourt",
+    image: extendedProfile?.image || "/images/profile.jpg",
+    joined: extendedProfile?.createdAt
+      ? new Date(extendedProfile.createdAt).toLocaleDateString("en-GB", {
           month: "short",
           year: "numeric",
         })
       : "Joined recently",
     interests:
-      profile?.interests?.length > 0
-        ? profile.interests.slice(0, 5)
+      extendedProfile?.interests?.length > 0
+        ? extendedProfile.interests.slice(0, 5)
         : ["Live Music", "Networking"],
-    ticketsCount: profile?.tickets?.length || 0,
+    ticketsCount: extendedProfile?.tickets?.length || 0,
   };
 
   return (
@@ -264,6 +322,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* --- ACTIVE PASSES TICKETS --- */}
             <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden">
               <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
@@ -281,9 +340,9 @@ export default function ProfilePage() {
                 )}
               </div>
               <div className="px-4 pb-4">
-                {profile?.tickets?.length > 0 ? (
+                {extendedProfile?.tickets?.length > 0 ? (
                   <div className="divide-y divide-slate-50">
-                    {profile.tickets.slice(0, 3).map((ticket: any) => (
+                    {extendedProfile.tickets.slice(0, 3).map((ticket: any) => (
                       <div
                         key={ticket._id}
                         onClick={() => router.push(`/tickets/${ticket._id}`)}
@@ -321,6 +380,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* --- MOVES WORKSPACE --- */}
             <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden">
               <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
@@ -337,18 +397,18 @@ export default function ProfilePage() {
               </div>
 
               <div className="px-2 pb-4">
-                {profile?.organizedEvents?.length > 0 ? (
+                {extendedProfile?.organizedEvents?.length > 0 ? (
                   <div className="space-y-1">
-                    {profile.organizedEvents.map((event: any) => {
+                    {extendedProfile.organizedEvents.map((event: any) => {
                       const isMainOrganizer =
-                        event.organizer === profile._id ||
-                        event.organizer?._id === profile._id;
+                        event.organizer === extendedProfile._id ||
+                        event.organizer?._id === extendedProfile._id;
 
                       const partnerRecord = event.coOrganizers?.find(
                         (coOrg: any) => {
                           const coOrgId =
                             coOrg.user?._id || coOrg.user?.id || coOrg.user;
-                          return coOrgId === profile._id;
+                          return coOrgId === extendedProfile._id;
                         },
                       );
 
@@ -521,6 +581,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* --- LOGOUT TRIGGER --- */}
             <div className="flex justify-center pt-8">
               <button
                 onClick={handleSignOut}

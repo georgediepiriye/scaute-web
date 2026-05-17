@@ -45,11 +45,15 @@ export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
     setIsUpdating(loadingKey);
 
     try {
+      const token = localStorage.getItem("kivo_token");
       const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${event._id}/toggle-sold-out`;
 
       const res = await fetch(endpoint, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         credentials: "include",
         body: JSON.stringify({ tierId: isGlobal ? undefined : tierId }),
       });
@@ -92,11 +96,15 @@ export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
     }
 
     try {
+      const token = localStorage.getItem("kivo_token");
       const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${event._id}/update-coorganizer-permissions`;
 
       const res = await fetch(endpoint, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         credentials: "include",
         body: JSON.stringify({
           coOrganizerId: coOrganizerUserId,
@@ -275,7 +283,6 @@ export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
                     {/* Permissions Grid Matrix */}
                     <div className="grid sm:grid-cols-2 gap-2 pl-1">
                       {AVAILABLE_PERMISSIONS.map((perm) => {
-                        // FIX: Matches backend roles cleanly, and sets active toggle state for 'scan_tickets' if database permission initialization array is empty
                         const isGranted =
                           permissionsList.includes(perm.id) ||
                           (perm.id === "scan_tickets" &&

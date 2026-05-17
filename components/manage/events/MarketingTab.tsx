@@ -13,7 +13,7 @@ import {
   Loader2,
   Calendar,
   Trash2,
-  Hash, // Added for usage limit icon
+  Hash,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -30,7 +30,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
   const [formData, setFormData] = useState({
     code: "",
     discountPercentage: "",
-    usageLimit: "", // Added this field
+    usageLimit: "",
     expiryDate: "",
     applicableTickets: [] as string[],
   });
@@ -51,18 +51,23 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
 
     setIsSubmitting(true);
     try {
+      const token = localStorage.getItem("kivo_token"); // Retrieve JWT
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/discounts`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }), // Inject Auth
+          },
           credentials: "include",
           body: JSON.stringify({
             code: formData.code.toUpperCase().trim(),
             discountPercentage: Number(formData.discountPercentage),
             usageLimit: formData.usageLimit
               ? Number(formData.usageLimit)
-              : null, // Send to backend
+              : null,
             expiryDate: formData.expiryDate || null,
             applicableTickets: formData.applicableTickets,
           }),
@@ -77,7 +82,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
       setFormData({
         code: "",
         discountPercentage: "",
-        usageLimit: "", // Reset field
+        usageLimit: "",
         expiryDate: "",
         applicableTickets: [],
       });
@@ -99,9 +104,17 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
     setIsDeleting(discountId);
 
     try {
+      const token = localStorage.getItem("kivo_token"); // Retrieve JWT
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/discounts/${discountId}`,
-        { method: "DELETE", credentials: "include" },
+        {
+          method: "DELETE",
+          headers: {
+            ...(token && { Authorization: `Bearer ${token}` }), // Inject Auth
+          },
+          credentials: "include",
+        },
       );
 
       if (!response.ok) throw new Error("Failed to delete");
@@ -127,7 +140,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Stats Section stays the same */}
+      {/* Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           {
@@ -165,7 +178,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
         ))}
       </div>
 
-      {/* Main Link Section stays the same */}
+      {/* Main Link Section */}
       <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
         <div className="relative z-10">
           <h3 className="text-xs font-black uppercase tracking-[0.2em] text-yellow-400 mb-4">
@@ -240,7 +253,6 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
                     className="w-full p-4 rounded-2xl bg-white border border-slate-100 text-[10px] font-bold outline-none focus:border-yellow-400"
                   />
                 </div>
-                {/* NEW USAGE LIMIT FIELD */}
                 <div>
                   <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">
                     Usage Limit
@@ -255,7 +267,6 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
                     className="w-full p-4 rounded-2xl bg-white border border-slate-100 text-[10px] font-bold outline-none focus:border-yellow-400"
                   />
                 </div>
-                {/* UPDATED DATE-TIME FIELD */}
                 <div>
                   <label className="text-[9px] font-black uppercase text-slate-400 ml-2 mb-1 block">
                     Expiry Date & Time
@@ -305,7 +316,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
             </div>
           )}
 
-          {/* List display logic stays the same */}
+          {/* List display logic */}
           <div className="space-y-3">
             {discounts.length > 0 ? (
               discounts.map((discount: any) => (
@@ -326,7 +337,6 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
                           {discount.discountPercentage}% OFF
                         </span>
                         <span>•</span>
-                        {/* Display Limit Info if it exists */}
                         <span>
                           {discount.usedCount || 0} /{" "}
                           {discount.usageLimit || "∞"} uses

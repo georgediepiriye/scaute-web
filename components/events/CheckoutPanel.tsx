@@ -12,6 +12,7 @@ import {
   Loader2,
   UserCheck,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -66,28 +67,27 @@ export default function CheckoutPanel({
     [subtotal, discountAmount],
   );
 
-  const fetchUser = useCallback(async () => {
+  // Synchronize Auth State from localStorage directly
+  const syncLocalUser = useCallback(() => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/me`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        },
-      );
-      if (response.ok) {
-        const result = await response.json();
-        setUser(result.user);
+      const token = localStorage.getItem("kivo_token");
+      const localUserData = localStorage.getItem("user");
+
+      if (token && localUserData) {
+        const parsedUser = JSON.parse(localUserData);
+        setUser(parsedUser);
+      } else {
+        setUser(null);
       }
     } catch (error) {
-      console.error("Checkout: User fetch failed", error);
+      console.error("Checkout: Error parsing user from localStorage", error);
+      setUser(null);
     }
   }, []);
 
   useEffect(() => {
     if (isOpen) {
-      fetchUser();
+      syncLocalUser();
       setTimeLeft(900);
       // Auto-select first available tier (checks both manual sold out flag and capacity)
       if (event?.ticketTiers?.length > 0) {
@@ -97,7 +97,7 @@ export default function CheckoutPanel({
         setSelectedTier(availableTier || event.ticketTiers[0]);
       }
     }
-  }, [isOpen, fetchUser, event]);
+  }, [isOpen, syncLocalUser, event]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -117,6 +117,8 @@ export default function CheckoutPanel({
 
   const handleUseMyDetails = () => {
     if (!user) return toast.error("Could not find profile details");
+
+    // Parse name string into first and last name variables safely
     const names = user.name ? user.name.split(" ") : ["", ""];
     setFirstName(names[0] || "");
     setLastName(names.slice(1).join(" ") || "");
@@ -163,12 +165,23 @@ export default function CheckoutPanel({
   const handleProcessOrder = async () => {
     setLoading(true);
     try {
+      // 1. Fetch the authorization token directly from storage
+      const token = localStorage.getItem("kivo_token");
+
+      // 2. Dynamically build headers
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/book`,
         {
           method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: headers, // <--- Protected with identity validation mechanics
           body: JSON.stringify({
             eventId: event._id,
             tierName: selectedTier.name,
@@ -287,8 +300,7 @@ export default function CheckoutPanel({
               Event Sold Out
             </h3>
             <p className="text-gray-500 text-xs font-bold uppercase tracking-widest leading-relaxed">
-              This move in Port Harcourt is fully booked. Stay tuned for future
-              events.
+              This move is fully booked. Stay tuned for future events.
             </p>
           </div>
         ) : (
@@ -390,20 +402,38 @@ export default function CheckoutPanel({
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-6"
                   >
+                    {/* Autofill Banner (Now securely bound to localStorage auth check) */}
+                    {user && (
+                      <motion.button
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        type="button"
+                        onClick={handleUseMyDetails}
+                        className="w-full p-4 bg-blue-50 border-2 border-blue-200 rounded-2xl flex items-center justify-between text-left group transition-all hover:bg-blue-100/70 active:scale-[0.99]"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-200">
+                            <Sparkles size={16} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-black text-slate-900 uppercase tracking-tight">
+                              Autofill from Profile?
+                            </p>
+                            <p className="text-[10px] font-bold text-blue-600/90 uppercase tracking-wider mt-0.5 truncate max-w-[180px]">
+                              Logged in as {user.name}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="px-3 py-1.5 bg-white rounded-xl border border-blue-200 text-[10px] font-black uppercase text-blue-700 tracking-wider flex items-center gap-1 shadow-sm group-hover:border-blue-400 transition-colors">
+                          <UserCheck size={12} /> Sync
+                        </div>
+                      </motion.button>
+                    )}
+
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                          Contact Info
-                        </p>
-                        {user && (
-                          <button
-                            onClick={handleUseMyDetails}
-                            className="flex items-center gap-1.5 text-[10px] font-black uppercase text-blue-600 hover:underline"
-                          >
-                            <UserCheck size={14} /> Use Profile
-                          </button>
-                        )}
-                      </div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Contact Info
+                      </p>
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                           <input
@@ -460,7 +490,6 @@ export default function CheckoutPanel({
                           }
                           disabled={!!appliedDiscount}
                           placeholder="PROMO20"
-                          /* 💡 FIX: Changed text-[14px] to text-base (16px) to kill the mobile auto-zoom completely */
                           className="flex-1 px-5 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-black text-base font-bold outline-none uppercase placeholder:text-gray-400"
                         />
                         <button

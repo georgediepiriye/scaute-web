@@ -248,6 +248,26 @@ export default function Navbar() {
                   animate="open"
                   className="flex flex-col gap-5 py-2"
                 >
+                  {/* 💡 FEATURE: Admin Link Inserted dynamically at the top if conditions match */}
+                  {!loading && user?.role === "admin" && (
+                    <motion.div variants={itemVariants}>
+                      <Link
+                        href="/admin/dashboard"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="text-blue-600 font-black text-3xl tracking-tighter uppercase flex items-center justify-between group transition-colors hover:text-slate-950 border-b border-dashed border-slate-100 pb-2 mb-2"
+                      >
+                        <span className="flex items-center gap-3 transition-transform duration-200 group-hover:translate-x-1">
+                          <ShieldCheck size={28} className="text-blue-500" />
+                          Admin Console
+                        </span>
+                        <ChevronRight
+                          size={24}
+                          className="text-blue-300 group-hover:text-slate-950 transition-colors"
+                        />
+                      </Link>
+                    </motion.div>
+                  )}
+
                   {navLinks.map((link) => (
                     <motion.div key={link.href} variants={itemVariants}>
                       <Link

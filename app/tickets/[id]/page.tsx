@@ -34,20 +34,38 @@ export default function TicketDetailsPage() {
   useEffect(() => {
     const fetchTicketDetails = async () => {
       try {
+        const token = localStorage.getItem("kivo_token");
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        // Inject the explicit authorization state into headers to align with middleware changes
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/${params.id}`,
-          { method: "GET", credentials: "include" },
+          {
+            method: "GET",
+            headers: headers,
+            credentials: "include",
+          },
         );
         const result = await response.json();
 
         if (response.ok && result.status === "success") {
           setTicket(result.data);
         } else {
-          toast.error("Could not load ticket");
-          router.push("/profile");
+          toast.error(result.message || "Could not load ticket details");
+          // If authorization fails, redirect to home page or general search instead of freezing on /profile
+          router.push("/");
         }
       } catch (error) {
         console.error("Ticket Load Error:", error);
+        toast.error(
+          "A network error occurred while rendering your digital pass.",
+        );
       } finally {
         setLoading(false);
       }
@@ -70,25 +88,27 @@ export default function TicketDetailsPage() {
 
   if (!ticket) return null;
 
+  // Gracefully fallback inside constants formatting if status definitions are missing
   const statusKey = (ticket.status as keyof typeof TICKET_STATUS) || "valid";
-  const statusConfig = TICKET_STATUS[statusKey];
+  const statusConfig = TICKET_STATUS[statusKey] || {
+    label: "Valid",
+    color: KIVO_BLUE,
+  };
 
-  const eventDate = new Date(ticket.event.startDate).toLocaleDateString(
-    "en-GB",
-    {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    },
-  );
+  const eventDate = ticket.event?.startDate
+    ? new Date(ticket.event.startDate).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "TBD";
 
-  const eventTime = new Date(ticket.event.startDate).toLocaleTimeString(
-    "en-US",
-    {
-      hour: "2-digit",
-      minute: "2-digit",
-    },
-  );
+  const eventTime = ticket.event?.startDate
+    ? new Date(ticket.event.startDate).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "TBD";
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-24">
@@ -99,7 +119,7 @@ export default function TicketDetailsPage() {
           onClick={() => router.back()}
           className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-black mb-8 transition-colors"
         >
-          <ChevronLeft size={14} /> Back to Profile
+          <ChevronLeft size={14} /> Back
         </button>
 
         <div className="relative group">
@@ -114,10 +134,10 @@ export default function TicketDetailsPage() {
           <div className="relative bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/50">
             {/* Event Banner */}
             <div className="relative h-48 w-full bg-slate-100">
-              {ticket.event.image ? (
+              {ticket.event?.image ? (
                 <Image
                   src={ticket.event.image}
-                  alt={ticket.event.title}
+                  alt={ticket.event.title || "Event Image"}
                   fill
                   className="object-cover"
                 />
@@ -137,7 +157,7 @@ export default function TicketDetailsPage() {
                   {ticket.tierName}
                 </span>
                 <h1 className="text-2xl font-black text-white uppercase mt-2 leading-tight tracking-tighter">
-                  {ticket.event.title}
+                  {ticket.event?.title || "Untitled Move"}
                 </h1>
               </div>
             </div>
@@ -156,12 +176,18 @@ export default function TicketDetailsPage() {
                     statusKey !== "valid" ? "opacity-30 grayscale" : ""
                   }
                 >
-                  <QRCodeSVG
-                    value={ticket.checkInCode}
-                    size={180}
-                    level="H"
-                    includeMargin={false}
-                  />
+                  {ticket.checkInCode ? (
+                    <QRCodeSVG
+                      value={ticket.checkInCode}
+                      size={180}
+                      level="H"
+                      includeMargin={false}
+                    />
+                  ) : (
+                    <div className="w-[180px] h-[180px] bg-gray-100 rounded-xl flex items-center justify-center text-xs font-bold uppercase text-gray-400">
+                      No Code Available
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -173,7 +199,7 @@ export default function TicketDetailsPage() {
                   className="text-xl font-mono font-black"
                   style={{ color: KIVO_BLUE }}
                 >
-                  {ticket.checkInCode}
+                  {ticket.checkInCode || "PENDING"}
                 </h3>
               </div>
 
@@ -229,7 +255,7 @@ export default function TicketDetailsPage() {
                   <MapPin size={10} style={{ color: KIVO_BLUE }} /> Venue
                 </p>
                 <p className="text-sm font-black uppercase truncate">
-                  {ticket.event.location?.address || "Port Harcourt, Nigeria"}
+                  {ticket.event?.location?.address || "Port Harcourt, Nigeria"}
                 </p>
               </div>
             </div>
@@ -240,11 +266,12 @@ export default function TicketDetailsPage() {
                   Admit One
                 </span>
                 <span className="text-[11px] font-black uppercase">
-                  {ticket.buyerInfo.firstName} {ticket.buyerInfo.lastName}
+                  {ticket.buyerInfo?.firstName || "Guest"}{" "}
+                  {ticket.buyerInfo?.lastName || "User"}
                 </span>
               </div>
               <span className="text-[10px] font-mono font-bold text-slate-300">
-                #{ticket.ticketCode}
+                #{ticket.ticketCode || "00000"}
               </span>
             </div>
           </div>
@@ -267,7 +294,7 @@ export default function TicketDetailsPage() {
           <p className="text-[10px] font-bold text-[#0052FF] leading-relaxed uppercase">
             {statusKey === "valid"
               ? "Do not share this QR code. It will be scanned at the entrance and can only be used once."
-              : `This pass is currently marked as ${statusConfig.label.toLowerCase()}.`}
+              : `This pass is currently marked as ${statusConfig.label?.toLowerCase() || "invalid"}.`}
           </p>
         </div>
       </main>

@@ -22,6 +22,9 @@ export default function TicketScannerPage() {
   const params = useParams();
   const router = useRouter();
 
+  // Next.js Routing Shield: Resolves dynamic path parameters regardless of folder naming configuration
+  const targetEventId = (params.id || params.eventId) as string;
+
   // --- STATE ---
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastResult, setLastResult] = useState<{
@@ -41,6 +44,7 @@ export default function TicketScannerPage() {
   // --- REFS ---
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const processingRef = useRef(false);
+  const hasFetchedOnMount = useRef(false);
 
   const playSound = (type: "success" | "error") => {
     if (typeof window === "undefined") return;
@@ -66,23 +70,20 @@ export default function TicketScannerPage() {
     osc.stop(ctx.currentTime + 0.2);
   };
 
-  // --- SYNC ENGINE (MANUAL & INITIAL MOUNT) ---
+  // --- SYNC ENGINE (PULL GUESTLIST DOWN) ---
   const performSync = useCallback(
     async (manual = false) => {
-      if (!params.eventId || syncStatus === "syncing") return;
+      if (!targetEventId || syncStatus === "syncing") return;
       setSyncStatus("syncing");
 
       try {
         const lastTicket = await db.tickets.orderBy("updatedAt").last();
-        const since = lastTicket?.updatedAt
-          ? new Date(lastTicket.updatedAt).getTime()
-          : 0;
+        const since = lastTicket?.updatedAt ? lastTicket.updatedAt : 0;
 
-        // Retrieve explicitly stored auth string token
         const token = localStorage.getItem("kivo_token");
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/event/${params.eventId}/sync?since=${since}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/event/${targetEventId}/sync?since=${since}`,
           {
             method: "GET",
             headers: {
@@ -98,14 +99,16 @@ export default function TicketScannerPage() {
           await db.tickets.bulkPut(
             result.data.map((t: any) => ({
               id: t._id,
-              eventId: params.eventId,
+              eventId: targetEventId,
               checkInCode: t.checkInCode,
               guestName: t.buyerInfo
                 ? `${t.buyerInfo.firstName} ${t.buyerInfo.lastName}`
                 : "Guest",
               tier: t.tierName,
               status: t.status,
-              updatedAt: t.updatedAt,
+              updatedAt: t.updatedAt
+                ? new Date(t.updatedAt).getTime()
+                : Date.now(),
             })),
           );
           if (manual) toast.success(`Synced ${result.data.length} new guests`);
@@ -118,13 +121,15 @@ export default function TicketScannerPage() {
         if (manual) toast.error("Sync failed. Check connection.");
       }
     },
-    [params.eventId, syncStatus],
+    [targetEventId, syncStatus],
   );
 
-  // Run initial sync once on mount
   useEffect(() => {
-    performSync();
-  }, []);
+    if (!hasFetchedOnMount.current && targetEventId) {
+      hasFetchedOnMount.current = true;
+      performSync(false);
+    }
+  }, [performSync, targetEventId]);
 
   // --- CORE VALIDATION LOGIC ---
   const processValidation = useCallback(
@@ -132,49 +137,18 @@ export default function TicketScannerPage() {
       if (processingRef.current) return;
 
       const cleanCode = code.trim().toUpperCase();
-      if (!cleanCode.includes("-")) return;
+      if (cleanCode.length < 5) return;
 
       processingRef.current = true;
       setIsProcessing(true);
 
+      const token = localStorage.getItem("kivo_token");
+
       try {
-        const ticket = await db.tickets
-          .where({
-            checkInCode: cleanCode,
-            eventId: params.eventId,
-          })
-          .first();
-
-        if (!ticket) {
-          playSound("error");
-          setLastResult({
-            success: false,
-            message: "INVALID TICKET FOR THIS EVENT",
-          });
-        } else if (ticket.status === "used" || ticket.status === "checked-in") {
-          playSound("error");
-          setLastResult({
-            success: false,
-            guestName: ticket.guestName,
-            message: "ALREADY CHECKED IN",
-          });
-        } else {
-          playSound("success");
-          setLastResult({
-            success: true,
-            guestName: ticket.guestName,
-            tier: ticket.tier,
-          });
-
-          // 1. Update Local Database (Offline-First)
-          await db.tickets.update(ticket.id, { status: "used" });
-
-          // Retrieve explicitly stored token for the check-in request
-          const token = localStorage.getItem("kivo_token");
-
-          // 2. Push to Server (Background)
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/check-in/${params.eventId}`,
+        // 1. Primary Path: Validate against Live Database
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/check-in/${targetEventId}`,
             {
               method: "POST",
               headers: {
@@ -183,26 +157,136 @@ export default function TicketScannerPage() {
               },
               body: JSON.stringify({ checkInCode: cleanCode }),
             },
-          ).catch(async () => {
-            // 3. If fetch fails completely, queue in outbox for retry worker
+          );
+
+          const result = await response.json();
+
+          if (response.ok && result.status === "success") {
+            const remoteData = result.data;
+
+            // Resolve existing ticket key to maintain structure integrity inside IndexedDB
+            const ticketInDb = await db.tickets
+              .where("checkInCode")
+              .equals(cleanCode)
+              .filter((t) => t.eventId === targetEventId)
+              .first();
+
+            await db.tickets.put({
+              id: ticketInDb?.id || remoteData._id || Math.random().toString(),
+              eventId: targetEventId,
+              checkInCode: cleanCode,
+              guestName: remoteData.guestName,
+              tier: remoteData.tier,
+              status: "used",
+              updatedAt: Date.now(),
+            });
+
+            playSound("success");
+            setLastResult({
+              success: true,
+              guestName: remoteData.guestName,
+              tier: remoteData.alreadyProcessed
+                ? "⚠️ ALREADY VERIFIED (WITHIN 2 MINS)"
+                : remoteData.tier,
+            });
+            return;
+          } else {
+            // Catches AppError models (e.g., 400, 403, 404, 409 Conflict) from your service layer
+            playSound("error");
+            setLastResult({
+              success: false,
+              message: result.message || "INVALID TICKET",
+            });
+            return;
+          }
+        } catch (networkError) {
+          // 2. Fallback Path: Offline Verification Mode (Runs only when remote API is unreachable)
+          const localTicket = await db.tickets
+            .where("checkInCode")
+            .equals(cleanCode)
+            .filter((t) => t.eventId === targetEventId)
+            .first();
+
+          if (!localTicket) {
+            playSound("error");
+            setLastResult({
+              success: false,
+              message: "NOT FOUND IN OFFLINE CACHE",
+            });
+            return;
+          }
+
+          // Evaluate offline cache rules
+          if (
+            localTicket.status === "used" ||
+            localTicket.status === "checked-in"
+          ) {
+            playSound("error");
+            setLastResult({
+              success: false,
+              guestName: localTicket.guestName,
+              message: "ALREADY CHECKED IN (OFFLINE)",
+            });
+          } else if (localTicket.status === "refunded") {
+            playSound("error");
+            setLastResult({
+              success: false,
+              guestName: localTicket.guestName,
+              message: "REFUNDED PASS - ACCESS DENIED",
+            });
+          } else if (
+            localTicket.status === "cancelled" ||
+            localTicket.status === "void"
+          ) {
+            playSound("error");
+            setLastResult({
+              success: false,
+              guestName: localTicket.guestName,
+              message: "CANCELLED PASS - ACCESS DENIED",
+            });
+          } else if (localTicket.status === "transferred") {
+            playSound("error");
+            setLastResult({
+              success: false,
+              guestName: localTicket.guestName,
+              message: "TRANSFERRED PASS - ACCESS DENIED",
+            });
+          } else if (localTicket.status !== "valid") {
+            playSound("error");
+            setLastResult({
+              success: false,
+              message: "INACTIVE TICKET STATE",
+            });
+          } else {
+            // Locally execute offline pass activation and drop into persistent storage sync queue
+            playSound("success");
+            setLastResult({
+              success: true,
+              guestName: localTicket.guestName,
+              tier: localTicket.tier,
+            });
+
+            await db.tickets.update(localTicket.id, { status: "used" });
+
             await db.outbox.add({
               checkInCode: cleanCode,
-              eventId: params.eventId as string,
+              eventId: targetEventId,
               timestamp: Date.now(),
             });
-          });
+          }
         }
       } catch (err) {
+        console.error("Internal Scanner Error:", err);
         toast.error("Scanning Error");
       } finally {
         setIsProcessing(false);
         setManualCode("");
         setTimeout(() => {
           processingRef.current = false;
-        }, 2000);
+        }, 1500); // 1.5-second scan throttle window
       }
     },
-    [params.eventId],
+    [targetEventId],
   );
 
   // --- CAMERA CONTROL ---
@@ -270,7 +354,7 @@ export default function TicketScannerPage() {
             <button
               onClick={() => performSync(true)}
               disabled={syncStatus === "syncing"}
-              className="flex items-center gap-1.5 mx-auto mt-1 text-[10px] font-bold text-yellow-500 uppercase active:opacity-50 disabled:opacity-30"
+              className="flex items-center gap-1.5 mx-auto mt-1 text-[10px] font-bold text-yellow-500 uppercase active:scale-95 transition-all disabled:opacity-30"
             >
               <RefreshCw
                 size={10}
@@ -313,7 +397,7 @@ export default function TicketScannerPage() {
                     className="w-full bg-black/60 border-2 border-white/10 p-5 rounded-2xl text-center font-mono text-xl tracking-widest outline-none focus:border-yellow-500 transition-all placeholder:opacity-20"
                   />
                   <button
-                    disabled={isProcessing || manualCode.length < 4}
+                    disabled={isProcessing || manualCode.length < 5}
                     className="w-full bg-yellow-500 disabled:bg-white/5 disabled:text-white/20 text-black py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-yellow-500/10"
                   >
                     {isProcessing ? (
@@ -377,7 +461,7 @@ export default function TicketScannerPage() {
                   {lastResult.guestName || "Guest"}
                 </h2>
                 <p className="text-[10px] opacity-60 font-bold uppercase tracking-widest">
-                  {lastResult.tier || lastResult.message}
+                  {lastResult.success ? lastResult.tier : lastResult.message}
                 </p>
               </div>
             ) : (

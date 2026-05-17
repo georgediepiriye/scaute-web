@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import confetti from "canvas-confetti";
-import html2canvas from "html2canvas"; // Import html2canvas
+import html2canvas from "html2canvas";
 
 // BRAND CONSTANTS
 const KIVO_BLUE = "#0052FF";
@@ -32,16 +32,15 @@ function VerifyPaymentContent() {
   const [ticketData, setTicketData] = useState<any>(null);
   const [attempts, setAttempts] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isSaving, setIsSaving] = useState(false); // Loading state for saving
+  const [isSaving, setIsSaving] = useState(false);
 
   const isVerifying = useRef(false);
 
+  // FIX 1: Read explicitly from local storage keys rather than legacy session cookies
   useEffect(() => {
     const checkAuth = () => {
       if (typeof window !== "undefined") {
-        const hasToken = document.cookie
-          .split(";")
-          .some((item) => item.trim().startsWith("token"));
+        const hasToken = !!localStorage.getItem("kivo_token");
         setIsLoggedIn(hasToken);
       }
     };
@@ -84,19 +83,15 @@ function VerifyPaymentContent() {
     }
   };
 
-  /**
-   * Captures the Ticket UI as an image and downloads it
-   */
   const handleSavePass = async () => {
     if (!ticketRef.current) return;
 
     setIsSaving(true);
     try {
-      // Small delay to ensure QR code is fully rendered
       const canvas = await html2canvas(ticketRef.current, {
-        scale: 3, // Maintains high quality for scanning
-        backgroundColor: "#FFFFFF", // Ensures the background isn't transparent
-        useCORS: true, // Necessary if using external images/assets
+        scale: 3,
+        backgroundColor: "#FFFFFF",
+        useCORS: true,
         logging: false,
       });
 
@@ -107,7 +102,6 @@ function VerifyPaymentContent() {
       link.click();
     } catch (err) {
       console.error("Failed to save ticket:", err);
-      // Fallback to print if canvas fails
       window.print();
     } finally {
       setIsSaving(false);
@@ -116,17 +110,27 @@ function VerifyPaymentContent() {
 
   const verifyOrder = useCallback(
     async (ref: string) => {
-      // Only block if we are currently mid-fetch
       if (isVerifying.current) return;
       isVerifying.current = true;
 
       try {
+        // FIX 2: Attach the token dynamically if it exists to satisfy backend auth middleware requirements
+        const token = localStorage.getItem("kivo_token");
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/verify/${ref}`,
           {
             method: "GET",
+            headers: headers,
             cache: "no-store",
-            credentials: "include",
+            credentials: "include", // Retain cross-origin safety configurations
           },
         );
         const result = await res.json();
@@ -134,21 +138,18 @@ function VerifyPaymentContent() {
         if (result.status === "success") {
           const { order, tickets } = result.data;
 
-          // 1. Set data FIRST
           setTicketData({
-            eventTitle: order.event.title, // Ensure backend is populating 'event'
+            eventTitle: order.event?.title || "Untitled Move",
             tierName: order.tierName,
             quantity: order.quantity,
             ticketCode: tickets?.[0]?.checkInCode || "KIVO-PASS",
           });
 
-          // 2. Set status to success to trigger the UI switch
           setStatus("success");
           triggerCelebration();
-          // Reset flag so we don't block future renders/logic
           isVerifying.current = false;
         } else if (result.status === "pending" && attempts < 15) {
-          isVerifying.current = false; // Reset flag to allow the next attempt
+          isVerifying.current = false;
           setTimeout(() => setAttempts((prev) => prev + 1), 3000);
         } else {
           setStatus("error");
@@ -164,7 +165,7 @@ function VerifyPaymentContent() {
         }
       }
     },
-    [attempts], // This dependency is fine, but the flag management above is key
+    [attempts],
   );
 
   useEffect(() => {
@@ -174,7 +175,7 @@ function VerifyPaymentContent() {
       }
     };
     performVerification();
-  }, [reference, attempts, verifyOrder]);
+  }, [reference, attempts, verifyOrder, status]);
 
   if (status === "verifying") {
     return (
@@ -217,7 +218,6 @@ function VerifyPaymentContent() {
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-6 py-12">
-      {/* CSS to hide everything except the ticket when printing */}
       <style jsx global>{`
         @media print {
           body * {
@@ -233,7 +233,7 @@ function VerifyPaymentContent() {
             top: 0;
             width: 100%;
             border: none !important;
-            shadow: none !important;
+            box-shadow: none !important;
           }
         }
       `}</style>
@@ -254,7 +254,6 @@ function VerifyPaymentContent() {
           </p>
         </div>
 
-        {/* Messaging Box */}
         <div
           className="border p-4 rounded-2xl flex gap-3 items-start text-left"
           style={{
@@ -276,7 +275,6 @@ function VerifyPaymentContent() {
           </p>
         </div>
 
-        {/* Ticket UI - Added 'printable-ticket' class */}
         <div
           ref={ticketRef}
           className="printable-ticket bg-white border-2 border-black rounded-[40px] overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]"
