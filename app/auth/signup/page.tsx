@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,9 +9,21 @@ import { motion } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
 import Navbar from "@/components/layout/NavBar";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { API } from "@/lib/api";
+import { useAuth } from "@/components/auth/AuthGuard";
+
+// External store helpers to sync localStorage safely with SSR
+const subscribe = () => () => {};
+const getSnapshot = () => localStorage.getItem("kivo_token");
+const getServerSnapshot = () => "SERVER_RENDER";
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { updateUser } = useAuth();
+
+  // Safely tracks token status to prevent layout shifting on initial paint
+  const token = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -22,6 +35,13 @@ export default function SignUpPage() {
     password: "",
     role: "user",
   });
+
+  // Handle auto-routing as a pure side-effect if a valid token is found on the client
+  useEffect(() => {
+    if (token && token !== "SERVER_RENDER") {
+      router.replace("/profile");
+    }
+  }, [token, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -46,31 +66,17 @@ export default function SignUpPage() {
         role,
       };
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/signup`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include", // Keeps compatibility active with your development setup
-          body: JSON.stringify(payload),
-        },
-      );
+      // 💡 Swapped out native fetch for your customized global API Axios instance
+      const response = await API.post("/v1/auth/signup", payload);
+      const data = response.data;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Signup failed");
-      }
-
-      // 💡 FIX: Safely parse and store the token string into localStorage on successful signup
+      // Safely parse and store token string into localStorage on successful signup
       if (data.token) {
         localStorage.setItem("kivo_token", data.token);
       }
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user || data.data?.user),
-      );
+      const userData = data.user || data.data?.user;
+      localStorage.setItem("user", JSON.stringify(userData));
 
       return data;
     };
@@ -79,16 +85,20 @@ export default function SignUpPage() {
       signupAction(),
       {
         loading: "Creating your Kivo account...",
-        success: () => {
+        success: (data) => {
           setLoading(false);
 
-          // Force a hard navigation so AuthProvider instantiates fresh user state instantly
-          window.location.href = "/profile";
+          // 💡 Extract user context and commit it to React state right now
+          const userData = data.user || data.data?.user;
+          updateUser(userData);
+
+          // 💡 Use soft navigation router to keep your context and interceptor state active
+          router.push("/profile");
           return `Welcome to Kivo, ${formData.firstName}!`;
         },
-        error: (err) => {
+        error: (err: any) => {
           setLoading(false);
-          return err.message;
+          return err.response?.data?.message || err.message || "Signup failed";
         },
       },
       {
@@ -106,6 +116,16 @@ export default function SignUpPage() {
     );
   };
 
+  // 1. If it's the server rendering, or if a token already exists, render loader fallback
+  if (token === "SERVER_RENDER" || token !== null) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <Loader2 className="w-10 h-10 animate-spin text-[#0052FF]" />
+      </div>
+    );
+  }
+
+  // 2. Render clean signup template for unauthenticated users
   return (
     <div className="flex h-screen w-full bg-white font-sans text-gray-900 overflow-hidden">
       <Toaster position="top-center" reverseOrder={false} />

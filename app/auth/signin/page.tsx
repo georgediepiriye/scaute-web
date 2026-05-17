@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/NavBar";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import { useAuth } from "@/components/auth/AuthGuard";
+import { API } from "@/lib/api";
 
 // External store helpers to sync localStorage safely with SSR
 const subscribe = () => () => {};
@@ -18,6 +20,7 @@ const getServerSnapshot = () => "SERVER_RENDER";
 
 export default function SignInPage() {
   const router = useRouter();
+  const { updateUser } = useAuth(); // 💡 Hook into your auth context to sync user state instantly
 
   // Safely tracks token status.
   // On the server, this is always "SERVER_RENDER".
@@ -45,22 +48,10 @@ export default function SignInPage() {
     const loginAction = async () => {
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/login`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        },
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message || "Invalid credentials. Please try again.",
-        );
-      }
+      // 💡 Swapped out native fetch for your customized global API Axios instance
+      // This guarantees withCredentials cookies and header interceptions bind immediately
+      const response = await API.post("/v1/auth/login", formData);
+      const data = response.data;
 
       if (data.token) {
         localStorage.setItem("kivo_token", data.token);
@@ -76,14 +67,26 @@ export default function SignInPage() {
       loginAction(),
       {
         loading: "Authenticating...",
-        success: () => {
+        success: (data) => {
           setIsLoading(false);
-          window.location.href = "/profile";
+
+          // 💡 Extract user context and commit it to React state right now
+          const userData = data.data?.user || data.user;
+          updateUser(userData);
+
+          // 💡 Use soft navigation router to prevent state wiping or cross-domain cookie drops
+          router.push("/profile");
           return "Welcome back to Kivo!";
         },
-        error: (err) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        error: (err: any) => {
           setIsLoading(false);
-          return err.message;
+          // Gracefully handles both native errors and Axios error structures
+          return (
+            err.response?.data?.message ||
+            err.message ||
+            "Invalid credentials. Please try again."
+          );
         },
       },
       {

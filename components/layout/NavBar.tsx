@@ -14,14 +14,13 @@ import {
   ChevronRight,
   LogOut,
   User as UserIcon,
-  MapPin,
   ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthGuard";
 
 export default function Navbar() {
   const router = useRouter();
-  const { user, loading, logout } = useAuth(); // 💡 FIX 1: Access logout function hook from provider context
+  const { user, loading, logout } = useAuth();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Prevent body scroll when mobile menu is open
@@ -37,34 +36,32 @@ export default function Navbar() {
   }, [isMobileMenuOpen]);
 
   const handleSignOut = async () => {
+    setMobileMenuOpen(false);
+
     try {
       const token = localStorage.getItem("kivo_token");
 
-      // Execute explicit logout request to cleanup secondary server states if necessary
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
+      // 💡 This API call goes to Express, which fires the clearance code above
+      if (token) {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/logout`, {
+          method: "POST", // Or GET, depending on your backend route definition
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
     } catch (error) {
       console.error("Server cleanup during logout failed:", error);
     } finally {
-      // 💡 FIX 2: Fully synchronize client memory teardowns across the system
-      localStorage.removeItem("kivo_token");
-      localStorage.removeItem("user");
-
-      // Unlink auth session cookie so Next.js edge routers clear out protected frames instantly
-      document.cookie =
-        "kivo_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax;";
-
-      setMobileMenuOpen(false);
-
-      if (logout) logout(); // Notify state provider tree
-
-      // Perform a full hard refresh to safely reset state trees across providers
-      window.location.href = "/auth/signin";
+      // Client-side state cleanup happens AFTER the backend successfully drops the httpOnly cookie
+      if (logout) {
+        logout();
+      } else {
+        localStorage.removeItem("kivo_token");
+        localStorage.removeItem("user");
+        router.push("/auth/signin");
+      }
     }
   };
 
@@ -207,9 +204,13 @@ export default function Navbar() {
                     <p className="font-black text-2xl tracking-tight leading-none mb-1 text-slate-950">
                       {user.name}
                     </p>
-                    <p className="text-[11px] font-black uppercase text-blue-600 tracking-wider">
+                    <Link
+                      href="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-[11px] font-black uppercase text-blue-600 tracking-wider"
+                    >
                       View Profile
-                    </p>
+                    </Link>
                   </div>
                 </div>
               )}

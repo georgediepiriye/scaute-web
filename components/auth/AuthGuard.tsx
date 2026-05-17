@@ -10,15 +10,18 @@ import {
 } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
-// Simple client-side helper to set cookies so the Next.js middleware can read them
+const isProd = process.env.NODE_ENV === "production";
+
+// Client-side helper to set cookies so Next.js middleware can read them
 const setClientCookie = (name: string, value: string, days: number) => {
   const expires = new Date();
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${value};path=/;expires=${expires.toUTCString()};SameSite=Lax;secure=${process.env.NODE_ENV === "production"}`;
+  document.cookie = `${name}=${value};path=/;expires=${expires.toUTCString()};SameSite=Lax;secure=${isProd}`;
 };
 
+// 💡 FIX: Upgraded deletion framework to ensure it dynamically matches production attributes
 const deleteClientCookie = (name: string) => {
-  document.cookie = `${name}=;path=/;expires=Thu, 01 Jan 1770 00:00:00 GMT;SameSite=Lax`;
+  document.cookie = `${name}=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT;SameSite=Lax${isProd ? ";secure" : ""}`;
 };
 
 interface AuthContextType {
@@ -33,8 +36,6 @@ interface AuthContextType {
 const AuthUserContext = createContext<AuthContextType | null>(null);
 
 // 1. ISOLATED REDIRECTION ENGINE
-// Moving searchParams evaluation down into a dedicated sub-component
-// wrapped in Suspense protects the root layout from static bailout crashes.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function AuthRedirectListener({
   user,
@@ -68,6 +69,8 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -75,6 +78,22 @@ export default function AuthProvider({
   useEffect(() => {
     const bootstrapSession = async () => {
       try {
+        // Grab token out of URL if arriving from a Google OAuth redirect frame
+        if (typeof window !== "undefined") {
+          const params = new URLSearchParams(window.location.search);
+          const urlToken = params.get("token");
+
+          if (urlToken) {
+            localStorage.setItem("kivo_token", urlToken);
+            setClientCookie("kivo_token", urlToken, 7);
+
+            // Clean up the URL string immediately so the raw token string is hidden
+            const cleanUrl = window.location.pathname + window.location.hash;
+            window.history.replaceState({}, document.title, cleanUrl);
+          }
+        }
+
+        // Load local fallback user text immediately to avoid layout flickering
         const localUser = localStorage.getItem("user");
         if (localUser) {
           setUser(JSON.parse(localUser));
@@ -82,29 +101,8 @@ export default function AuthProvider({
 
         let freshUser = null;
 
-        if (API) {
-          const response = await API.get("/v1/auth/me");
-          freshUser = response.data?.data?.user || response.data?.user;
-        } else {
-          const token = localStorage.getItem("kivo_token");
-          const headers: HeadersInit = { "Content-Type": "application/json" };
-          if (token) headers["Authorization"] = `Bearer ${token}`;
-
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/me`,
-            {
-              method: "GET",
-              headers,
-            },
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            freshUser = data.data?.user || data.user;
-          } else {
-            throw { response: { status: response.status } };
-          }
-        }
+        const response = await API.get("/v1/auth/me");
+        freshUser = response.data?.data?.user || response.data?.user;
 
         if (freshUser) {
           setUser(freshUser);
@@ -117,6 +115,7 @@ export default function AuthProvider({
       } catch (err: any) {
         const status = err.response?.status || err.status;
 
+        // Ignore standard 401s (unauthenticated users visiting public areas)
         if (status !== 401) {
           console.error(
             "Session bootstrap failed due to an unexpected server issue:",
@@ -124,11 +123,13 @@ export default function AuthProvider({
           );
         }
 
-        if (status === 401) {
+        // 💡 FIX: Force-clear BOTH potential cookie keys if credentials expire or become missing
+        if (status === 401 || !localStorage.getItem("kivo_token")) {
           setUser(null);
           localStorage.removeItem("user");
           localStorage.removeItem("kivo_token");
           deleteClientCookie("kivo_token");
+          deleteClientCookie("token");
         }
       } finally {
         setLoading(false);
@@ -136,20 +137,26 @@ export default function AuthProvider({
     };
 
     bootstrapSession();
-  }, []);
+  }, [pathname]);
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("kivo_token");
+
+    // 💡 FIX: Evict both cookie definitions entirely to break the middleware redirection loops
     deleteClientCookie("kivo_token");
-    window.location.href = "/auth/signin";
+    deleteClientCookie("token");
+
+    router.push("/auth/signin");
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateUser = (userData: any) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
+    const token = localStorage.getItem("kivo_token");
+    if (token) setClientCookie("kivo_token", token, 7);
   };
 
   return (
