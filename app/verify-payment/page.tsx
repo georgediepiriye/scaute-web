@@ -139,7 +139,7 @@ function VerifyPaymentContent() {
           const { order, tickets } = result.data;
 
           setTicketData({
-            eventTitle: order.event?.title || "Untitled Move",
+            eventTitle: order.event?.title || "Move",
             tierName: order.tierName,
             quantity: order.quantity,
             ticketCode: tickets?.[0]?.checkInCode || "KIVO-PASS",

@@ -121,7 +121,7 @@ export const PreviewModal = ({
                 {data.category || "General"}
               </span>
               <h2 className="text-white text-xl sm:text-2xl font-black uppercase mt-2 line-clamp-2 leading-none tracking-tighter">
-                {data.title || "Untitled Move"}
+                {data.title || "Move"}
               </h2>
             </div>
           </div>

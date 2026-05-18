@@ -251,7 +251,7 @@ export default function EventSettingsPage() {
                   Control Center
                 </h1>
                 <p className="text-xl font-black uppercase tracking-tight">
-                  {formData.title || "Untitled Move"}
+                  {formData.title || "Move"}
                 </p>
               </div>
             </div>

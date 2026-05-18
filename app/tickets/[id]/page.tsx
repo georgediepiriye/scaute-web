@@ -157,7 +157,7 @@ export default function TicketDetailsPage() {
                   {ticket.tierName}
                 </span>
                 <h1 className="text-2xl font-black text-white uppercase mt-2 leading-tight tracking-tighter">
-                  {ticket.event?.title || "Untitled Move"}
+                  {ticket.event?.title || "Move"}
                 </h1>
               </div>
             </div>
