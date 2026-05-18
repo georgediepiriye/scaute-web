@@ -134,7 +134,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                     placeholder="e.g. Early Bird"
                     value={tier.name}
                     onChange={(e) => updateTier(idx, "name", e.target.value)}
-                    className="w-full p-4 rounded-2xl bg-white font-bold text-sm outline-none shadow-sm focus:ring-2 transition-all"
+                    className="w-full p-4 rounded-2xl bg-white font-bold text-base outline-none shadow-sm focus:ring-2 transition-all"
                     style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
                   />
                 </div>
@@ -150,7 +150,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                     // Show empty string if 0 so placeholder is visible
                     value={tier.price === 0 ? "" : tier.price}
                     onChange={(e) => updateTier(idx, "price", e.target.value)}
-                    className="w-full p-4 rounded-2xl bg-white font-bold text-sm outline-none shadow-sm focus:ring-2 transition-all"
+                    className="w-full p-4 rounded-2xl bg-white font-bold text-base outline-none shadow-sm focus:ring-2 transition-all"
                     style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
                   />
                 </div>
@@ -168,7 +168,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                       onChange={(e) =>
                         updateTier(idx, "capacity", e.target.value)
                       }
-                      className="w-full p-4 rounded-2xl bg-white font-bold text-sm outline-none shadow-sm focus:ring-2 transition-all"
+                      className="w-full p-4 rounded-2xl bg-white font-bold text-base outline-none shadow-sm focus:ring-2 transition-all"
                       style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
                     />
                     <Users
@@ -272,7 +272,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
               placeholder="https://chat.whatsapp.com/..."
               value={formData.communityLink || ""}
               onChange={(e) => updateForm("communityLink", e.target.value)}
-              className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white focus:ring-2 transition-all shadow-sm"
+              className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-base border border-transparent focus:bg-white focus:ring-2 transition-all shadow-sm"
               style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
             />
           </div>
