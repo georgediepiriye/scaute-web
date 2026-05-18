@@ -51,7 +51,7 @@ export default function OnboardingFlow() {
       setIsVisible(false);
       if (targetPath) {
         if (targetPath.includes("google")) {
-          window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/google`;
+          window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/google?callbackUrl=${encodeURIComponent("/map")}`;
         } else {
           router.push(targetPath);
         }
@@ -299,7 +299,7 @@ export default function OnboardingFlow() {
 
                   <div className="space-y-3 max-w-sm mx-auto w-full">
                     <button
-                      onClick={() => completeOnboarding("/auth/google")}
+                      onClick={() => completeOnboarding("google")}
                       className="w-full py-4 border-2 border-zinc-100 rounded-2xl flex items-center justify-center gap-4 font-bold text-zinc-800 hover:bg-zinc-50 hover:border-zinc-200 transition-all active:scale-[0.98]"
                     >
                       <Image
@@ -314,7 +314,9 @@ export default function OnboardingFlow() {
                     </button>
 
                     <button
-                      onClick={() => completeOnboarding("/auth/signin")}
+                      onClick={() =>
+                        completeOnboarding("/auth/signin?redirect=/map")
+                      }
                       className="w-full py-4 bg-zinc-50 border-2 border-transparent rounded-2xl flex items-center justify-center gap-4 font-bold text-zinc-800 hover:bg-zinc-100/70 hover:border-zinc-200/60 transition-all active:scale-[0.98]"
                     >
                       <Mail size={16} className="text-zinc-400" />

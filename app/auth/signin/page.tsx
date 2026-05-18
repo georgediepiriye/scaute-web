@@ -4,7 +4,7 @@ import React, { useState, useEffect, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/NavBar";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
@@ -20,11 +20,13 @@ const getServerSnapshot = () => "SERVER_RENDER";
 
 export default function SignInPage() {
   const router = useRouter();
-  const { updateUser } = useAuth(); // 💡 Hook into your auth context to sync user state instantly
+  const searchParams = useSearchParams();
+  const { updateUser } = useAuth(); // Hook into your auth context to sync user state instantly
+
+  // Safely extract the optional redirect target path (e.g., /map), defaulting to /profile
+  const redirectTo = searchParams.get("redirect") || "/profile";
 
   // Safely tracks token status.
-  // On the server, this is always "SERVER_RENDER".
-  // On the client initial mount, it automatically evaluates to the actual token string or null.
   const token = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -37,9 +39,9 @@ export default function SignInPage() {
   // Handle auto-routing as a pure side-effect when a valid token is found on the client
   useEffect(() => {
     if (token && token !== "SERVER_RENDER") {
-      router.replace("/profile");
+      router.replace(redirectTo);
     }
-  }, [token, router]);
+  }, [token, router, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,8 +50,7 @@ export default function SignInPage() {
     const loginAction = async () => {
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      // 💡 Swapped out native fetch for your customized global API Axios instance
-      // This guarantees withCredentials cookies and header interceptions bind immediately
+      // Swapped out native fetch for your customized global API Axios instance
       const response = await API.post("/v1/auth/login", formData);
       const data = response.data;
 
@@ -70,12 +71,12 @@ export default function SignInPage() {
         success: (data) => {
           setIsLoading(false);
 
-          // 💡 Extract user context and commit it to React state right now
+          // Extract user context and commit it to React state right now
           const userData = data.data?.user || data.user;
           updateUser(userData);
 
-          // 💡 Use soft navigation router to prevent state wiping or cross-domain cookie drops
-          router.push("/profile");
+          // Route the user directly to their intended destination target instead of blindly hitting /profile
+          router.push(redirectTo);
           return "Welcome back to Kivo!";
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,7 +116,6 @@ export default function SignInPage() {
   }
 
   // 2. If token is explicitly null on the client, it means the user is not authenticated.
-  // We can safely paint the sign-in forms without layout shifts or console warnings.
   return (
     <div className="min-h-screen w-full flex bg-white font-sans text-gray-900 overflow-x-hidden">
       <Toaster position="top-center" reverseOrder={false} />
@@ -171,9 +171,10 @@ export default function SignInPage() {
 
           <button
             type="button"
-            onClick={() =>
-              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/google`)
-            }
+            onClick={() => {
+              const callback = encodeURIComponent(redirectTo);
+              window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/google?callbackUrl=${callback}`;
+            }}
             className="w-full py-4 px-6 border-2 border-gray-100 rounded-2xl flex items-center justify-center gap-4 font-black text-[10px] uppercase tracking-widest text-gray-700 hover:bg-gray-50 hover:border-blue-600 transition-all active:scale-[0.98] mb-8"
           >
             <Image
@@ -264,7 +265,7 @@ export default function SignInPage() {
           <p className="mt-10 text-center text-sm text-gray-400 font-medium pb-10 lg:pb-0">
             Don&apos;t have an account?{" "}
             <Link
-              href="/signup"
+              href={`/signup?redirect=${encodeURIComponent(redirectTo)}`}
               className="text-blue-600 font-black hover:underline underline-offset-4 uppercase text-[10px]"
             >
               Create an account
