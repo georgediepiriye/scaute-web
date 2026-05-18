@@ -181,7 +181,7 @@ export default function CheckoutPanel({
         `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/book`,
         {
           method: "POST",
-          headers: headers, // <--- Protected with identity validation mechanics
+          headers: headers,
           body: JSON.stringify({
             eventId: event._id,
             tierName: selectedTier.name,
@@ -198,7 +198,12 @@ export default function CheckoutPanel({
 
       if (response.ok && result.status === "success") {
         if (result.data.isFree) {
-          router.push(`/booking-success?ref=${result.data.reference}`);
+          const code = result.data.checkInCode || "";
+          const reference = result.data.reference || "";
+          const eventTitle = encodeURIComponent(event.title);
+          router.push(
+            `/booking-success?ref=${reference}&checkInCode=${code}&event=${eventTitle}`,
+          );
         } else {
           window.location.href = result.data.authorization_url;
         }

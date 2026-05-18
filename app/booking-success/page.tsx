@@ -4,7 +4,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   CheckCircle,
-  Calendar,
   Ticket,
   ArrowLeft,
   Loader2,
@@ -12,21 +11,47 @@ import {
   Share2,
 } from "lucide-react";
 import Navbar from "@/components/layout/NavBar";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import confetti from "canvas-confetti";
 
-// BRAND CONSTANT
-const KIVO_BLUE = "#0052FF";
+// SKAUTE BRAND CONSTANTS
+const SKAUTE_BLUE = "#0052FF";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const ticketCode =
-    searchParams.get("ticketCode") || searchParams.get("ref") || "KIVO-PASS";
-  // Retrieving reference and event info from searchParams
-
+  // GET URL PARAMETERS
+  const rawCheckInCode = searchParams.get("checkInCode");
+  const refCode = searchParams.get("ref");
   const eventName = searchParams.get("event") || "Your Move";
+
+  // FAIL-SAFE IMPLEMENTATION:
+  // If checkInCode parameter is explicitly empty or null, instantly fallback to the Order Reference string.
+  const checkInCode =
+    rawCheckInCode && rawCheckInCode.trim() !== ""
+      ? rawCheckInCode
+      : refCode || "KIVO-PASS";
+
+  // Fire celebration animation context on mount
+  useEffect(() => {
+    // Left side burst
+    confetti({
+      particleCount: 80,
+      spread: 60,
+      origin: { x: 0.1, y: 0.6 },
+      colors: [SKAUTE_BLUE, "#22C55E", "#FACC15", "#000000"],
+    });
+
+    // Right side burst
+    confetti({
+      particleCount: 80,
+      spread: 60,
+      origin: { x: 0.9, y: 0.6 },
+      colors: [SKAUTE_BLUE, "#22C55E", "#FACC15", "#000000"],
+    });
+  }, []);
 
   const handleSavePass = () => {
     window.print();
@@ -70,13 +95,13 @@ function SuccessContent() {
                   Valid Entry
                 </p>
               </div>
-              <Ticket style={{ color: KIVO_BLUE }} size={24} />
+              <Ticket style={{ color: SKAUTE_BLUE }} size={24} />
             </div>
 
             {/* QR Code */}
             <div className="bg-white p-4 border-2 border-black rounded-3xl">
               <QRCodeSVG
-                value={ticketCode}
+                value={checkInCode}
                 size={160}
                 level="H"
                 includeMargin={false}
@@ -86,10 +111,10 @@ function SuccessContent() {
             {/* Ticket ID */}
             <div className="space-y-1 text-center">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Entry Code
+                Check-In Code
               </p>
               <p className="text-xl font-mono font-black tracking-widest text-black uppercase">
-                {ticketCode}
+                {checkInCode}
               </p>
             </div>
           </div>
@@ -120,8 +145,8 @@ function SuccessContent() {
         onClick={() => router.push("/discover")}
         className="w-full max-w-sm mx-auto py-6 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2"
         style={{
-          backgroundColor: KIVO_BLUE,
-          boxShadow: `0 20px 25px -5px ${KIVO_BLUE}33`,
+          backgroundColor: SKAUTE_BLUE,
+          boxShadow: `0 20px 25px -5px ${SKAUTE_BLUE}33`,
         }}
       >
         <ArrowLeft size={16} /> Back to Discover
@@ -140,7 +165,7 @@ export default function BookingSuccessPage() {
             <div className="flex flex-col items-center justify-center p-20">
               <Loader2
                 className="animate-spin"
-                style={{ color: KIVO_BLUE }}
+                style={{ color: SKAUTE_BLUE }}
                 size={32}
               />
               <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
