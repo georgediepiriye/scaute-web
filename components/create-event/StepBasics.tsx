@@ -104,7 +104,8 @@ export const StepBasics = ({ formData, updateForm, categories }: any) => {
                     : "border-transparent bg-gray-50"
               } focus-within:border-[#FFD700] focus-within:bg-white`}
             >
-              <span className="pl-6 pr-1 text-gray-400 font-bold text-sm select-none whitespace-nowrap">
+              {/* Swapped text-sm to text-base to keep scaling in structural alignment with the input */}
+              <span className="pl-6 pr-1 text-gray-400 font-bold text-base select-none whitespace-nowrap">
                 kivo.com/e/
               </span>
 
@@ -116,7 +117,8 @@ export const StepBasics = ({ formData, updateForm, categories }: any) => {
                   updateForm("slug", generateSlug(e.target.value));
                   updateForm("slugManuallyEdited", true);
                 }}
-                className="w-full p-5 ml-1 bg-transparent font-black text-sm outline-none placeholder:text-gray-300"
+                /* OVERHAUL: Changed from text-sm to text-base (16px) to block iOS auto-zoom */
+                className="w-full p-5 ml-1 bg-transparent font-black text-base outline-none placeholder:text-gray-300"
               />
 
               <div className="pr-5 flex items-center gap-2">

@@ -78,8 +78,6 @@ const AuthGuardModal = ({
 
 export default function CreateEventPage() {
   const router = useRouter();
-
-  // 💡 FIX 1: Extract global authenticated context state cleanly
   const { user, loading: authLoading } = useAuth();
 
   const [step, setStep] = useState(0);
@@ -87,8 +85,6 @@ export default function CreateEventPage() {
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  // Auth States
   const [showAuthGuard, setShowAuthGuard] = useState(false);
 
   // Form State
@@ -123,9 +119,20 @@ export default function CreateEventPage() {
   });
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-
-  // 💡 FIX 2: Derive authorization flags directly from your global bootstrap state
   const isLoggedIn = !!user;
+
+  // ⚡ OVERHAUL UX FIX: Lifecycle controlled step-change scroll manager
+  useEffect(() => {
+    // We add a tiny 10ms frame delay so Framer Motion layouts completely mount before scrolling
+    const scrollTimeout = setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }, 10);
+
+    return () => clearTimeout(scrollTimeout);
+  }, [step]); // Triggers smoothly on both Forward and Backward step adjustments
 
   const updateForm = (field: string, value: any) => {
     if (field === "recurrenceInterval" && value !== "" && parseInt(value) < 1) {
@@ -138,18 +145,13 @@ export default function CreateEventPage() {
     const feature = res.features[0];
     if (feature) {
       const [lng, lat] = feature.geometry.coordinates;
-
       const placeName =
         feature.properties.full_address ||
         feature.properties.name ||
         feature.place_name;
-
       const neighborhood =
         feature.properties.context?.neighborhood?.name ||
         feature.properties.context?.locality?.name ||
-        feature.context?.find((c: any) => c.id.startsWith("neighborhood"))
-          ?.text ||
-        feature.context?.find((c: any) => c.id.startsWith("locality"))?.text ||
         "Port Harcourt";
 
       setFormData((prev) => ({
@@ -170,15 +172,12 @@ export default function CreateEventPage() {
 
       if (data.features && data.features.length > 0) {
         const feature = data.features[0];
-        const placeName = feature.place_name;
-        const neighborhood =
-          feature.context?.find((c: any) => c.id.startsWith("neighborhood"))
-            ?.text || "";
-
         setFormData((prev) => ({
           ...prev,
-          location: placeName,
-          neighborhood: neighborhood || prev.neighborhood,
+          location: feature.place_name,
+          neighborhood:
+            feature.context?.find((c: any) => c.id.startsWith("neighborhood"))
+              ?.text || prev.neighborhood,
           locationCoords: { lat, lng },
         }));
       }
@@ -246,7 +245,6 @@ export default function CreateEventPage() {
           "Please add at least one ticket tier to sell on Kivo.",
         );
       }
-
       if (
         formData.ticketingType === "external" &&
         !formData.externalTicketLink
@@ -256,7 +254,7 @@ export default function CreateEventPage() {
     }
 
     setStep((s) => s + 1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // 💡 REMOVED: Old window.scrollTo line here was executing too early!
   };
 
   const handleSubmit = async () => {
@@ -273,7 +271,6 @@ export default function CreateEventPage() {
         Object.keys(EVENT_CATEGORIES).find(
           (k) => (EVENT_CATEGORIES as any)[k].label === formData.category,
         ) || formData.category;
-
       const generatedSlug = formData.title
         .toLowerCase()
         .trim()
@@ -348,20 +345,15 @@ export default function CreateEventPage() {
       data.append("image", formData.imageFile);
       data.append("eventData", JSON.stringify(payload));
 
-      // 💡 FIX 3: Use dynamic authentication headers derived out of client local disk
-      // instead of raw non-credential background fetch chains.
       const token = localStorage.getItem("kivo_token");
       const headers: HeadersInit = {};
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/events`, {
         method: "POST",
         headers,
         body: data,
       });
-
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Broadcast failed.");
@@ -385,7 +377,6 @@ export default function CreateEventPage() {
       maxWidthOrHeight: 1200,
       useWebWorker: true,
     };
-
     try {
       const compressedFile = await imageCompression(imageFile, options);
       setPreviewImage(URL.createObjectURL(compressedFile));
@@ -397,7 +388,6 @@ export default function CreateEventPage() {
 
   const totalSteps = 4;
 
-  // Render minimal layout shell while the core initialization boots up
   if (authLoading) {
     return (
       <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center">
@@ -487,11 +477,10 @@ export default function CreateEventPage() {
               ) : (
                 <button
                   onClick={() => {
-                    if (!formData.imageFile) {
+                    if (!formData.imageFile)
                       return toast.error(
                         "Please upload an image before broadcasting.",
                       );
-                    }
                     setShowPreview(true);
                   }}
                   className="flex-1 md:flex-none px-12 py-4 bg-black text-white rounded-2xl font-black text-[10px] uppercase shadow-xl shadow-blue-600/10 hover:bg-blue-600 transition-all"
@@ -551,7 +540,6 @@ export default function CreateEventPage() {
         submitting={submitting}
         onConfirm={handleSubmit}
       />
-
       <AuthGuardModal
         isOpen={showAuthGuard}
         onClose={() => setShowAuthGuard(false)}

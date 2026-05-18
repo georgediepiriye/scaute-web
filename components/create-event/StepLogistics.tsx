@@ -5,6 +5,8 @@ import {
   Repeat,
   Video,
   Link as LinkIcon,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -72,53 +74,79 @@ export const StepLogistics = ({
         ))}
       </div>
 
-      {/* 2. Date & Time Grid */}
+      {/* 2. Overhauled Date & Time Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* START DATE & TIME */}
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
             Start <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-2">
-            <input
-              type="date"
-              required
-              value={formData.startDate}
-              onChange={(e) => updateForm("startDate", e.target.value)}
-              className="flex-1 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2 transition-all"
-              style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
-            />
-            <input
-              type="time"
-              value={formData.startTime}
-              required
-              onChange={(e) => updateForm("startTime", e.target.value)}
-              className="w-1/3 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2 transition-all"
-              style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
-            />
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Date Input Wrap */}
+            <div className="relative flex-1 group">
+              <Calendar
+                size={16}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors z-10 pointer-events-none"
+              />
+              <input
+                type="date"
+                required
+                value={formData.startDate}
+                onChange={(e) => updateForm("startDate", e.target.value)}
+                className="w-full pl-11 pr-4 py-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:bg-white focus:border-black transition-all cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+              />
+            </div>
+            {/* Time Input Wrap */}
+            <div className="relative w-full sm:w-2/5 group">
+              <Clock
+                size={16}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors z-10 pointer-events-none"
+              />
+              <input
+                type="time"
+                value={formData.startTime}
+                required
+                onChange={(e) => updateForm("startTime", e.target.value)}
+                className="w-full pl-11 pr-4 py-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:bg-white focus:border-black transition-all cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+              />
+            </div>
           </div>
         </div>
 
+        {/* END DATE & TIME */}
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
             End <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-2">
-            <input
-              type="date"
-              required
-              value={formData.endDate}
-              onChange={(e) => updateForm("endDate", e.target.value)}
-              className="flex-1 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2 transition-all"
-              style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
-            />
-            <input
-              type="time"
-              required
-              value={formData.endTime}
-              onChange={(e) => updateForm("endTime", e.target.value)}
-              className="w-1/3 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2 transition-all"
-              style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
-            />
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Date Input Wrap */}
+            <div className="relative flex-1 group">
+              <Calendar
+                size={16}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors z-10 pointer-events-none"
+              />
+              <input
+                type="date"
+                required
+                value={formData.endDate}
+                onChange={(e) => updateForm("endDate", e.target.value)}
+                className="w-full pl-11 pr-4 py-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:bg-white focus:border-black transition-all cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+              />
+            </div>
+            {/* Time Input Wrap */}
+            <div className="relative w-full sm:w-2/5 group">
+              <Clock
+                size={16}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors z-10 pointer-events-none"
+              />
+              <input
+                type="time"
+                required
+                value={formData.endTime}
+                onChange={(e) => updateForm("endTime", e.target.value)}
+                className="w-full pl-11 pr-4 py-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:bg-white focus:border-black transition-all cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -232,19 +260,26 @@ export const StepLogistics = ({
                     style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
                   />
                 </div>
+
+                {/* RECURRENCE END DATE */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase text-gray-400">
                     Ending On
                   </label>
-                  <input
-                    type="date"
-                    value={formData.recurrenceEndDate ?? ""}
-                    onChange={(e) =>
-                      updateForm("recurrenceEndDate", e.target.value)
-                    }
-                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white focus:ring-2"
-                    style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
-                  />
+                  <div className="relative group">
+                    <Calendar
+                      size={14}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors z-10 pointer-events-none"
+                    />
+                    <input
+                      type="date"
+                      value={formData.recurrenceEndDate ?? ""}
+                      onChange={(e) =>
+                        updateForm("recurrenceEndDate", e.target.value)
+                      }
+                      className="w-full pl-10 pr-4 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:bg-white focus:border-black transition-all cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                    />
+                  </div>
                 </div>
               </div>
 
