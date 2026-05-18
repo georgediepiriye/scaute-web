@@ -15,12 +15,18 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getIPLocation } from "@/lib/locationUtils";
+import { useAuth } from "@/components/auth/AuthGuard";
 
 // BRAND COLOR CONSTANTS
 const KIVO_BLUE = "#0052FF";
 
 export default function OnboardingFlow() {
   const router = useRouter();
+
+  // Pull global auth context state to track active user sessions
+  const { user, loading: authLoading } = useAuth();
+  const isLoggedIn = !!user;
+
   const [step, setStep] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
   const [status, setStatus] = useState<
@@ -28,13 +34,33 @@ export default function OnboardingFlow() {
   >("idle");
 
   useEffect(() => {
+    // Hold rendering evaluation until the authentication status resolves
+    if (authLoading) return;
+
     const hasSeen = localStorage.getItem("kivo_onboarded");
     if (!hasSeen) {
       const timer = setTimeout(() => setIsVisible(true), 1200);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [authLoading]);
 
+  // Memoized completeOnboarding to prevent function recreation on renders
+  const completeOnboarding = useCallback(
+    (targetPath?: string) => {
+      localStorage.setItem("kivo_onboarded", "true");
+      setIsVisible(false);
+      if (targetPath) {
+        if (targetPath.includes("google")) {
+          window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/google`;
+        } else {
+          router.push(targetPath);
+        }
+      }
+    },
+    [router],
+  );
+
+  // Fully compliant location request function matching inferred compiler dependencies
   const handleLocationRequest = useCallback(async () => {
     setStatus("requesting");
 
@@ -43,8 +69,15 @@ export default function OnboardingFlow() {
         isNaN(lat) || isNaN(lng) ? { lat: 4.8156, lng: 7.0498 } : { lat, lng };
       localStorage.setItem("user_coords", JSON.stringify(coords));
       setStatus("success");
-      // Smooth transition to next step after success
-      setTimeout(() => setStep(2), 1200);
+
+      // Direct routing optimization for authenticated users
+      setTimeout(() => {
+        if (isLoggedIn) {
+          completeOnboarding("/map");
+        } else {
+          setStep(2);
+        }
+      }, 1200);
     };
 
     if (!navigator.geolocation) {
@@ -61,21 +94,9 @@ export default function OnboardingFlow() {
       },
       { enableHighAccuracy: false, timeout: 6000 },
     );
-  }, []);
+  }, [isLoggedIn, completeOnboarding]);
 
-  const completeOnboarding = (targetPath?: string) => {
-    localStorage.setItem("kivo_onboarded", "true");
-    setIsVisible(false);
-    if (targetPath) {
-      if (targetPath.includes("google")) {
-        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/google`;
-      } else {
-        router.push(targetPath);
-      }
-    }
-  };
-
-  if (!isVisible) return null;
+  if (!isVisible || authLoading) return null;
 
   return (
     <AnimatePresence>
@@ -86,37 +107,39 @@ export default function OnboardingFlow() {
         className="fixed inset-0 z-[1000] bg-zinc-950/60 backdrop-blur-xl flex items-center justify-center p-4 md:p-6"
       >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          initial={{ scale: 0.95, opacity: 0, y: 15 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="bg-white w-full max-w-5xl md:h-[600px] rounded-[40px] shadow-[0_40px_100px_-15px_rgba(0,82,255,0.2)] border border-white/20 flex flex-col md:flex-row overflow-hidden relative"
+          exit={{ scale: 0.95, opacity: 0, y: 15 }}
+          transition={{ type: "spring", damping: 25, stiffness: 180 }}
+          className="bg-white w-full max-w-5xl min-h-[500px] md:h-[620px] rounded-[40px] shadow-[0_40px_100px_-15px_rgba(0,82,255,0.15)] border border-white/20 flex flex-col md:flex-row overflow-hidden relative"
         >
           {/* Close Button */}
           <button
             onClick={() => completeOnboarding()}
-            className="absolute top-6 right-6 z-50 p-2.5 bg-zinc-50 border border-zinc-100 rounded-full text-zinc-400 hover:text-zinc-900 transition-all"
+            className="absolute top-6 right-6 z-50 p-2.5 bg-white/80 backdrop-blur border border-zinc-100 rounded-full text-zinc-400 hover:text-zinc-900 transition-all active:scale-95"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
 
           <AnimatePresence mode="wait">
             {step === 1 ? (
               <motion.div
                 key="step1"
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
                 className="w-full h-full flex flex-col md:flex-row"
               >
                 {/* LEFT: Visual & Value Prop */}
-                <div className="w-full md:w-1/2 bg-zinc-50 p-12 flex flex-col justify-between relative overflow-hidden border-r border-zinc-100">
+                <div className="w-full md:w-1/2 bg-zinc-50 p-8 md:p-12 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-zinc-100">
                   <div className="absolute -top-24 -left-24 w-64 h-64 bg-[#0052FF]/5 rounded-full blur-3xl" />
 
                   <div className="relative z-10">
-                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-8 border border-zinc-100">
-                      <Globe size={24} style={{ color: KIVO_BLUE }} />
+                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-8 border border-zinc-100/80">
+                      <Globe size={22} style={{ color: KIVO_BLUE }} />
                     </div>
-                    <h2 className="text-4xl font-black mb-4 text-zinc-900 tracking-tighter leading-none">
+                    <h2 className="text-3xl md:text-4xl font-black mb-4 text-zinc-900 tracking-tighter leading-none">
                       The city, <br />
                       <span style={{ color: KIVO_BLUE }} className="italic">
                         personalized.
@@ -129,23 +152,23 @@ export default function OnboardingFlow() {
                     </p>
                   </div>
 
-                  <div className="relative z-10 pt-12">
-                    <div className="flex -space-x-3 mb-4">
+                  <div className="relative z-10 pt-8 md:pt-0">
+                    <div className="flex -space-x-2.5 mb-3">
                       {[1, 2, 3, 4].map((i) => (
                         <div
                           key={i}
-                          className="w-8 h-8 rounded-full border-2 border-white bg-zinc-200 overflow-hidden"
+                          className="w-8 h-8 rounded-full border-2 border-white bg-zinc-200 overflow-hidden relative"
                         >
                           <Image
-                            src={`https://i.pravatar.cc/100?img=${i + 10}`}
+                            src={`https://i.pravatar.cc/100?img=${i + 15}`}
                             alt="User"
-                            width={32}
-                            height={32}
+                            fill
+                            className="object-cover"
                           />
                         </div>
                       ))}
-                      <div className="w-8 h-8 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-600">
-                        +2k
+                      <div className="w-8 h-8 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-[9px] font-black text-blue-600">
+                        +2K
                       </div>
                     </div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
@@ -156,19 +179,19 @@ export default function OnboardingFlow() {
 
                 {/* RIGHT: Action Section */}
                 <div className="w-full md:w-1/2 p-8 md:p-14 flex flex-col justify-center bg-white">
-                  <div className="space-y-6">
+                  <div className="space-y-6 max-w-sm mx-auto w-full">
                     <div className="p-6 bg-zinc-50 rounded-3xl border border-zinc-100">
                       <div className="flex items-start gap-4">
-                        <div className="mt-1">
+                        <div className="mt-1.5">
                           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-zinc-900">
+                          <p className="text-xs font-black uppercase tracking-wider text-zinc-900 mb-0.5">
                             Privacy First
                           </p>
-                          <p className="text-[11px] text-zinc-500 leading-normal">
-                            Your location is encrypted and used only to curate
-                            your local feed.
+                          <p className="text-[12px] text-zinc-500 font-medium leading-normal">
+                            Your location is securely encrypted and used only to
+                            curate your local neighborhood feed.
                           </p>
                         </div>
                       </div>
@@ -177,20 +200,24 @@ export default function OnboardingFlow() {
                     <button
                       onClick={handleLocationRequest}
                       disabled={status === "requesting" || status === "success"}
-                      className="group w-full py-5 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+                      className="group w-full py-5 text-white font-black text-[11px] uppercase tracking-[0.2em] rounded-2xl shadow-lg transition-all flex items-center justify-center gap-3 disabled:opacity-90 active:scale-[0.98] hover:opacity-90"
                       style={{
                         backgroundColor:
                           status === "success" ? "#10B981" : "#000",
+                        boxShadow:
+                          status === "success"
+                            ? "0 10px 25px -5px rgba(16,185,129,0.25)"
+                            : "0 10px 25px -5px rgba(0,0,0,0.15)",
                       }}
                     >
                       {status === "requesting" ? (
-                        <Loader2 className="animate-spin" size={18} />
+                        <Loader2 className="animate-spin" size={16} />
                       ) : status === "success" ? (
-                        <ShieldCheck size={18} />
+                        <ShieldCheck size={16} className="scale-110" />
                       ) : (
                         <MapPin
-                          size={18}
-                          className="group-hover:animate-bounce"
+                          size={16}
+                          className="group-hover:translate-y-[-2px] transition-transform"
                         />
                       )}
                       {status === "requesting"
@@ -201,7 +228,13 @@ export default function OnboardingFlow() {
                     </button>
 
                     <button
-                      onClick={() => setStep(2)}
+                      onClick={() => {
+                        if (isLoggedIn) {
+                          completeOnboarding("/map");
+                        } else {
+                          setStep(2);
+                        }
+                      }}
                       className="w-full text-zinc-400 text-[10px] font-black uppercase tracking-widest hover:text-zinc-900 transition-colors py-2 flex items-center justify-center gap-2"
                     >
                       Enter Manually <ArrowRight size={12} />
@@ -212,40 +245,42 @@ export default function OnboardingFlow() {
             ) : (
               <motion.div
                 key="step2"
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
                 className="w-full h-full flex flex-col md:flex-row"
               >
                 {/* LEFT: Branding/Atmosphere */}
-                <div className="w-full md:w-1/2 bg-zinc-900 p-12 flex flex-col justify-between text-white relative">
-                  <div className="absolute inset-0 opacity-50">
+                <div className="w-full md:w-1/2 bg-zinc-900 p-8 md:p-12 flex flex-col justify-between text-white relative min-h-[200px] md:min-h-0">
+                  <div className="absolute inset-0 opacity-40">
                     <Image
                       src="https://res.cloudinary.com/dzhfiblg7/image/upload/v1778054500/kivo_events/inhouse/tower.png"
                       alt="PH City Vibe"
                       fill
-                      className="object-cover grayscale"
+                      className="object-cover grayscale brightness-75"
+                      priority
                     />
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-zinc-900/10" />
 
                   <div className="relative z-10">
                     <p
-                      className="font-black text-2xl tracking-tighter"
+                      className="font-black text-2xl tracking-tighter uppercase"
                       style={{ color: KIVO_BLUE }}
                     >
                       KIVO.
                     </p>
                   </div>
 
-                  <div className="relative z-10">
+                  <div className="relative z-10 mt-12 md:mt-0">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full mb-4 border border-white/10 backdrop-blur-md">
-                      <Sparkles size={12} style={{ color: KIVO_BLUE }} />
+                      <Sparkles size={11} style={{ color: KIVO_BLUE }} />
                       <span className="text-[9px] font-black uppercase tracking-widest">
                         Premium Access
                       </span>
                     </div>
-                    <h3 className="text-3xl font-black italic leading-tight tracking-tighter mb-2">
+                    <h3 className="text-2xl md:text-3xl font-black italic leading-tight tracking-tighter">
                       Ready for the <br /> next move?
                     </h3>
                   </div>
@@ -253,42 +288,42 @@ export default function OnboardingFlow() {
 
                 {/* RIGHT: Authentication Options */}
                 <div className="w-full md:w-1/2 p-8 md:p-14 flex flex-col justify-center bg-white">
-                  <div className="mb-10">
-                    <h2 className="text-2xl font-black text-zinc-900 mb-2">
+                  <div className="mb-8 max-w-sm mx-auto w-full">
+                    <h2 className="text-2xl font-black text-zinc-900 tracking-tight uppercase">
                       Identity
                     </h2>
-                    <p className="text-zinc-400 text-xs font-medium">
+                    <p className="text-zinc-400 text-xs font-semibold mt-0.5">
                       How should we remember you?
                     </p>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3 max-w-sm mx-auto w-full">
                     <button
                       onClick={() => completeOnboarding("/auth/google")}
-                      className="w-full py-4 border-2 border-zinc-100 rounded-2xl flex items-center justify-center gap-4 font-bold text-zinc-800 hover:bg-zinc-50 transition-all active:scale-[0.98]"
+                      className="w-full py-4 border-2 border-zinc-100 rounded-2xl flex items-center justify-center gap-4 font-bold text-zinc-800 hover:bg-zinc-50 hover:border-zinc-200 transition-all active:scale-[0.98]"
                     >
                       <Image
                         src="/images/google_icon.png"
-                        width={18}
-                        height={18}
+                        width={16}
+                        height={16}
                         alt="Google"
                       />
-                      <span className="text-[11px] uppercase tracking-widest font-black">
+                      <span className="text-[10px] uppercase tracking-widest font-black">
                         Google Identity
                       </span>
                     </button>
 
                     <button
                       onClick={() => completeOnboarding("/auth/signin")}
-                      className="w-full py-4 bg-zinc-50 border-2 border-transparent rounded-2xl flex items-center justify-center gap-4 font-bold text-zinc-800 hover:border-zinc-200 transition-all active:scale-[0.98]"
+                      className="w-full py-4 bg-zinc-50 border-2 border-transparent rounded-2xl flex items-center justify-center gap-4 font-bold text-zinc-800 hover:bg-zinc-100/70 hover:border-zinc-200/60 transition-all active:scale-[0.98]"
                     >
-                      <Mail size={18} className="text-zinc-400" />
-                      <span className="text-[11px] uppercase tracking-widest font-black">
+                      <Mail size={16} className="text-zinc-400" />
+                      <span className="text-[10px] uppercase tracking-widest font-black">
                         Email Access
                       </span>
                     </button>
 
-                    <div className="flex items-center gap-4 py-2">
+                    <div className="flex items-center gap-4 py-3">
                       <div className="h-px bg-zinc-100 flex-1" />
                       <span className="text-[9px] font-black text-zinc-300 uppercase tracking-widest">
                         Guest Entry
@@ -298,8 +333,11 @@ export default function OnboardingFlow() {
 
                     <button
                       onClick={() => completeOnboarding("/map")}
-                      className="group w-full py-5 text-white font-black text-[11px] uppercase tracking-[0.2em] rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2"
-                      style={{ backgroundColor: KIVO_BLUE }}
+                      className="group w-full py-5 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] hover:opacity-90"
+                      style={{
+                        backgroundColor: KIVO_BLUE,
+                        boxShadow: `0 10px 25px -5px rgba(0,82,255,0.3)`,
+                      }}
                     >
                       Explore Locally
                       <ArrowRight
@@ -309,7 +347,7 @@ export default function OnboardingFlow() {
                     </button>
                   </div>
 
-                  <p className="mt-12 text-[9px] text-zinc-400 font-bold text-center uppercase tracking-widest">
+                  <p className="mt-10 text-[9px] text-zinc-400 font-bold text-center uppercase tracking-widest">
                     Secured by Kivo Identity Protection
                   </p>
                 </div>
