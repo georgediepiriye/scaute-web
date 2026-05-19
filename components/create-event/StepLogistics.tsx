@@ -12,8 +12,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 
 // BRAND COLOR CONSTANTS
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 const SearchBox = dynamic(
   () => import("@mapbox/search-js-react").then((m) => m.SearchBox),
@@ -66,7 +66,7 @@ export const StepLogistics = ({
             }`}
             style={{
               color: formData.eventFormat === f ? "#000" : "",
-              backgroundColor: formData.eventFormat === f ? KIVO_YELLOW : "",
+              backgroundColor: formData.eventFormat === f ? SKAUTE_YELLOW : "",
             }}
           >
             {f}
@@ -161,7 +161,7 @@ export const StepLogistics = ({
             className="pt-6 border-t border-gray-100 space-y-4 overflow-hidden"
           >
             <div className="flex items-center gap-2">
-              <Video size={16} style={{ color: KIVO_BLUE }} />
+              <Video size={16} style={{ color: SKAUTE_BLUE }} />
               <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
                 Meeting Link <span className="text-red-500">*</span>
               </label>
@@ -174,7 +174,7 @@ export const StepLogistics = ({
                 value={formData.meetingLink || ""}
                 onChange={(e) => updateForm("meetingLink", e.target.value)}
                 className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white focus:ring-2 transition-all shadow-sm pl-12"
-                style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+                style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
               />
               <LinkIcon
                 size={16}
@@ -193,7 +193,8 @@ export const StepLogistics = ({
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-sm font-black uppercase flex items-center gap-2">
-              <Repeat size={16} style={{ color: KIVO_BLUE }} /> Recurring Move?
+              <Repeat size={16} style={{ color: SKAUTE_BLUE }} /> Recurring
+              Move?
             </p>
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
               Does this happen more than once?
@@ -203,7 +204,9 @@ export const StepLogistics = ({
             type="button"
             onClick={() => updateForm("isRecurring", !formData.isRecurring)}
             className={`w-14 h-8 rounded-full transition-all relative ${formData.isRecurring ? "" : "bg-gray-200"}`}
-            style={{ backgroundColor: formData.isRecurring ? KIVO_YELLOW : "" }}
+            style={{
+              backgroundColor: formData.isRecurring ? SKAUTE_YELLOW : "",
+            }}
           >
             <motion.div
               animate={{ x: formData.isRecurring ? 24 : 4 }}
@@ -231,7 +234,7 @@ export const StepLogistics = ({
                       updateForm("recurrenceFrequency", e.target.value)
                     }
                     className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white border-none focus:ring-2"
-                    style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+                    style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
                   >
                     <option value="none">Select...</option>
                     <option value="daily">Daily</option>
@@ -257,7 +260,7 @@ export const StepLogistics = ({
                       }
                     }}
                     className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:ring-2"
-                    style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+                    style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
                   />
                 </div>
 
@@ -301,10 +304,10 @@ export const StepLogistics = ({
                         }`}
                         style={{
                           backgroundColor: formData.selectedDays?.includes(day)
-                            ? KIVO_YELLOW
+                            ? SKAUTE_YELLOW
                             : "",
                           borderColor: formData.selectedDays?.includes(day)
-                            ? KIVO_YELLOW
+                            ? SKAUTE_YELLOW
                             : "",
                         }}
                       >
@@ -335,7 +338,7 @@ export const StepLogistics = ({
               type="button"
               onClick={useCurrentLocation}
               className="text-[10px] font-black flex items-center gap-1 hover:opacity-70 transition-opacity"
-              style={{ color: KIVO_BLUE }}
+              style={{ color: SKAUTE_BLUE }}
             >
               <Navigation
                 size={12}
@@ -361,8 +364,8 @@ export const StepLogistics = ({
               animate={{ opacity: 1, y: 0 }}
               className="p-4 rounded-2xl border space-y-1"
               style={{
-                backgroundColor: `${KIVO_YELLOW}10`,
-                borderColor: `${KIVO_YELLOW}40`,
+                backgroundColor: `${SKAUTE_YELLOW}10`,
+                borderColor: `${SKAUTE_YELLOW}40`,
               }}
             >
               <p
@@ -394,11 +397,11 @@ export const StepLogistics = ({
             className="w-full py-5 font-black text-[10px] uppercase rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg"
             style={{
               backgroundColor: formData.locationCoords
-                ? KIVO_YELLOW
+                ? SKAUTE_YELLOW
                 : "#000000",
               color: formData.locationCoords ? "#000" : "#FFFFFF",
               boxShadow: formData.locationCoords
-                ? `0 10px 15px -3px ${KIVO_YELLOW}40`
+                ? `0 10px 15px -3px ${SKAUTE_YELLOW}40`
                 : "",
             }}
           >

@@ -17,12 +17,12 @@ export interface LocalTicket {
   updatedAt: number;
 }
 
-export class KivoScannerDB extends Dexie {
+export class SkauteScannerDB extends Dexie {
   tickets!: Table<LocalTicket>;
   outbox!: Table<PendingSync>;
 
   constructor() {
-    super("KivoScannerDB");
+    super("SkauteScannerDB");
 
     this.version(3).stores({
       tickets:
@@ -33,4 +33,4 @@ export class KivoScannerDB extends Dexie {
   }
 }
 
-export const db = new KivoScannerDB();
+export const db = new SkauteScannerDB();

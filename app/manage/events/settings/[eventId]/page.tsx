@@ -86,7 +86,7 @@ export default function EventSettingsPage() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const token = localStorage.getItem("kivo_token");
+        const token = localStorage.getItem("skaute_token");
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${params.eventId}`,
           {
@@ -195,7 +195,7 @@ export default function EventSettingsPage() {
         },
       };
 
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${params.eventId}`,
         {
@@ -225,7 +225,7 @@ export default function EventSettingsPage() {
           <div className="absolute inset-0 border-4 border-t-yellow-500 rounded-xl animate-spin" />
         </div>
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/60">
-          Syncing with Kivo...
+          Syncing with skaute...
         </p>
       </div>
     );
@@ -326,7 +326,7 @@ export default function EventSettingsPage() {
                       </p>
                       <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
                         {formData.isPublic
-                          ? "Visible to everyone on Kivo"
+                          ? "Visible to everyone on skaute"
                           : "Private / Invite Only"}
                       </p>
                     </div>

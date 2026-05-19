@@ -11,7 +11,7 @@ export const MoveTypeSelector = ({
     animate={{ opacity: 1, y: 0 }}
     className="text-center max-w-2xl mx-auto py-10 px-4"
   >
-    {/* Badge using Kivo Yellow */}
+    {/* Badge using skaute Yellow */}
     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-400 text-slate-950 text-[10px] font-black uppercase mb-6 shadow-sm border border-slate-950">
       <Sparkles size={12} fill="currentColor" /> Start something people can join
     </div>

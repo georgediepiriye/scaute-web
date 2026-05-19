@@ -28,7 +28,7 @@ export default function AssistantPage() {
       id: "1",
       role: "assistant",
       content:
-        "Hi there! 👋 I'm Kivo, your local guide in Port Harcourt. What are you looking to explore today? Dinner, a gig, or a quiet cafe?",
+        "Hi there! 👋 I'm skaute, your local guide in Port Harcourt. What are you looking to explore today? Dinner, a gig, or a quiet cafe?",
       timestamp: new Date(),
     },
   ]);
@@ -119,7 +119,7 @@ export default function AssistantPage() {
             </div>
             <div>
               <h2 className="font-bold text-sm md:text-base leading-tight">
-                Kivo AI Assistant
+                skaute AI Assistant
               </h2>
               <p className="text-[10px] text-green-600 font-medium uppercase tracking-wider">
                 Online
@@ -198,7 +198,7 @@ export default function AssistantPage() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  placeholder="Message Kivo..."
+                  placeholder="Message skaute..."
                   className="flex-1 bg-transparent py-2 px-1 focus:outline-none text-sm"
                 />
                 <button className="p-2 text-gray-400 hidden sm:block">

@@ -10,7 +10,7 @@ interface PageProps {
 export const dynamicParams = true;
 
 /**
- * Kivo Event Slug Page
+ * skaute Event Slug Page
  * Optimized for Next.js 15 with strict error handling and
  * performance safety nets.
  */

@@ -7,8 +7,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 // Brand Constants
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 export default function VibeCheckSection({ data }: any) {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function VibeCheckSection({ data }: any) {
         title="Vibe Check"
         subtitle="The heartbeat of the city"
         icon={Sparkles}
-        iconColor={KIVO_BLUE}
+        iconColor={SKAUTE_BLUE}
       >
         {data.map((e: any) => (
           <div
@@ -40,11 +40,11 @@ export default function VibeCheckSection({ data }: any) {
               {/* Cinematic Overlays */}
               <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/80" />
 
-              {/* Top Tag: Using Kivo Blue */}
+              {/* Top Tag: Using skaute Blue */}
               <div className="absolute top-6 left-6">
                 <span
                   className="px-5 py-2.5 rounded-full text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-xl transition-colors duration-300 group-hover:bg-black"
-                  style={{ backgroundColor: KIVO_BLUE }}
+                  style={{ backgroundColor: SKAUTE_BLUE }}
                 >
                   {e.category}
                 </span>
@@ -59,7 +59,7 @@ export default function VibeCheckSection({ data }: any) {
                 <div className="flex items-center justify-between">
                   <span
                     className="text-[10px] font-black uppercase tracking-[0.2em]"
-                    style={{ color: KIVO_YELLOW }}
+                    style={{ color: SKAUTE_YELLOW }}
                   >
                     {e.location?.neighborhood || "Port Harcourt"}
                   </span>
@@ -70,8 +70,8 @@ export default function VibeCheckSection({ data }: any) {
                       size={14}
                       className="transition-all duration-300 group-hover:scale-125"
                       style={{
-                        fill: KIVO_YELLOW,
-                        stroke: KIVO_YELLOW,
+                        fill: SKAUTE_YELLOW,
+                        stroke: SKAUTE_YELLOW,
                       }}
                     />
                     <span className="text-white text-[11px] font-black">

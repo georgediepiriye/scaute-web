@@ -199,7 +199,7 @@ export function PulseAnalytics({ data }: PulseProps) {
           <div className="mt-8 p-6 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
             <p className="text-[10px] font-bold text-slate-400 uppercase leading-relaxed text-center">
               System Note: Data updates every time a{" "}
-              <span className="text-slate-900">KIVO-Code</span> is scanned.
+              <span className="text-slate-900">skaute-Code</span> is scanned.
             </p>
           </div>
         </div>

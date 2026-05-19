@@ -15,7 +15,7 @@ function CallbackHandler() {
     // ensures the UI doesn't awkwardly flash for 50ms.
     const handleRedirect = setTimeout(() => {
       if (token) {
-        localStorage.setItem("kivo_token", token);
+        localStorage.setItem("skaute_token", token);
         router.push("/profile");
       } else {
         router.push("/auth/signin");
@@ -50,7 +50,7 @@ function CallbackHandler() {
           Syncing your account
         </h1>
         <p className="text-xs font-semibold text-slate-400 leading-relaxed max-w-[280px] animate-pulse">
-          Setting up your secure Kivo session environment. Please hold on.
+          Setting up your secure skaute session environment. Please hold on.
         </p>
       </div>
     </div>

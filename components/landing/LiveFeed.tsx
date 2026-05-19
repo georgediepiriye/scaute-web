@@ -6,13 +6,13 @@ import Image from "next/image";
 import Link from "next/link";
 
 /**
- * KIVO LIVE FEED COMPONENT
+ * skaute LIVE FEED COMPONENT
  * Aesthetic: Chowdeck / Neo-Brutalist
- * Color Palette: Kivo Blue (#0052FF), Kivo Yellow (#FBBF24)
+ * Color Palette: skaute Blue (#0052FF), skaute Yellow (#FBBF24)
  */
 
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FBBF24";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FBBF24";
 
 const events = [
   {

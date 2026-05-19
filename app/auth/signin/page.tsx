@@ -13,7 +13,7 @@ import { API } from "@/lib/api";
 
 // External store helpers to sync localStorage safely with SSR
 const subscribe = () => () => {};
-const getSnapshot = () => localStorage.getItem("kivo_token");
+const getSnapshot = () => localStorage.getItem("skaute_token");
 
 // The server snapshot returns a sentinel object indicating it's rendering on the server
 const getServerSnapshot = () => "SERVER_RENDER";
@@ -55,7 +55,7 @@ export default function SignInPage() {
       const data = response.data;
 
       if (data.token) {
-        localStorage.setItem("kivo_token", data.token);
+        localStorage.setItem("skaute_token", data.token);
       }
 
       const userData = data.data?.user || data.user;
@@ -77,7 +77,7 @@ export default function SignInPage() {
 
           // Route the user directly to their intended destination target instead of blindly hitting /profile
           router.push(redirectTo);
-          return "Welcome back to Kivo!";
+          return "Welcome back to skaute!";
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         error: (err: any) => {
@@ -134,7 +134,7 @@ export default function SignInPage() {
         >
           <Image
             src="https://res.cloudinary.com/dzhfiblg7/image/upload/f_auto,q_auto,w_800/v1778054500/kivo_events/inhouse/tower.png"
-            alt="Kivo World"
+            alt="skaute World"
             width={500}
             height={500}
             className="drop-shadow-2xl mb-10 rounded-[40px] object-contain border-4 border-white shadow-blue-600/10"
@@ -275,7 +275,7 @@ export default function SignInPage() {
 
         <div className="hidden sm:block absolute bottom-8 text-center">
           <p className="text-[10px] text-gray-300 font-black uppercase tracking-tighter">
-            © 2026 Kivo Social. All rights reserved.
+            © 2026 skaute Social. All rights reserved.
           </p>
         </div>
       </div>

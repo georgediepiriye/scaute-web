@@ -15,7 +15,7 @@ export default function Footer() {
                 <span className="text-black font-black text-2xl">K</span>
               </div>
               <div className="text-3xl font-black tracking-tighter uppercase italic">
-                Kivo
+                Skaute
               </div>
             </div>
             <p className="text-blue-100 font-bold text-sm leading-relaxed">
@@ -108,7 +108,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-20 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-xs font-bold text-blue-200/60 uppercase tracking-widest">
-            © 2026 Kivo Technologies. All rights reserved.
+            © 2026 Skaute Technologies. All rights reserved.
           </p>
           <div className="flex items-center gap-2 text-xs font-black uppercase tracking-tighter">
             Built with{" "}

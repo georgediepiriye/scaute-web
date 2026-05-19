@@ -49,7 +49,7 @@ const AuthGuardModal = ({
           <ShieldCheck size={40} className="text-blue-600" />
         </div>
         <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">
-          Kivo ID Required
+          skaute ID Required
         </h3>
         <p className="text-gray-500 text-sm font-medium mb-8 leading-relaxed">
           Only verified members can broadcast moves. Sign in to share your event
@@ -242,7 +242,7 @@ export default function CreateEventPage() {
         (!formData.ticketTiers || formData.ticketTiers.length === 0)
       ) {
         return toast.error(
-          "Please add at least one ticket tier to sell on Kivo.",
+          "Please add at least one ticket tier to sell on skaute.",
         );
       }
       if (
@@ -345,7 +345,7 @@ export default function CreateEventPage() {
       data.append("image", formData.imageFile);
       data.append("eventData", JSON.stringify(payload));
 
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
       const headers: HeadersInit = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
@@ -359,7 +359,7 @@ export default function CreateEventPage() {
         throw new Error(errorData.message || "Broadcast failed.");
       }
 
-      toast.success("Move Submitted! Waiting for Kivo Team approval.");
+      toast.success("Move Submitted! Waiting for skaute Team approval.");
       setTimeout(() => router.push("/profile"), 2500);
     } catch (e: any) {
       toast.error(e.message);

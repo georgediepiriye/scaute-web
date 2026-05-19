@@ -9,7 +9,7 @@ export default function SocialProofTicker() {
     "Tickets for PH Comedy Night selling fast",
     "30+ People just joined Sunday Brunch at Evo Road",
     "New Secret Vibe created at Pleasure Park",
-    "140+ people found something to do on Kivo this weekend",
+    "140+ people found something to do on Skaute this weekend",
     "Ada just shared a new link-up in Borokiri",
   ];
 

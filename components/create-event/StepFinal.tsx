@@ -4,8 +4,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 
 // BRAND COLOR CONSTANTS
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 const Toggle = ({ label, sub, value, field, updateForm }: any) => (
   <div className="flex items-center justify-between group">
@@ -17,7 +17,7 @@ const Toggle = ({ label, sub, value, field, updateForm }: any) => (
       type="button"
       onClick={() => updateForm(field, !value)}
       className="w-12 h-7 rounded-full transition-all relative"
-      style={{ backgroundColor: value ? KIVO_YELLOW : "#374151" }}
+      style={{ backgroundColor: value ? SKAUTE_YELLOW : "#374151" }}
     >
       <motion.div
         animate={{ x: value ? 22 : 4 }}
@@ -78,7 +78,7 @@ export const StepFinal = ({
           <div className="bg-gray-900 text-white p-8 rounded-[40px] shadow-xl space-y-8">
             <div
               className="flex items-center gap-2 font-black text-[10px] uppercase tracking-widest"
-              style={{ color: KIVO_YELLOW }}
+              style={{ color: SKAUTE_YELLOW }}
             >
               <Settings2 size={16} /> Advanced Settings
             </div>
@@ -112,7 +112,7 @@ export const StepFinal = ({
                   value={formData.ageRestriction || "All Ages"}
                   onChange={(e) => updateForm("ageRestriction", e.target.value)}
                   className="w-full bg-gray-800 text-white p-4 rounded-2xl font-bold text-xs outline-none border border-gray-700 transition-all focus:ring-2"
-                  style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+                  style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
                 >
                   <option value="All Ages">All Ages</option>
                   <option value="13+">13+ (Teens)</option>
@@ -129,7 +129,7 @@ export const StepFinal = ({
                   value={formData.refundPolicy}
                   onChange={(e) => updateForm("refundPolicy", e.target.value)}
                   className="w-full bg-gray-800 text-white p-4 rounded-2xl font-bold text-xs outline-none border border-gray-700 transition-all focus:ring-2"
-                  style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+                  style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
                 >
                   <option value="none">No Refunds</option>
                   <option value="flexible">Flexible</option>
@@ -149,11 +149,11 @@ export const StepFinal = ({
         className="bg-yellow-50 border-2 border-yellow-100 p-8 rounded-[40px] flex flex-col md:flex-row items-center gap-6"
       >
         <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-sm shrink-0">
-          <ShieldAlert size={32} style={{ color: KIVO_YELLOW }} />
+          <ShieldAlert size={32} style={{ color: SKAUTE_YELLOW }} />
         </div>
         <div>
           <h4 className="text-[12px] font-black uppercase text-yellow-900 tracking-wider mb-1">
-            Kivo Moderation Process
+            skaute Moderation Process
           </h4>
           <p className="text-xs font-bold text-yellow-800/80 leading-relaxed uppercase">
             To maintain quality in the Port Harcourt ecosystem, all new moves

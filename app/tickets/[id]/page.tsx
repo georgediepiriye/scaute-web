@@ -21,8 +21,8 @@ import toast from "react-hot-toast";
 import { TICKET_STATUS } from "@/lib/constants";
 
 // BRAND COLOR CONSTANTS
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 export default function TicketDetailsPage() {
   const params = useParams();
@@ -34,7 +34,7 @@ export default function TicketDetailsPage() {
   useEffect(() => {
     const fetchTicketDetails = async () => {
       try {
-        const token = localStorage.getItem("kivo_token");
+        const token = localStorage.getItem("skaute_token");
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
         };
@@ -79,7 +79,7 @@ export default function TicketDetailsPage() {
       <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center">
         <div
           className="animate-pulse font-black text-[10px] uppercase tracking-widest"
-          style={{ color: KIVO_BLUE }}
+          style={{ color: SKAUTE_BLUE }}
         >
           Retrieving Digital Pass...
         </div>
@@ -92,7 +92,7 @@ export default function TicketDetailsPage() {
   const statusKey = (ticket.status as keyof typeof TICKET_STATUS) || "valid";
   const statusConfig = TICKET_STATUS[statusKey] || {
     label: "Valid",
-    color: KIVO_BLUE,
+    color: SKAUTE_BLUE,
   };
 
   const eventDate = ticket.event?.startDate
@@ -127,7 +127,7 @@ export default function TicketDetailsPage() {
           <div
             className="absolute -inset-1 rounded-[3rem] blur opacity-10 transition-all duration-500"
             style={{
-              backgroundImage: `linear-gradient(to bottom, ${KIVO_BLUE}, ${KIVO_YELLOW})`,
+              backgroundImage: `linear-gradient(to bottom, ${SKAUTE_BLUE}, ${SKAUTE_YELLOW})`,
             }}
           />
 
@@ -144,7 +144,7 @@ export default function TicketDetailsPage() {
               ) : (
                 <div className="w-full h-full bg-[#121212] flex items-center justify-center">
                   <h2 className="text-white font-black italic uppercase opacity-20 text-4xl">
-                    Kivo Move
+                    skaute Move
                   </h2>
                 </div>
               )}
@@ -152,7 +152,7 @@ export default function TicketDetailsPage() {
               <div className="absolute bottom-6 left-6 right-6">
                 <span
                   className="px-3 py-1 text-white text-[9px] font-black uppercase tracking-widest rounded-full"
-                  style={{ backgroundColor: KIVO_BLUE }}
+                  style={{ backgroundColor: SKAUTE_BLUE }}
                 >
                   {ticket.tierName}
                 </span>
@@ -168,7 +168,7 @@ export default function TicketDetailsPage() {
                 className={`p-4 bg-white border-[6px] rounded-[2rem] shadow-sm mb-6 transition-colors duration-500`}
                 style={{
                   borderColor:
-                    statusKey === "valid" ? KIVO_BLUE : statusConfig.color,
+                    statusKey === "valid" ? SKAUTE_BLUE : statusConfig.color,
                 }}
               >
                 <div
@@ -197,7 +197,7 @@ export default function TicketDetailsPage() {
                 </p>
                 <h3
                   className="text-xl font-mono font-black"
-                  style={{ color: KIVO_BLUE }}
+                  style={{ color: SKAUTE_BLUE }}
                 >
                   {ticket.checkInCode || "PENDING"}
                 </h3>
@@ -240,19 +240,19 @@ export default function TicketDetailsPage() {
             <div className="px-8 pb-8 grid grid-cols-2 gap-6 border-t border-dashed border-slate-200 pt-8 mt-2">
               <div className="space-y-1">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Calendar size={10} style={{ color: KIVO_BLUE }} /> Date
+                  <Calendar size={10} style={{ color: SKAUTE_BLUE }} /> Date
                 </p>
                 <p className="text-sm font-black uppercase">{eventDate}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Clock size={10} style={{ color: KIVO_BLUE }} /> Time
+                  <Clock size={10} style={{ color: SKAUTE_BLUE }} /> Time
                 </p>
                 <p className="text-sm font-black uppercase">{eventTime}</p>
               </div>
               <div className="col-span-2 space-y-1">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <MapPin size={10} style={{ color: KIVO_BLUE }} /> Venue
+                  <MapPin size={10} style={{ color: SKAUTE_BLUE }} /> Venue
                 </p>
                 <p className="text-sm font-black uppercase truncate">
                   {ticket.event?.location?.address || "Port Harcourt, Nigeria"}

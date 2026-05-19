@@ -84,8 +84,8 @@ export default function AuthProvider({
           const urlToken = params.get("token");
 
           if (urlToken) {
-            localStorage.setItem("kivo_token", urlToken);
-            setClientCookie("kivo_token", urlToken, 7);
+            localStorage.setItem("skaute_token", urlToken);
+            setClientCookie("skaute_token", urlToken, 7);
 
             // Clean up the URL string immediately so the raw token string is hidden
             const cleanUrl = window.location.pathname + window.location.hash;
@@ -108,8 +108,8 @@ export default function AuthProvider({
           setUser(freshUser);
           localStorage.setItem("user", JSON.stringify(freshUser));
 
-          const token = localStorage.getItem("kivo_token");
-          if (token) setClientCookie("kivo_token", token, 7);
+          const token = localStorage.getItem("skaute_token");
+          if (token) setClientCookie("skaute_token", token, 7);
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
@@ -124,11 +124,11 @@ export default function AuthProvider({
         }
 
         // 💡 FIX: Force-clear BOTH potential cookie keys if credentials expire or become missing
-        if (status === 401 || !localStorage.getItem("kivo_token")) {
+        if (status === 401 || !localStorage.getItem("skaute_token")) {
           setUser(null);
           localStorage.removeItem("user");
-          localStorage.removeItem("kivo_token");
-          deleteClientCookie("kivo_token");
+          localStorage.removeItem("skaute_token");
+          deleteClientCookie("skaute_token");
           deleteClientCookie("token");
         }
       } finally {
@@ -142,10 +142,10 @@ export default function AuthProvider({
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
-    localStorage.removeItem("kivo_token");
+    localStorage.removeItem("skaute_token");
 
     // 💡 FIX: Evict both cookie definitions entirely to break the middleware redirection loops
-    deleteClientCookie("kivo_token");
+    deleteClientCookie("skaute_token");
     deleteClientCookie("token");
 
     router.push("/auth/signin");
@@ -155,8 +155,8 @@ export default function AuthProvider({
   const updateUser = (userData: any) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
-    const token = localStorage.getItem("kivo_token");
-    if (token) setClientCookie("kivo_token", token, 7);
+    const token = localStorage.getItem("skaute_token");
+    if (token) setClientCookie("skaute_token", token, 7);
   };
 
   return (

@@ -70,7 +70,7 @@ export default function CheckoutPanel({
   // Synchronize Auth State from localStorage directly
   const syncLocalUser = useCallback(() => {
     try {
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
       const localUserData = localStorage.getItem("user");
 
       if (token && localUserData) {
@@ -166,7 +166,7 @@ export default function CheckoutPanel({
     setLoading(true);
     try {
       // 1. Fetch the authorization token directly from storage
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
 
       // 2. Dynamically build headers
       const headers: Record<string, string> = {
@@ -190,6 +190,7 @@ export default function CheckoutPanel({
             firstName: firstName.trim(),
             lastName: lastName.trim(),
             discountCode: appliedDiscount?.code || "",
+            eventTitle: event?.title || "",
           }),
         },
       );

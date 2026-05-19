@@ -19,8 +19,8 @@ import {
 import Image from "next/image";
 import { useState } from "react";
 
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 export const PreviewModal = ({
   isOpen,
@@ -34,7 +34,7 @@ export const PreviewModal = ({
 
   if (!isOpen) return null;
 
-  const eventLink = `kivo-isca.onrender.com/e/${data.slug}`;
+  const eventLink = `skaute-isca.onrender.com/e/${data.slug}`;
 
   const handleCopy = async () => {
     try {
@@ -116,7 +116,7 @@ export const PreviewModal = ({
             <div className="absolute bottom-4 left-5 right-5 sm:bottom-6 sm:left-8 sm:right-8">
               <span
                 className="px-2.5 py-1 text-gray-900 text-[8px] sm:text-[9px] font-black uppercase rounded-full tracking-wider"
-                style={{ backgroundColor: KIVO_YELLOW }}
+                style={{ backgroundColor: SKAUTE_YELLOW }}
               >
                 {data.category || "General"}
               </span>
@@ -182,14 +182,14 @@ export const PreviewModal = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
               <div className="space-y-1.5">
                 <p className="text-[9px] font-black uppercase text-gray-400 flex items-center gap-1.5 tracking-widest">
-                  <Calendar size={12} style={{ color: KIVO_BLUE }} /> Date &
+                  <Calendar size={12} style={{ color: SKAUTE_BLUE }} /> Date &
                   Time
                 </p>
                 <div className="text-xs font-bold text-gray-900 leading-snug">
                   <p>{formatNGRDate(data.startDate)}</p>
                   <p
                     className="mt-0.5 uppercase font-black"
-                    style={{ color: KIVO_BLUE }}
+                    style={{ color: SKAUTE_BLUE }}
                   >
                     {formatNGRTime(data.startTime)}
                   </p>
@@ -200,11 +200,11 @@ export const PreviewModal = ({
               <div className="space-y-1.5">
                 <p className="text-[9px] font-black uppercase text-gray-400 flex items-center gap-1.5 tracking-widest">
                   {data.eventFormat === "online" ? (
-                    <Video size={12} style={{ color: KIVO_BLUE }} />
+                    <Video size={12} style={{ color: SKAUTE_BLUE }} />
                   ) : data.eventFormat === "hybrid" ? (
-                    <Globe size={12} style={{ color: KIVO_BLUE }} />
+                    <Globe size={12} style={{ color: SKAUTE_BLUE }} />
                   ) : (
-                    <MapPin size={12} style={{ color: KIVO_BLUE }} />
+                    <MapPin size={12} style={{ color: SKAUTE_BLUE }} />
                   )}
                   {data.eventFormat === "online" ? "Meeting Link" : "Venue"}
                 </p>
@@ -222,7 +222,7 @@ export const PreviewModal = ({
                       {data.neighborhood && (
                         <p
                           className="text-[9px] uppercase font-black mt-1 flex items-center gap-1"
-                          style={{ color: KIVO_BLUE }}
+                          style={{ color: SKAUTE_BLUE }}
                         >
                           <Navigation size={8} /> {data.neighborhood}
                         </p>
@@ -241,7 +241,7 @@ export const PreviewModal = ({
             {/* Tags Section */}
             <div className="space-y-2">
               <p className="text-[9px] font-black uppercase text-gray-400 flex items-center gap-1.5 tracking-widest">
-                <Tag size={12} style={{ color: KIVO_BLUE }} /> Tags
+                <Tag size={12} style={{ color: SKAUTE_BLUE }} /> Tags
               </p>
               <div className="flex flex-wrap gap-2">
                 {data.tags &&
@@ -278,8 +278,8 @@ export const PreviewModal = ({
             disabled={submitting}
             className="flex-1 py-4 sm:py-5 text-white rounded-[20px] sm:rounded-[24px] font-black text-[10px] uppercase transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 order-1 sm:order-2"
             style={{
-              backgroundColor: KIVO_BLUE,
-              boxShadow: `0 8px 15px -3px ${KIVO_BLUE}30`,
+              backgroundColor: SKAUTE_BLUE,
+              boxShadow: `0 8px 15px -3px ${SKAUTE_BLUE}30`,
             }}
           >
             {submitting ? (
@@ -307,10 +307,10 @@ export const PreviewModal = ({
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
                   className="w-16 h-16 border-4 border-gray-100 border-t-blue-600 rounded-full"
-                  style={{ borderTopColor: KIVO_BLUE }}
+                  style={{ borderTopColor: SKAUTE_BLUE }}
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Send size={20} style={{ color: KIVO_BLUE }} />
+                  <Send size={20} style={{ color: SKAUTE_BLUE }} />
                 </div>
               </div>
               <p className="mt-4 text-[9px] font-black uppercase tracking-[0.2em] text-gray-900 animate-pulse">

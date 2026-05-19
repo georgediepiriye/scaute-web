@@ -29,7 +29,7 @@ export default function ProximityCTA() {
 
           {/* Subtitle: Highlighting the Auto-Location Map */}
           <p className="text-xl md:text-2xl font-bold text-blue-50 max-w-2xl mx-auto mb-14 leading-tight">
-            Kivo centers on your coordinates to show you the best vibes within
+            Skaute centers on your coordinates to show you the best vibes within
             walking distance. Don’t miss what&apos;s happening behind you.
           </p>
 

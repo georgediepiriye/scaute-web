@@ -17,7 +17,7 @@ import confetti from "canvas-confetti";
 import html2canvas from "html2canvas";
 
 // BRAND CONSTANTS
-const KIVO_BLUE = "#0052FF";
+const SKAUTE_BLUE = "#0052FF";
 
 function VerifyPaymentContent() {
   const searchParams = useSearchParams();
@@ -40,7 +40,7 @@ function VerifyPaymentContent() {
   useEffect(() => {
     const checkAuth = () => {
       if (typeof window !== "undefined") {
-        const hasToken = !!localStorage.getItem("kivo_token");
+        const hasToken = !!localStorage.getItem("skaute_token");
         setIsLoggedIn(hasToken);
       }
     };
@@ -60,14 +60,14 @@ function VerifyPaymentContent() {
       particleCount: 150,
       spread: 70,
       origin: { y: 0.6 },
-      colors: [KIVO_BLUE, "#000000", "#FFFFFF"],
+      colors: [SKAUTE_BLUE, "#000000", "#FFFFFF"],
     });
   };
 
   const handleShare = async () => {
     const shareData = {
       title: `My Ticket: ${ticketData?.eventTitle}`,
-      text: `I'm attending ${ticketData?.eventTitle}! Check it out on Kivo.`,
+      text: `I'm attending ${ticketData?.eventTitle}! Check it out on skaute.`,
       url: window.location.href,
     };
 
@@ -98,7 +98,7 @@ function VerifyPaymentContent() {
       const image = canvas.toDataURL("image/png");
       const link = document.createElement("a");
       link.href = image;
-      link.download = `Kivo-Ticket-${ticketData?.eventTitle || "Pass"}.png`;
+      link.download = `skaute-Ticket-${ticketData?.eventTitle || "Pass"}.png`;
       link.click();
     } catch (err) {
       console.error("Failed to save ticket:", err);
@@ -115,7 +115,7 @@ function VerifyPaymentContent() {
 
       try {
         // FIX 2: Attach the token dynamically if it exists to satisfy backend auth middleware requirements
-        const token = localStorage.getItem("kivo_token");
+        const token = localStorage.getItem("skaute_token");
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
         };
@@ -142,7 +142,7 @@ function VerifyPaymentContent() {
             eventTitle: order.event?.title || "Move",
             tierName: order.tierName,
             quantity: order.quantity,
-            ticketCode: tickets?.[0]?.checkInCode || "KIVO-PASS",
+            ticketCode: tickets?.[0]?.checkInCode || "skaute-PASS",
           });
 
           setStatus("success");
@@ -156,7 +156,7 @@ function VerifyPaymentContent() {
           isVerifying.current = false;
         }
       } catch (error) {
-        console.error("Kivo verification error:", error);
+        console.error("skaute verification error:", error);
         isVerifying.current = false;
         if (attempts >= 15) {
           setStatus("error");
@@ -183,7 +183,7 @@ function VerifyPaymentContent() {
         <div className="relative">
           <Loader2
             className="animate-spin"
-            style={{ color: KIVO_BLUE }}
+            style={{ color: SKAUTE_BLUE }}
             size={64}
           />
           <div className="absolute inset-0 flex items-center justify-center">
@@ -257,18 +257,18 @@ function VerifyPaymentContent() {
         <div
           className="border p-4 rounded-2xl flex gap-3 items-start text-left"
           style={{
-            backgroundColor: `${KIVO_BLUE}10`,
-            borderColor: `${KIVO_BLUE}20`,
+            backgroundColor: `${SKAUTE_BLUE}10`,
+            borderColor: `${SKAUTE_BLUE}20`,
           }}
         >
           <Info
-            style={{ color: KIVO_BLUE }}
+            style={{ color: SKAUTE_BLUE }}
             className="shrink-0 mt-0.5"
             size={18}
           />
           <p
             className="text-[11px] font-bold leading-relaxed uppercase"
-            style={{ color: KIVO_BLUE }}
+            style={{ color: SKAUTE_BLUE }}
           >
             A confirmation has been sent to your email.{" "}
             {isLoggedIn && "This ticket is also saved to your profile."}
@@ -291,7 +291,7 @@ function VerifyPaymentContent() {
               </div>
               <div
                 className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center"
-                style={{ color: KIVO_BLUE }}
+                style={{ color: SKAUTE_BLUE }}
               >
                 <Ticket size={24} />
               </div>
@@ -299,7 +299,7 @@ function VerifyPaymentContent() {
 
             <div className="bg-white p-4 border-2 border-black rounded-3xl">
               <QRCodeSVG
-                value={ticketData?.ticketCode || "KIVO-PASS"}
+                value={ticketData?.ticketCode || "skaute-PASS"}
                 size={160}
                 level="H"
                 includeMargin={false}
@@ -366,8 +366,8 @@ function VerifyPaymentContent() {
           onClick={() => handleMoveNavigation("/profile", "/discover")}
           className="w-full flex items-center justify-center gap-2 py-6 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl"
           style={{
-            backgroundColor: KIVO_BLUE,
-            boxShadow: `0 20px 25px -5px ${KIVO_BLUE}33`,
+            backgroundColor: SKAUTE_BLUE,
+            boxShadow: `0 20px 25px -5px ${SKAUTE_BLUE}33`,
           }}
         >
           Return to City <ArrowRight size={18} />

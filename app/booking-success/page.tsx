@@ -32,7 +32,7 @@ function SuccessContent() {
   const checkInCode =
     rawCheckInCode && rawCheckInCode.trim() !== ""
       ? rawCheckInCode
-      : refCode || "KIVO-PASS";
+      : refCode || "Skaute-PASS";
 
   // Fire celebration animation context on mount
   useEffect(() => {
@@ -89,7 +89,7 @@ function SuccessContent() {
             <div className="w-full flex justify-between items-center pb-4 border-b border-dashed border-gray-200">
               <div className="text-left">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  Kivo Entry Pass
+                  Skaute Entry Pass
                 </p>
                 <p className="font-black uppercase italic text-sm">
                   Valid Entry

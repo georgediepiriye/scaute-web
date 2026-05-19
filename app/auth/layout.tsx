@@ -15,7 +15,7 @@ export default function AuthLayout({
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("kivo_token");
+    const token = localStorage.getItem("skaute_token");
 
     if (token) {
       // If they are logged in, redirect them directly without setting local layout state.

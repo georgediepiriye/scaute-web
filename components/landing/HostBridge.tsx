@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 /**
- * KIVO HOST BRIDGE COMPONENT
+ * skaute HOST BRIDGE COMPONENT
  * Location: Port Harcourt focused
  */
 
@@ -87,7 +87,7 @@ export default function HostBridge() {
 
           <p className="text-xl font-bold text-slate-500 max-w-md leading-relaxed">
             Turn your idea into a city-wide activity. Whether it&apos;s a
-            rooftop hangout or a digital workshop, put it on the Kivo map and
+            rooftop hangout or a digital workshop, put it on the skaute map and
             watch the community join.
           </p>
 

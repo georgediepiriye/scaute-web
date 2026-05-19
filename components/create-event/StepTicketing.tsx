@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 export const StepTicketing = ({ formData, updateForm }: any) => {
   const ticketingType = formData.ticketingType || "none";
@@ -53,7 +53,12 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
 
   const TICKET_OPTIONS = [
     { id: "none", label: "No Tickets", sub: "Open entry", icon: Ban },
-    { id: "internal", label: "Kivo Tickets", sub: "Sell on app", icon: Ticket },
+    {
+      id: "internal",
+      label: "skaute Tickets",
+      sub: "Sell on app",
+      icon: Ticket,
+    },
     {
       id: "external",
       label: "External Link",
@@ -80,8 +85,8 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                   : "border-gray-50 bg-gray-50/50 text-gray-400 hover:border-gray-200"
               }`}
               style={{
-                borderColor: isActive ? KIVO_YELLOW : "",
-                backgroundColor: isActive ? `${KIVO_YELLOW}20` : "",
+                borderColor: isActive ? SKAUTE_YELLOW : "",
+                backgroundColor: isActive ? `${SKAUTE_YELLOW}20` : "",
                 color: isActive ? "#000" : "",
               }}
             >
@@ -111,7 +116,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
             </h3>
             <span
               className="text-[10px] font-black text-gray-900 px-3 py-1 rounded-full shadow-sm"
-              style={{ backgroundColor: KIVO_YELLOW }}
+              style={{ backgroundColor: SKAUTE_YELLOW }}
             >
               {tiers.length} Active
             </span>
@@ -135,7 +140,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                     value={tier.name}
                     onChange={(e) => updateTier(idx, "name", e.target.value)}
                     className="w-full p-4 rounded-2xl bg-white font-bold text-base outline-none shadow-sm focus:ring-2 transition-all"
-                    style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+                    style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
                   />
                 </div>
 
@@ -151,7 +156,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                     value={tier.price === 0 ? "" : tier.price}
                     onChange={(e) => updateTier(idx, "price", e.target.value)}
                     className="w-full p-4 rounded-2xl bg-white font-bold text-base outline-none shadow-sm focus:ring-2 transition-all"
-                    style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+                    style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
                   />
                 </div>
 
@@ -169,7 +174,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                         updateTier(idx, "capacity", e.target.value)
                       }
                       className="w-full p-4 rounded-2xl bg-white font-bold text-base outline-none shadow-sm focus:ring-2 transition-all"
-                      style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+                      style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
                     />
                     <Users
                       size={14}
@@ -195,7 +200,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                         updateTier(idx, "salesEnd", e.target.value)
                       }
                       className="w-full p-4 rounded-2xl bg-white font-bold text-[10px] outline-none shadow-sm focus:ring-2 transition-all"
-                      style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+                      style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
                     />
                     <CalendarDays
                       size={14}
@@ -244,7 +249,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                   updateForm("externalTicketLink", e.target.value)
                 }
                 className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white focus:ring-2 transition-all shadow-sm"
-                style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+                style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
               />
               <LinkIcon
                 size={16}
@@ -258,7 +263,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
       {/* 4. Community Management */}
       <div className="space-y-4 pt-8 border-t border-gray-100">
         <div className="flex items-center gap-2 mb-2">
-          <MessageCircle size={16} style={{ color: KIVO_BLUE }} />
+          <MessageCircle size={16} style={{ color: SKAUTE_BLUE }} />
           <h3 className="text-[10px] font-black uppercase text-gray-400">
             Community Management
           </h3>
@@ -273,7 +278,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
               value={formData.communityLink || ""}
               onChange={(e) => updateForm("communityLink", e.target.value)}
               className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-base border border-transparent focus:bg-white focus:ring-2 transition-all shadow-sm"
-              style={{ "--tw-ring-color": `${KIVO_YELLOW}40` } as any}
+              style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
             />
           </div>
         </div>

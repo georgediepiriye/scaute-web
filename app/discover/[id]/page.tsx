@@ -34,8 +34,8 @@ import Footer from "@/components/layout/Footer";
 import EventMap from "@/components/map/EventMap";
 import toast, { Toaster } from "react-hot-toast";
 
-const KIVO_YELLOW = "#FFD700";
-const KIVO_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
 
 export default function EventDetailsPage() {
   const params = useParams();
@@ -66,7 +66,7 @@ export default function EventDetailsPage() {
           fetchSimilarEvents(data.category, data._id);
         }
       } catch (error) {
-        console.error("Kivo Detail Fetch Error:", error);
+        console.error("skaute Detail Fetch Error:", error);
       } finally {
         setLoading(false);
       }
@@ -261,11 +261,11 @@ export default function EventDetailsPage() {
                 <ExternalLink size={32} />
               </div>
               <h3 className="text-2xl font-black tracking-tight mb-2 uppercase italic">
-                Leaving Kivo
+                Leaving skaute
               </h3>
               <p className="text-gray-500 text-sm font-medium mb-8 leading-relaxed">
                 You are being redirected to an external site to complete your
-                booking. Kivo does not manage tickets for this specific event.
+                booking. skaute does not manage tickets for this specific event.
               </p>
               <div className="flex flex-col gap-3">
                 <button
@@ -278,7 +278,7 @@ export default function EventDetailsPage() {
                   onClick={() => setShowExternalModal(false)}
                   className="w-full py-5 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all"
                 >
-                  Stay on Kivo
+                  Stay on skaute
                 </button>
               </div>
             </motion.div>
@@ -309,7 +309,7 @@ export default function EventDetailsPage() {
               <div className="relative aspect-[16/9] w-full rounded-[40px] overflow-hidden shadow-2xl border border-gray-100">
                 <Image
                   src={
-                    event.image || "https://picsum.photos/seed/kivo/1200/800"
+                    event.image || "https://picsum.photos/seed/skaute/1200/800"
                   }
                   alt={event.title}
                   fill
@@ -367,7 +367,7 @@ export default function EventDetailsPage() {
                         Organizer
                       </p>
                       <p className="text-lg font-black text-gray-900 leading-none">
-                        {event.organizer?.name || "Kivo Host"}
+                        {event.organizer?.name || "skaute Host"}
                       </p>
                     </div>
                   </div>
@@ -381,7 +381,7 @@ export default function EventDetailsPage() {
                       >
                         <MessageSquare
                           size={16}
-                          style={{ color: KIVO_YELLOW }}
+                          style={{ color: SKAUTE_YELLOW }}
                         />
                         <span className="text-[10px] font-black uppercase tracking-widest">
                           Join Community
@@ -495,7 +495,7 @@ export default function EventDetailsPage() {
                               {tierSoldOut ? (
                                 <Lock size={10} className="text-gray-400" />
                               ) : (
-                                <Zap size={10} fill={KIVO_BLUE} />
+                                <Zap size={10} fill={SKAUTE_BLUE} />
                               )}{" "}
                               {tier.name}
                             </p>
@@ -580,7 +580,7 @@ export default function EventDetailsPage() {
                 <div className="space-y-1">
                   <div
                     className="flex items-center gap-2"
-                    style={{ color: KIVO_BLUE }}
+                    style={{ color: SKAUTE_BLUE }}
                   >
                     <Sparkles size={18} />
                     <span className="text-[10px] font-black uppercase tracking-widest">
@@ -625,7 +625,7 @@ export default function EventDetailsPage() {
                         <div className="absolute top-4 left-4">
                           <span
                             className="px-4 py-2 rounded-xl text-[9px] font-black uppercase text-gray-900 shadow-sm"
-                            style={{ backgroundColor: KIVO_YELLOW }}
+                            style={{ backgroundColor: SKAUTE_YELLOW }}
                           >
                             {similar.category}
                           </span>
@@ -634,7 +634,7 @@ export default function EventDetailsPage() {
                       <div className="p-8 space-y-4">
                         <div
                           className="flex items-center gap-2"
-                          style={{ color: KIVO_BLUE }}
+                          style={{ color: SKAUTE_BLUE }}
                         >
                           <Calendar size={14} />
                           <span className="text-[10px] font-black uppercase">
@@ -657,7 +657,7 @@ export default function EventDetailsPage() {
                           </div>
                           <span
                             className="text-[10px] font-black uppercase tracking-wider group-hover:underline"
-                            style={{ color: KIVO_YELLOW }}
+                            style={{ color: SKAUTE_YELLOW }}
                           >
                             View Details
                           </span>

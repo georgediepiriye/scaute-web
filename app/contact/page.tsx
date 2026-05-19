@@ -15,8 +15,8 @@ import Navbar from "@/components/layout/NavBar";
 import Footer from "@/components/layout/Footer";
 
 // BRAND COLOR CONSTANTS
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 export default function ContactPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -38,7 +38,10 @@ export default function ContactPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]"
-              style={{ backgroundColor: `${KIVO_BLUE}15`, color: KIVO_BLUE }}
+              style={{
+                backgroundColor: `${SKAUTE_BLUE}15`,
+                color: SKAUTE_BLUE,
+              }}
             >
               <Cpu size={12} className="animate-pulse" /> Support Hub
             </motion.div>
@@ -50,8 +53,8 @@ export default function ContactPage() {
             >
               <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8">
                 Got questions? <br />
-                <span style={{ color: KIVO_BLUE }} className="italic">
-                  Ask Kivo.
+                <span style={{ color: SKAUTE_BLUE }} className="italic">
+                  Ask Skaute.
                 </span>
               </h1>
               <p className="text-gray-500 text-lg leading-relaxed max-w-sm">
@@ -70,7 +73,7 @@ export default function ContactPage() {
               <ContactInfoCard
                 icon={<Mail size={20} />}
                 label="Email"
-                value="hello@kivo.social"
+                value="hello@skaute.social"
               />
               <ContactInfoCard
                 icon={<Phone size={20} />}
@@ -139,7 +142,7 @@ export default function ContactPage() {
                     </label>
                     <select className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-[#0052FF] outline-none transition-all font-medium text-sm appearance-none cursor-pointer">
                       <option>General Support</option>
-                      <option>Partner with Kivo</option>
+                      <option>Partner with Skaute</option>
                       <option>Event Hosting Inquiry</option>
                       <option>Report a Bug</option>
                     </select>
@@ -160,7 +163,7 @@ export default function ContactPage() {
                   <button
                     type="submit"
                     className="w-full py-5 text-white font-black rounded-2xl transition-all active:scale-[0.99] flex items-center justify-center gap-3 shadow-xl hover:shadow-blue-500/20"
-                    style={{ backgroundColor: KIVO_BLUE }}
+                    style={{ backgroundColor: SKAUTE_BLUE }}
                   >
                     Send Message <Send size={18} />
                   </button>
@@ -174,7 +177,7 @@ export default function ContactPage() {
                 >
                   <div
                     className="w-24 h-24 text-white rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-blue-500/30"
-                    style={{ backgroundColor: KIVO_BLUE }}
+                    style={{ backgroundColor: SKAUTE_BLUE }}
                   >
                     <CheckCircle2 size={40} />
                   </div>
@@ -182,13 +185,13 @@ export default function ContactPage() {
                     Message Received!
                   </h2>
                   <p className="text-gray-500 max-w-xs mx-auto">
-                    Kivo Scout is processing your request. Check your inbox
+                    skaute Scout is processing your request. Check your inbox
                     soon.
                   </p>
                   <button
                     onClick={() => setIsSubmitted(false)}
                     className="text-sm font-black uppercase tracking-widest hover:underline"
-                    style={{ color: KIVO_BLUE }}
+                    style={{ color: SKAUTE_BLUE }}
                   >
                     Send another
                   </button>
@@ -199,7 +202,7 @@ export default function ContactPage() {
             {/* Branded Decoration */}
             <div
               className="absolute top-[-10%] right-[-10%] w-64 h-64 rounded-full blur-3xl opacity-10"
-              style={{ backgroundColor: KIVO_BLUE }}
+              style={{ backgroundColor: SKAUTE_BLUE }}
             />
           </motion.div>
         </div>
@@ -215,10 +218,10 @@ function ContactInfoCard({ icon, label, value, isLink }: any) {
     <div className="flex items-center gap-5 p-4 rounded-3xl hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-gray-100 group">
       <div
         className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:text-white transition-all"
-        style={{ color: KIVO_BLUE }}
+        style={{ color: SKAUTE_BLUE }}
         // Handling group hover styles via inline CSS for brand consistency
         onMouseEnter={(e) =>
-          (e.currentTarget.style.backgroundColor = KIVO_BLUE)
+          (e.currentTarget.style.backgroundColor = SKAUTE_BLUE)
         }
         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
       >
@@ -231,7 +234,7 @@ function ContactInfoCard({ icon, label, value, isLink }: any) {
         <p
           className="font-bold"
           style={{
-            color: isLink ? KIVO_BLUE : "inherit",
+            color: isLink ? SKAUTE_BLUE : "inherit",
             cursor: isLink ? "pointer" : "default",
           }}
         >

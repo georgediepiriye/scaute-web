@@ -9,7 +9,9 @@ API.interceptors.request.use(
   (config) => {
     // Ensure the string matches EXACTLY what you set inside your login screen logic
     const token =
-      typeof window !== "undefined" ? localStorage.getItem("kivo_token") : null;
+      typeof window !== "undefined"
+        ? localStorage.getItem("skaute_token")
+        : null;
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

@@ -15,8 +15,8 @@ import VibeCheckSection from "@/components/discover/VibeCheckSection";
 import NightMovesSection from "@/components/discover/NightMovesSection";
 import CreateEventCTA from "@/components/discover/CreateEventCTA";
 
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 const DEEP_BLACK = "#000000";
 const USER_LOCATION = { lat: 4.819, lng: 7.038 };
 
@@ -205,7 +205,7 @@ export default function DiscoverPage() {
           isOnline: e.eventFormat === "online" || e.eventFormat === "hybrid",
           lat: e.location?.coordinates?.[1] || null,
           lng: e.location?.coordinates?.[0] || null,
-          organizerName: e.organizer?.name || "Kivo Host",
+          organizerName: e.organizer?.name || "skaute Host",
           views: e.views || 0,
           likes: e.likes || 0,
         }));
@@ -213,7 +213,7 @@ export default function DiscoverPage() {
         setTotalPages(result.pagination.pages);
       }
     } catch (error) {
-      console.error("Kivo Discover Error:", error);
+      console.error("skaute Discover Error:", error);
     } finally {
       setLoading(false);
     }
@@ -305,12 +305,12 @@ export default function DiscoverPage() {
               <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-gray-900 leading-[0.85]">
                 Find your next <br />{" "}
                 <span className="relative inline-block">
-                  <span style={{ color: KIVO_BLUE }}>Move.</span>
+                  <span style={{ color: SKAUTE_BLUE }}>Move.</span>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: "100%" }}
                     className="absolute -bottom-2 left-0 h-2 rounded-full"
-                    style={{ backgroundColor: KIVO_YELLOW }}
+                    style={{ backgroundColor: SKAUTE_YELLOW }}
                   />
                 </span>
               </h1>
@@ -336,7 +336,8 @@ export default function DiscoverPage() {
                 onClick={() => setActiveCat(k)}
                 className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${activeCat === k ? "text-white" : "text-gray-400 border-gray-100"}`}
                 style={{
-                  backgroundColor: activeCat === k ? KIVO_BLUE : "transparent",
+                  backgroundColor:
+                    activeCat === k ? SKAUTE_BLUE : "transparent",
                 }}
               >
                 {v.label}
@@ -431,7 +432,7 @@ export default function DiscoverPage() {
               <button
                 onClick={clearFilters}
                 className="ml-auto px-4 py-1.5 text-[9px] font-black uppercase rounded-full shrink-0"
-                style={{ backgroundColor: KIVO_YELLOW, color: DEEP_BLACK }}
+                style={{ backgroundColor: SKAUTE_YELLOW, color: DEEP_BLACK }}
               >
                 Reset
               </button>

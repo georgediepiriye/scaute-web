@@ -75,7 +75,7 @@ export default function MapPage() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [showGuide, setShowGuide] = useState(() => {
     if (typeof window !== "undefined")
-      return !localStorage.getItem("kivo_map_guided");
+      return !localStorage.getItem("skaute_map_guided");
     return false;
   });
 
@@ -125,7 +125,7 @@ export default function MapPage() {
   const handleSignOut = async () => {
     try {
       setIsSigningOut(true);
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/logout`, {
         method: "POST",
         headers: {
@@ -136,10 +136,10 @@ export default function MapPage() {
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
-      localStorage.removeItem("kivo_token");
+      localStorage.removeItem("skaute_token");
       localStorage.removeItem("user");
       document.cookie =
-        "kivo_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax;";
+        "skaute_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax;";
       setMenuOpen(false);
       logout();
       window.location.href = "/auth/signin";
@@ -161,7 +161,7 @@ export default function MapPage() {
         lat: e.location?.coordinates[1],
         lng: e.location?.coordinates[0],
         isOnline: e.medium === "online" || e.isOnline === true,
-        organizerName: e.organizer?.name || "Kivo Host",
+        organizerName: e.organizer?.name || "skaute Host",
         organizerImage:
           e.organizer?.image ||
           `https://api.dicebear.com/7.x/avataaars/svg?seed=${e._id}`,
@@ -291,7 +291,7 @@ export default function MapPage() {
         {showGuide && (
           <MapGuide
             onClose={() => {
-              localStorage.setItem("kivo_map_guided", "true");
+              localStorage.setItem("skaute_map_guided", "true");
               setShowGuide(false);
             }}
           />
@@ -321,7 +321,7 @@ export default function MapPage() {
                   onClick={() => setMenuOpen(false)}
                   className="font-black italic text-xl tracking-tighter text-blue-600 uppercase cursor-pointer hover:opacity-80 transition-opacity"
                 >
-                  KIVO
+                  skaute
                 </Link>
 
                 <button
@@ -348,7 +348,7 @@ export default function MapPage() {
                     </div>
                     <div>
                       <p className="font-black text-sm truncate">
-                        {profile?.name || "Kivo User"}
+                        {profile?.name || "skaute User"}
                       </p>
                       <button
                         onClick={() => {
@@ -425,7 +425,7 @@ export default function MapPage() {
             className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center"
           >
             <div className="font-black text-3xl text-gray-900 mb-4 tracking-tighter italic">
-              Kivo
+              skaute
             </div>
             <Loader2 className="animate-spin text-gray-200" size={32} />
           </motion.div>

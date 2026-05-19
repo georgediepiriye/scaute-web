@@ -5,8 +5,8 @@ import mapboxgl, { Map as MapboxMap, Marker } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 // BRAND COLOR CONSTANTS
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN as string;
 
@@ -34,7 +34,7 @@ const CreateEventMap = forwardRef<MapRef, CreateEventMapProps>(
       },
     }));
 
-    // Function to create or update the custom Kivo marker
+    // Function to create or update the custom skaute marker
     const updateMarker = (
       map: MapboxMap,
       coords: { lat: number; lng: number },
@@ -45,9 +45,9 @@ const CreateEventMap = forwardRef<MapRef, CreateEventMapProps>(
         const el = document.createElement("div");
         el.style.width = "28px";
         el.style.height = "28px";
-        el.style.backgroundColor = KIVO_BLUE; // Updated to Kivo Blue
+        el.style.backgroundColor = SKAUTE_BLUE; // Updated to skaute Blue
         el.style.borderRadius = "50%";
-        el.style.border = `4px solid ${KIVO_YELLOW}`; // Kivo Yellow accent border
+        el.style.border = `4px solid ${SKAUTE_YELLOW}`;
         el.style.boxShadow = "0 8px 20px rgba(0,82,255,0.4)"; // Themed shadow
         el.style.cursor = "pointer";
 
@@ -67,7 +67,7 @@ const CreateEventMap = forwardRef<MapRef, CreateEventMapProps>(
 
       const map = new mapboxgl.Map({
         container: mapContainer.current,
-        style: "mapbox://styles/mapbox/dark-v11", // Using dark mode for a sleeker "Kivo" tech look
+        style: "mapbox://styles/mapbox/dark-v11", // Using dark mode for a sleeker "Skaute" tech look
         center: initialCenter,
         zoom: selectedCoords ? 15 : 12,
       });

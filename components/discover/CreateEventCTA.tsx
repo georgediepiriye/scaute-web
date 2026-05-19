@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 // Brand Constants
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 export default function CreateEventCTA() {
   const router = useRouter();
@@ -20,10 +20,10 @@ export default function CreateEventCTA() {
         viewport={{ once: true }}
         className="relative overflow-hidden bg-white border border-gray-100 rounded-[40px] md:rounded-[60px] p-8 md:p-12 lg:p-16 shadow-sm"
       >
-        {/* Decorative Brand Glow - Using Kivo Blue */}
+        {/* Decorative Brand Glow - Using skaute Blue */}
         <div
           className="absolute -top-24 -right-24 w-80 h-80 blur-[100px] rounded-full pointer-events-none opacity-10"
-          style={{ backgroundColor: KIVO_BLUE }}
+          style={{ backgroundColor: SKAUTE_BLUE }}
         />
 
         <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
@@ -31,7 +31,10 @@ export default function CreateEventCTA() {
             {/* Tag using Brand Blue */}
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest mb-8"
-              style={{ backgroundColor: `${KIVO_BLUE}10`, color: KIVO_BLUE }}
+              style={{
+                backgroundColor: `${SKAUTE_BLUE}10`,
+                color: SKAUTE_BLUE,
+              }}
             >
               <Plus size={12} />
               <span>Host an Experience</span>
@@ -39,7 +42,7 @@ export default function CreateEventCTA() {
 
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-[0.9] tracking-tighter mb-6">
               Can’t find the <br />
-              <span style={{ color: KIVO_BLUE }}>perfect vibe?</span>
+              <span style={{ color: SKAUTE_BLUE }}>perfect vibe?</span>
             </h2>
 
             <p className="text-gray-500 font-bold text-lg md:text-xl leading-tight">
@@ -58,7 +61,7 @@ export default function CreateEventCTA() {
             {/* Hover Background Slide Effect */}
             <div
               className="absolute inset-0 translate-y-full group-hover:translate-y-0 transition-transform duration-500"
-              style={{ backgroundColor: KIVO_BLUE }}
+              style={{ backgroundColor: SKAUTE_BLUE }}
             />
 
             <span className="relative z-10 text-xl font-black tracking-tight">
@@ -67,7 +70,7 @@ export default function CreateEventCTA() {
 
             <div
               className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 group-hover:rotate-[-45deg]"
-              style={{ backgroundColor: KIVO_YELLOW, color: "#000" }}
+              style={{ backgroundColor: SKAUTE_YELLOW, color: "#000" }}
             >
               <ArrowRight size={22} />
             </div>

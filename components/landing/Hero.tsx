@@ -12,7 +12,7 @@ import {
 import { Navigation } from "lucide-react";
 import Link from "next/link";
 
-const KIVO_BLUE = "#0052FF";
+const SKAUTE_BLUE = "#0052FF";
 
 export default function Hero() {
   const containerRef = useRef(null);
@@ -103,7 +103,7 @@ export default function Hero() {
           className="group flex items-center gap-2 bg-white/90 backdrop-blur-xl p-1 pr-4 md:pr-6 rounded-full shadow-sm border border-slate-200/50 mb-8 md:mb-12"
         >
           <div
-            style={{ backgroundColor: KIVO_BLUE }}
+            style={{ backgroundColor: SKAUTE_BLUE }}
             className="px-3 md:px-5 py-1.5 md:py-2.5 rounded-full flex items-center gap-2"
           >
             <span className="relative flex h-2 w-2">
@@ -141,7 +141,7 @@ export default function Hero() {
               />
             </span>{" "}
             <br />
-            <span style={{ color: KIVO_BLUE }} className="italic font-serif">
+            <span style={{ color: SKAUTE_BLUE }} className="italic font-serif">
               right now?
             </span>
           </motion.h1>
@@ -164,7 +164,7 @@ export default function Hero() {
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              style={{ backgroundColor: KIVO_BLUE }}
+              style={{ backgroundColor: SKAUTE_BLUE }}
               className="relative overflow-hidden rounded-[30px] md:rounded-[40px] p-1 shadow-xl md:shadow-2xl shadow-blue-500/20"
             >
               <div className="absolute inset-0 bg-slate-950 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />

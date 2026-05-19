@@ -18,7 +18,7 @@ export type CoOrganizerPermission =
   | "send_broadcasts"
   | "scan_tickets";
 
-// AVAILABLE PERMISSIONS ON KIVO PLATFORM
+// AVAILABLE PERMISSIONS ON Skaute PLATFORM
 const AVAILABLE_PERMISSIONS: { id: CoOrganizerPermission; label: string }[] = [
   { id: "view_revenue", label: "View Revenue" },
   { id: "issue_refunds", label: "Issue Refunds" },
@@ -45,7 +45,7 @@ export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
     setIsUpdating(loadingKey);
 
     try {
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
       const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${event._id}/toggle-sold-out`;
 
       const res = await fetch(endpoint, {
@@ -96,7 +96,7 @@ export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
     }
 
     try {
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
       const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${event._id}/update-coorganizer-permissions`;
 
       const res = await fetch(endpoint, {

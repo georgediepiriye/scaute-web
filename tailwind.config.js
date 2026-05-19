@@ -39,8 +39,8 @@ module.exports = {
     extend: {
       // 💡 Added your font family mapping here
       fontFamily: {
-        sans: ["var(--font-inter)", "sans-serif"], // Maps to your Inter body text
-        heading: ["var(--font-jakarta)", "sans-serif"], // Maps to your Plus Jakarta Sans titles
+        sans: ["var(--font-cabinet)", "sans-serif"],
+        heading: ["var(--font-jakarta)", "sans-serif"],
       },
       colors: {
         primary: "#715800",

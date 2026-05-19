@@ -26,6 +26,10 @@
   }
 }
 
+@theme {
+  --font-sans: var(--font-cabinet), sans-serif;
+}
+
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -35,8 +39,8 @@
   }
 }
 
-/* Kivo Custom Mapbox Search Styling */
-.kivo-search-container input {
+/* skaute Custom Mapbox Search Styling */
+.skaute-search-container input {
   padding-left: 3.5rem !important;
   background-color: #f9fafb !important;
   border-radius: 24px !important;
@@ -45,9 +49,9 @@
   border: 2px solid transparent !important;
 }
 
-.kivo-search-container input:focus {
+.skaute-search-container input:focus {
   background-color: white !important;
-  border-color: #0052ff !important; /* Updated to your Kivo Blue */
+  border-color: #0052ff !important; /* Updated to your skaute Blue */
   outline: none !important;
 }
 

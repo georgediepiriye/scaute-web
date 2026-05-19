@@ -60,7 +60,7 @@ export default function ManageEventDashboard() {
    */
   const fetchDashboardData = useCallback(async () => {
     try {
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/manage`,
         {
@@ -78,7 +78,7 @@ export default function ManageEventDashboard() {
         router.replace("/auth/signin");
       }
     } catch (err) {
-      toast.error("Unable to connect to Kivo servers.");
+      toast.error("Unable to connect to skaute servers.");
     } finally {
       setLoading(false);
     }
@@ -99,7 +99,7 @@ export default function ManageEventDashboard() {
     if (!coOrgEmail) return toast.error("Please enter an email");
     setAddingCoOrg(true);
     try {
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/co-organizers`,
         {
@@ -139,7 +139,7 @@ export default function ManageEventDashboard() {
     if (!isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/co-organizers/${partnerId}`,
         {
@@ -174,7 +174,7 @@ export default function ManageEventDashboard() {
     const toastId = toast.loading("Processing refund...");
 
     try {
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/refund/${ticketCode}`,
         {

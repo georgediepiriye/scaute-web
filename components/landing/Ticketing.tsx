@@ -14,7 +14,7 @@ export default function Ticketing() {
           </h2>
 
           <p className="text-xl text-slate-400 font-bold max-w-md">
-            Your Kivo Pass is a dynamic digital key. No more digging through
+            Your Skaute Pass is a dynamic digital key. No more digging through
             emails or lost paper—just a smooth scan at the door.
           </p>
 
@@ -94,7 +94,7 @@ export default function Ticketing() {
               </motion.p>
 
               <h3 className="font-black text-3xl uppercase tracking-tighter">
-                Kivo Carnival
+                Skaute Carnival
               </h3>
 
               <motion.div

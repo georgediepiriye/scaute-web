@@ -15,8 +15,8 @@ import Navbar from "@/components/layout/NavBar";
 import Footer from "@/components/layout/Footer";
 
 // BRAND COLOR CONSTANTS
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 // 1. ISOLATED INNER CONTENT COMPONENT
 function AboutPageContent() {
@@ -31,22 +31,22 @@ function AboutPageContent() {
             <div>
               <div
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-                style={{ backgroundColor: `${KIVO_BLUE}10` }}
+                style={{ backgroundColor: `${SKAUTE_BLUE}10` }}
               >
                 <span
                   className="text-[10px] font-black uppercase tracking-[0.2em]"
-                  style={{ color: KIVO_BLUE }}
+                  style={{ color: SKAUTE_BLUE }}
                 >
                   Our Origin Story
                 </span>
               </div>
               <h1 className="text-5xl md:text-6xl font-black uppercase tracking-tighter italic mb-8 leading-[0.9]">
                 Born in the <br />
-                <span style={{ color: KIVO_BLUE }}>Heart of PH City.</span>
+                <span style={{ color: SKAUTE_BLUE }}>Heart of PH City.</span>
               </h1>
               <div className="space-y-4 text-slate-600 font-medium leading-relaxed">
                 <p>
-                  Kivo was founded in Port Harcourt to solve a simple problem:
+                  Skaute was founded in Port Harcourt to solve a simple problem:
                   making local events easy to find and secure to attend.
                 </p>
                 <p>
@@ -59,7 +59,7 @@ function AboutPageContent() {
             <div className="relative h-[500px] w-full rounded-[3rem] overflow-hidden shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500">
               <Image
                 src="https://res.cloudinary.com/dzhfiblg7/image/upload/f_auto,q_auto,w_800/v1778054500/kivo_events/inhouse/tower.png"
-                alt="Kivo Operations in Port Harcourt"
+                alt="Skaute Operations in Port Harcourt"
                 fill
                 priority
                 sizes="(max-width: 768px) 100vw, 50vw"
@@ -75,7 +75,7 @@ function AboutPageContent() {
             <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col items-center text-center">
               <div
                 className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-                style={{ backgroundColor: KIVO_BLUE }}
+                style={{ backgroundColor: SKAUTE_BLUE }}
               >
                 <Target size={32} className="text-white" />
               </div>
@@ -92,7 +92,7 @@ function AboutPageContent() {
             <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col items-center text-center">
               <div
                 className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-                style={{ backgroundColor: KIVO_YELLOW }}
+                style={{ backgroundColor: SKAUTE_YELLOW }}
               >
                 <Eye size={32} className="text-black" />
               </div>
@@ -112,7 +112,7 @@ function AboutPageContent() {
         <section className="max-w-6xl mx-auto px-4 md:px-8 mb-32">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black uppercase italic text-slate-900">
-              The Kivo Advantage
+              The Skaute Advantage
             </h2>
             <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-2">
               Built for security and speed
@@ -149,7 +149,7 @@ function AboutPageContent() {
                 <feature.icon
                   size={32}
                   className="mb-6 group-hover:scale-110 transition-transform"
-                  style={{ color: KIVO_BLUE }}
+                  style={{ color: SKAUTE_BLUE }}
                 />
                 <h4 className="font-black uppercase text-sm mb-2">
                   {feature.title}
@@ -170,7 +170,7 @@ function AboutPageContent() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               className="w-full sm:w-auto px-10 py-5 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-105 transition-all"
-              style={{ backgroundColor: KIVO_BLUE }}
+              style={{ backgroundColor: SKAUTE_BLUE }}
             >
               Get Started
             </button>
@@ -195,9 +195,9 @@ export default function AboutPage() {
           <div className="animate-pulse flex flex-col items-center">
             <span
               className="text-lg font-black uppercase tracking-widest italic"
-              style={{ color: KIVO_BLUE }}
+              style={{ color: SKAUTE_BLUE }}
             >
-              Kivo
+              skaute
             </span>
           </div>
         </div>

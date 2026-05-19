@@ -38,8 +38,8 @@ export const AuthGuardModal = ({ isOpen, onClose }: AuthGuardProps) => {
         </h3>
 
         <p className="text-gray-500 text-sm font-medium mb-10 leading-relaxed px-2">
-          Only verified Kivo members can broadcast moves. Sign in to share your
-          event with Port Harcourt.
+          Only verified skaute members can broadcast moves. Sign in to share
+          your event with Port Harcourt.
         </p>
 
         <div className="space-y-3">
@@ -47,7 +47,7 @@ export const AuthGuardModal = ({ isOpen, onClose }: AuthGuardProps) => {
             onClick={() => router.push("/auth/signin")}
             className="w-full py-5 bg-[#715800] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[#715800]/20 active:scale-95 transition-all flex items-center justify-center gap-2"
           >
-            Sign In to Kivo <ArrowRight size={14} />
+            Sign In to skaute <ArrowRight size={14} />
           </button>
 
           <button

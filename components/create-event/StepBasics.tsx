@@ -10,8 +10,8 @@ import {
 import axios from "axios";
 
 // BRAND COLOR CONSTANTS
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 export const StepBasics = ({ formData, updateForm, categories }: any) => {
   const [isChecking, setIsChecking] = useState(false);
@@ -91,7 +91,7 @@ export const StepBasics = ({ formData, updateForm, categories }: any) => {
           {/* 2. CUSTOM EVENT LINK */}
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase text-gray-400 flex items-center gap-2">
-              <LinkIcon size={12} style={{ color: KIVO_BLUE }} /> Custom Event
+              <LinkIcon size={12} style={{ color: SKAUTE_BLUE }} /> Custom Event
               Link
             </label>
 
@@ -106,7 +106,7 @@ export const StepBasics = ({ formData, updateForm, categories }: any) => {
             >
               {/* Swapped text-sm to text-base to keep scaling in structural alignment with the input */}
               <span className="pl-6 pr-1 text-gray-400 font-bold text-base select-none whitespace-nowrap">
-                kivo.com/e/
+                skaute.com/e/
               </span>
 
               <input
@@ -142,7 +142,7 @@ export const StepBasics = ({ formData, updateForm, categories }: any) => {
               )}
               <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight">
                 {formData.slug
-                  ? `Preview: kivo.com/e/${formData.slug}`
+                  ? `Preview: skaute.com/e/${formData.slug}`
                   : "The link people will use to join your move."}
               </p>
             </div>

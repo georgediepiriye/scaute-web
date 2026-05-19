@@ -14,7 +14,7 @@ import { useAuth } from "@/components/auth/AuthGuard";
 
 // External store helpers to sync localStorage safely with SSR
 const subscribe = () => () => {};
-const getSnapshot = () => localStorage.getItem("kivo_token");
+const getSnapshot = () => localStorage.getItem("skaute_token");
 const getServerSnapshot = () => "SERVER_RENDER";
 
 export default function SignUpPage() {
@@ -72,7 +72,7 @@ export default function SignUpPage() {
 
       // Safely parse and store token string into localStorage on successful signup
       if (data.token) {
-        localStorage.setItem("kivo_token", data.token);
+        localStorage.setItem("skaute_token", data.token);
       }
 
       const userData = data.user || data.data?.user;
@@ -84,7 +84,7 @@ export default function SignUpPage() {
     toast.promise(
       signupAction(),
       {
-        loading: "Creating your Kivo account...",
+        loading: "Creating your skaute account...",
         success: (data) => {
           setLoading(false);
 
@@ -94,7 +94,7 @@ export default function SignUpPage() {
 
           // 💡 Use soft navigation router to keep your context and interceptor state active
           router.push("/profile");
-          return `Welcome to Kivo, ${formData.firstName}!`;
+          return `Welcome to Skaute, ${formData.firstName}!`;
         },
         error: (err: any) => {
           setLoading(false);
@@ -142,7 +142,7 @@ export default function SignUpPage() {
           <div className="relative w-full aspect-square mb-10">
             <Image
               src="https://res.cloudinary.com/dzhfiblg7/image/upload/f_auto,q_auto,w_800/v1778054500/kivo_events/inhouse/park.png"
-              alt="Join Kivo"
+              alt="Join Skaute"
               fill
               className="drop-shadow-2xl rounded-[40px] object-cover border-4 border-white shadow-blue-600/10"
               priority
@@ -329,7 +329,7 @@ export default function SignUpPage() {
 
         <div className="hidden sm:block absolute bottom-8 text-center">
           <p className="text-[10px] text-gray-300 font-black uppercase tracking-tighter">
-            © 2026 Kivo Social. All rights reserved.
+            © 2026 Skaute Social. All rights reserved.
           </p>
         </div>
       </div>

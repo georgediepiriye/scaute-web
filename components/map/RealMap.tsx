@@ -18,8 +18,8 @@ import { Event } from "@/lib/events";
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN as string;
 
 // BRAND THEME CONSTANTS
-const KIVO_THEME = {
-  blue: "#2563eb", // Electric Blue
+const SKAUTE_THEME = {
+  blue: "#2563eb",
   amber: "#fbbf24", // Amber Gold
   live: "#22c55e", // Signal Green
   slate: "#1e293b", // Professional Slate
@@ -133,7 +133,7 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
           source: "events",
           filter: ["has", "point_count"],
           paint: {
-            "circle-color": KIVO_THEME.slate,
+            "circle-color": SKAUTE_THEME.slate,
             "circle-radius": [
               "step",
               ["get", "point_count"],
@@ -199,7 +199,7 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
               const el = document.createElement("div");
               el.innerHTML = getHotspotMarkerHTML(
                 spot.category,
-                spot.title || spot.name || "Kivo Hotspot",
+                spot.title || spot.name || "Skaute Hotspot",
               );
               el.onclick = (e) => {
                 e.stopPropagation();
@@ -275,7 +275,7 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
             ? "relative flex flex-col items-center animate-bounce duration-1000"
             : "relative flex flex-col items-center transition-transform hover:scale-125";
 
-          const dotColor = isLive ? KIVO_THEME.live : KIVO_THEME.amber;
+          const dotColor = isLive ? SKAUTE_THEME.live : SKAUTE_THEME.amber;
           const pulseColor = isLive
             ? "rgba(34, 197, 94, 0.6)"
             : "rgba(251, 191, 36, 0.4)";

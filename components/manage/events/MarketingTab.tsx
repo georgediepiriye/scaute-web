@@ -51,7 +51,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem("kivo_token"); // Retrieve JWT
+      const token = localStorage.getItem("skaute_token"); // Retrieve JWT
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/discounts`,
@@ -104,7 +104,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
     setIsDeleting(discountId);
 
     try {
-      const token = localStorage.getItem("kivo_token"); // Retrieve JWT
+      const token = localStorage.getItem("skaute_token"); // Retrieve JWT
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/discounts/${discountId}`,

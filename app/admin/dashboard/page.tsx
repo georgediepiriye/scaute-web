@@ -68,7 +68,7 @@ function AdminDashboardContent() {
         ...(eventSearch && { title: eventSearch }),
       });
 
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/events?${query}`,
@@ -111,7 +111,7 @@ function AdminDashboardContent() {
         ...(userSearch && { name: userSearch }),
       });
 
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/users?${query}`,
@@ -139,7 +139,7 @@ function AdminDashboardContent() {
   const fetchPulse = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/pulse`,
@@ -437,7 +437,7 @@ export default function AdminDashboard() {
       fallback={
         <div className="h-screen w-full flex flex-col items-center justify-center bg-[#FDFDFD]">
           <div className="font-black text-3xl text-gray-900 mb-4 tracking-tighter italic uppercase">
-            Kivo <span className="text-blue-600">Ops</span>
+            skaute <span className="text-blue-600">Ops</span>
           </div>
           <Loader2 className="animate-spin text-blue-600" size={24} />
         </div>

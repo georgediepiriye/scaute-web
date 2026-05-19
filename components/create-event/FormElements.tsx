@@ -2,8 +2,8 @@
 import { motion } from "framer-motion";
 
 // BRAND COLOR CONSTANTS
-const KIVO_BLUE = "#0052FF"; // Primary Action Color
-const KIVO_YELLOW = "#FFD700"; // Energy & Accent
+const SKAUTE_BLUE = "#0052FF"; // Primary Action Color
+const SKAUTE_YELLOW = "#FFD700"; // Energy & Accent
 
 export const StepHeader = ({
   step,
@@ -18,7 +18,7 @@ export const StepHeader = ({
     <div>
       <p
         className="text-[10px] font-black uppercase tracking-widest"
-        style={{ color: KIVO_BLUE }}
+        style={{ color: SKAUTE_BLUE }}
       >
         Step {step} of {totalSteps}
       </p>
@@ -32,7 +32,7 @@ export const StepHeader = ({
         animate={{ width: `${(step / totalSteps) * 100}%` }}
         transition={{ duration: 0.5, ease: "circOut" }}
         className="h-full"
-        style={{ backgroundColor: KIVO_BLUE }}
+        style={{ backgroundColor: SKAUTE_BLUE }}
       />
     </div>
   </div>
@@ -42,7 +42,7 @@ export const StepHeader = ({
 export const InputGroup = ({ label, children, icon: Icon }: any) => (
   <div className="space-y-2">
     <label className="text-[10px] font-black uppercase text-gray-400 flex items-center gap-1.5 tracking-wider">
-      {Icon && <Icon size={12} style={{ color: KIVO_BLUE }} />} {label}
+      {Icon && <Icon size={12} style={{ color: SKAUTE_BLUE }} />} {label}
     </label>
     <div className="relative group">
       {children}

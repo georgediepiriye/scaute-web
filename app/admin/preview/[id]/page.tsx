@@ -60,7 +60,7 @@ export default function ProfessionalReviewPage() {
     const fetchEventData = async () => {
       try {
         // Retrieve explicitly stored auth string token
-        const token = localStorage.getItem("kivo_token");
+        const token = localStorage.getItem("skaute_token");
 
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/events/${id}`,
@@ -98,7 +98,7 @@ export default function ProfessionalReviewPage() {
 
     try {
       // Retrieve explicitly stored auth string token
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/events/${id}/status`,

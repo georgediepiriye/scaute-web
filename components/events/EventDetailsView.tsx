@@ -18,7 +18,7 @@ import Link from "next/link";
 import CheckoutPanel from "./CheckoutPanel";
 import toast, { Toaster } from "react-hot-toast";
 
-const KIVO_BLUE = "#0052FF";
+const SKAUTE_BLUE = "#0052FF";
 
 interface EventViewProps {
   event: any;
@@ -47,7 +47,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
           console.warn("User not authenticated:", data.message);
         }
       } catch (e) {
-        toast.error("Could not connect to Kivo servers");
+        toast.error("Could not connect to skaute servers");
         console.error("Auth fetch failed:", e);
       }
     };
@@ -109,7 +109,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
   const handleShareMove = async () => {
     const shareData = {
       title: `Move: ${event.title}`,
-      text: `Securing my spot for ${event.title} on Kivo. Join the move!`,
+      text: `Securing my spot for ${event.title} on skaute. Join the move!`,
       url: eventLink,
     };
 
@@ -120,7 +120,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
         handleCopy();
       }
     } catch (err) {
-      console.error("Kivo Share Error:", err);
+      console.error("skaute Share Error:", err);
     }
   };
 
@@ -145,13 +145,13 @@ export default function EventDetailsView({ event }: EventViewProps) {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div
-              style={{ backgroundColor: KIVO_BLUE }}
+              style={{ backgroundColor: SKAUTE_BLUE }}
               className="w-9 h-9 rounded-xl flex items-center justify-center rotate-3 shadow-lg shadow-blue-200"
             >
               <span className="text-white font-black text-sm italic">K</span>
             </div>
             <span className="font-black uppercase tracking-tighter text-gray-900 text-lg">
-              Kivo
+              skaute
             </span>
           </Link>
 
@@ -179,7 +179,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-blue-900 to-indigo-950">
             <span className="text-white/5 font-black text-[12vw] uppercase tracking-tighter italic">
-              Kivo
+              skaute
             </span>
           </div>
         )}
@@ -357,7 +357,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
                 ) : (
                   <button
                     onClick={() => setIsCheckoutOpen(true)}
-                    style={{ backgroundColor: KIVO_BLUE }}
+                    style={{ backgroundColor: SKAUTE_BLUE }}
                     className="hidden lg:block w-full mt-8 py-5 rounded-[24px] text-white font-black text-[11px] uppercase tracking-[0.3em] shadow-xl shadow-blue-200 hover:brightness-110 active:scale-[0.98] transition-all"
                   >
                     Confirm Spot
@@ -373,7 +373,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
 
               <div className="bg-white p-6 rounded-[32px] border border-gray-100 flex items-center gap-4 shadow-sm">
                 <div
-                  style={{ backgroundColor: KIVO_BLUE }}
+                  style={{ backgroundColor: SKAUTE_BLUE }}
                   className="h-10 w-10 rounded-xl flex items-center justify-center font-black text-white italic"
                 >
                   {event.organizerName?.charAt(0) || "K"}
@@ -383,7 +383,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
                     Curated by
                   </p>
                   <p className="font-bold text-gray-900 text-sm">
-                    {event.organizerName || "Kivo Host"}
+                    {event.organizerName || "skaute Host"}
                   </p>
                 </div>
               </div>
@@ -411,7 +411,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
         ) : (
           <button
             onClick={() => setIsCheckoutOpen(true)}
-            style={{ backgroundColor: KIVO_BLUE }}
+            style={{ backgroundColor: SKAUTE_BLUE }}
             className="px-10 py-4 rounded-2xl text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-blue-100 active:scale-95 transition-all"
           >
             Secure Pass

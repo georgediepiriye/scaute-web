@@ -9,7 +9,6 @@ import { HiMenu, HiX } from "react-icons/hi";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
 import {
-  Zap,
   Bell,
   ChevronRight,
   LogOut,
@@ -39,7 +38,7 @@ export default function Navbar() {
     setMobileMenuOpen(false);
 
     try {
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
 
       if (token) {
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/logout`, {
@@ -56,7 +55,7 @@ export default function Navbar() {
       if (logout) {
         logout();
       } else {
-        localStorage.removeItem("kivo_token");
+        localStorage.removeItem("skaute_token");
         localStorage.removeItem("user");
         router.push("/auth/signin");
       }
@@ -87,15 +86,26 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 w-full z-[500] bg-white/80 backdrop-blur-2xl border-b border-slate-100">
-      <div className="max-w-7xl mx-auto px-6 md:px-8 py-5 flex justify-between items-center relative z-[600]">
-        {/* LOGO */}
-        <Link href="/" className="flex items-center gap-2 cursor-pointer group">
-          <div className="relative flex items-center justify-center w-10 h-10 bg-blue-600 rounded-2xl rotate-3 group-hover:rotate-0 transition-transform duration-300">
-            <Zap size={22} className="text-amber-400 fill-amber-400" />
+    /* Changed background from bg-white/80 backdrop-blur-2xl to fully opaque bg-white */
+    <nav className="fixed top-0 w-full z-[500] bg-white border-b border-gray-100">
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-3 flex justify-between items-center relative z-[600]">
+        {/* LOGO & BRAND TEXT */}
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 cursor-pointer group"
+        >
+          <div className="relative w-16 h-16 group-hover:scale-[1.03] transition-transform duration-300 ease-out">
+            <Image
+              src="/images/skaute_main_logo.jpeg"
+              alt="Skaute Icon"
+              fill
+              className="object-contain"
+              sizes="64px"
+              priority
+            />
           </div>
-          <span className="text-2xl font-black text-slate-950 tracking-tighter">
-            Kivo
+          <span className="text-2xl font-black font-sans text-black tracking-tighter uppercase select-none transition-colors group-hover:text-gray-700">
+            Skaute
           </span>
         </Link>
 
@@ -105,7 +115,7 @@ export default function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-slate-500 font-black text-[11px] hover:text-blue-600 transition-all uppercase tracking-[0.2em]"
+              className="text-gray-500 font-black text-[11px] hover:text-blue-600 transition-all uppercase tracking-[0.2em]"
             >
               {link.label}
             </Link>
@@ -122,20 +132,20 @@ export default function Navbar() {
                   {user?.role === "admin" && (
                     <Link
                       href="/admin/dashboard"
-                      className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-950 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all"
+                      className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all"
                     >
-                      <ShieldCheck size={14} className="text-blue-400" />
+                      <ShieldCheck size={14} className="text-white" />
                       Admin
                     </Link>
                   )}
 
                   <Bell
                     size={20}
-                    className="text-slate-400 cursor-pointer hover:text-blue-600 hidden sm:block"
+                    className="text-gray-400 cursor-pointer hover:text-gray-900 hidden sm:block"
                   />
                   <Link
                     href="/profile"
-                    className="w-11 h-11 rounded-2xl overflow-hidden relative border-2 border-slate-100 hover:border-blue-600 transition-all bg-slate-50 flex items-center justify-center"
+                    className="w-10 h-10 rounded-xl overflow-hidden relative border border-gray-200 hover:border-blue-600 transition-all bg-gray-50 flex items-center justify-center"
                   >
                     {user?.image ? (
                       <Image
@@ -143,34 +153,34 @@ export default function Navbar() {
                         alt="Profile"
                         fill
                         className="object-cover"
-                        sizes="44px"
+                        sizes="40px"
                       />
                     ) : (
-                      <UserIcon size={22} className="text-slate-400" />
+                      <UserIcon size={20} className="text-gray-400" />
                     )}
                   </Link>
 
                   <button
                     onClick={handleSignOut}
-                    className="hidden md:flex w-11 h-11 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-100 hover:border-red-100"
+                    className="hidden md:flex w-10 h-10 items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all border border-gray-200 hover:border-red-200"
                     title="Sign Out"
                   >
-                    <LogOut size={18} />
+                    <LogOut size={16} />
                   </button>
                 </div>
               ) : (
                 <div className="hidden md:flex items-center gap-3">
                   <Link
                     href="/auth/signin"
-                    className="px-5 py-3 text-slate-950 font-black text-[11px] uppercase tracking-widest hover:text-blue-600 transition-colors"
+                    className="px-5 py-3 text-gray-600 font-black text-[11px] uppercase tracking-widest hover:text-gray-900 transition-colors"
                   >
                     Log In
                   </Link>
                   <Link
                     href="/auth/signup"
-                    className="px-8 py-3.5 bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-200 hover:bg-slate-950 hover:shadow-none transition-all active:scale-95"
+                    className="px-7 py-3 bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-600/10"
                   >
-                    Join Kivo
+                    Join Skaute
                   </Link>
                 </div>
               )}
@@ -179,14 +189,14 @@ export default function Navbar() {
 
           {/* MOBILE MENU TOGGLE BUTTON */}
           <button
-            className={`md:hidden w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-300 active:scale-90 shadow-sm border ${
+            className={`md:hidden w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-300 active:scale-90 shadow-sm border ${
               isMobileMenuOpen
-                ? "bg-slate-950 text-white border-slate-950 rotate-90"
-                : "bg-white text-slate-950 border-slate-200 hover:bg-slate-50"
+                ? "bg-black text-white border-black rotate-90"
+                : "bg-gray-50 text-gray-900 border-gray-200 hover:bg-gray-100"
             }`}
             onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <HiX size={24} /> : <HiMenu size={24} />}
+            {isMobileMenuOpen ? <HiX size={22} /> : <HiMenu size={22} />}
           </button>
         </div>
       </div>
@@ -199,19 +209,19 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 w-full h-[100dvh] bg-white/95 backdrop-blur-3xl z-[500] md:hidden flex flex-col"
+            className="fixed inset-0 w-full h-[100dvh] bg-white z-[500] md:hidden flex flex-col"
           >
             {/* Soft Ambient Background Highlights */}
-            <div className="absolute top-0 left-[-10%] w-[60%] h-[40%] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-0 right-[-10%] w-[50%] h-[35%] bg-amber-500/5 blur-[90px] rounded-full pointer-events-none" />
+            <div className="absolute top-0 left-[-10%] w-[60%] h-[40%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-0 right-[-10%] w-[50%] h-[35%] bg-gray-100 blur-[100px] rounded-full pointer-events-none" />
 
             {/* Main Scrolling Canvas Frame */}
             <div className="flex-1 flex flex-col justify-between pt-28 px-8 pb-8 overflow-y-auto relative z-10">
               <div>
                 {/* Profile Widget */}
                 {!loading && user && (
-                  <div className="pb-6 flex items-center gap-4 border-b border-slate-100 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-slate-50 relative overflow-hidden flex-shrink-0 border border-slate-200">
+                  <div className="pb-6 flex items-center gap-4 border-b border-gray-100 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-gray-50 relative overflow-hidden flex-shrink-0 border border-gray-200">
                       {user?.image ? (
                         <Image
                           src={user.image}
@@ -221,13 +231,13 @@ export default function Navbar() {
                         />
                       ) : (
                         <UserIcon
-                          className="m-auto mt-3 text-slate-400"
+                          className="m-auto mt-3 text-gray-400"
                           size={18}
                         />
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className="font-black text-lg tracking-tight text-slate-950 leading-tight">
+                      <p className="font-black text-lg tracking-tight text-gray-900 leading-tight">
                         {user.name}
                       </p>
                       <Link
@@ -248,21 +258,21 @@ export default function Navbar() {
                   animate="open"
                   className="flex flex-col gap-5 py-2"
                 >
-                  {/* 💡 FEATURE: Admin Link Inserted dynamically at the top if conditions match */}
+                  {/* Admin Link Inserted dynamically if condition matches */}
                   {!loading && user?.role === "admin" && (
                     <motion.div variants={itemVariants}>
                       <Link
                         href="/admin/dashboard"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="text-blue-600 font-black text-3xl tracking-tighter uppercase flex items-center justify-between group transition-colors hover:text-slate-950 border-b border-dashed border-slate-100 pb-2 mb-2"
+                        className="text-blue-600 font-black text-3xl tracking-tighter uppercase flex items-center justify-between group transition-colors hover:text-blue-700 border-b border-gray-100 pb-2 mb-2"
                       >
                         <span className="flex items-center gap-3 transition-transform duration-200 group-hover:translate-x-1">
-                          <ShieldCheck size={28} className="text-blue-500" />
+                          <ShieldCheck size={28} className="text-blue-600" />
                           Admin Console
                         </span>
                         <ChevronRight
                           size={24}
-                          className="text-blue-300 group-hover:text-slate-950 transition-colors"
+                          className="text-gray-400 group-hover:text-blue-600 transition-colors"
                         />
                       </Link>
                     </motion.div>
@@ -273,14 +283,14 @@ export default function Navbar() {
                       <Link
                         href={link.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="text-slate-900 font-black text-3xl tracking-tighter uppercase flex items-center justify-between group transition-colors hover:text-blue-600"
+                        className="text-gray-800 font-black text-3xl tracking-tighter uppercase flex items-center justify-between group transition-colors hover:text-blue-600"
                       >
                         <span className="transition-transform duration-200 group-hover:translate-x-1">
                           {link.label}
                         </span>
                         <ChevronRight
                           size={20}
-                          className="text-slate-300 group-hover:text-blue-600 transition-colors"
+                          className="text-gray-300 group-hover:text-blue-600 transition-colors"
                         />
                       </Link>
                     </motion.div>
@@ -288,12 +298,13 @@ export default function Navbar() {
                 </motion.div>
               </div>
 
-              {/* Light Fixed Footer Block */}
-              <div className="mt-8 pt-6 border-t border-slate-100 bg-white/60 backdrop-blur-md sticky bottom-0">
+              {/* Fixed Footer Block */}
+              {/* Changed container context background from transparent blur to flat bg-white */}
+              <div className="mt-8 pt-6 border-t border-gray-100 bg-white sticky bottom-0">
                 {user ? (
                   <button
                     onClick={handleSignOut}
-                    className="w-full py-4 bg-slate-50 border border-red-100 text-red-600 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] hover:bg-red-50"
+                    className="w-full py-4 bg-gray-50 border border-red-100 text-red-500 font-black text-xs uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] hover:bg-red-50"
                   >
                     <LogOut size={15} />
                     Sign Out Account
@@ -303,16 +314,16 @@ export default function Navbar() {
                     <Link
                       href="/auth/signin"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="py-4 text-center text-slate-950 border border-slate-200 font-black text-xs uppercase tracking-widest bg-slate-50 rounded-2xl active:scale-[0.98] transition-all hover:bg-slate-100"
+                      className="py-4 text-center text-gray-700 border border-gray-200 font-black text-xs uppercase tracking-widest bg-gray-50 rounded-xl active:scale-[0.98] transition-all hover:bg-gray-100 hover:text-gray-900"
                     >
                       Log In
                     </Link>
                     <Link
                       href="/auth/signup"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="py-4 text-center bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-md shadow-blue-100 active:scale-[0.98] transition-all hover:bg-slate-950 hover:shadow-none"
+                      className="py-4 text-center bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl active:scale-[0.98] transition-all hover:bg-blue-700 shadow-lg shadow-blue-600/10"
                     >
-                      Join Kivo
+                      Join Skaute
                     </Link>
                   </div>
                 )}

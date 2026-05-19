@@ -80,7 +80,7 @@ export default function TicketScannerPage() {
         const lastTicket = await db.tickets.orderBy("updatedAt").last();
         const since = lastTicket?.updatedAt ? lastTicket.updatedAt : 0;
 
-        const token = localStorage.getItem("kivo_token");
+        const token = localStorage.getItem("skaute_token");
 
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/event/${targetEventId}/sync?since=${since}`,
@@ -142,7 +142,7 @@ export default function TicketScannerPage() {
       processingRef.current = true;
       setIsProcessing(true);
 
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
 
       try {
         // 1. Primary Path: Validate against Live Database
@@ -349,7 +349,7 @@ export default function TicketScannerPage() {
 
           <div className="text-center">
             <h1 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">
-              Kivo Staff Portal
+              skaute Staff Portal
             </h1>
             <button
               onClick={() => performSync(true)}
@@ -389,7 +389,7 @@ export default function TicketScannerPage() {
                   <input
                     autoFocus
                     type="text"
-                    placeholder="KIVO-XXXX"
+                    placeholder="skaute-XXXX"
                     value={manualCode}
                     onChange={(e) =>
                       setManualCode(e.target.value.toUpperCase())

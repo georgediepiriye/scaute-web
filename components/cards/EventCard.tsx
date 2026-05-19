@@ -16,8 +16,8 @@ import {
   Video,
 } from "lucide-react";
 
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 export type Props = {
   id?: string;
@@ -206,7 +206,7 @@ export default function EventCard({
           {isBoosted && (
             <div
               className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white shadow-lg"
-              style={{ backgroundColor: KIVO_BLUE }}
+              style={{ backgroundColor: SKAUTE_BLUE }}
             >
               <Zap size={11} className="fill-white" /> Promoted
             </div>
@@ -315,7 +315,7 @@ export default function EventCard({
             className={`px-4 py-2.5 rounded-2xl transition-all duration-300 active:scale-95 group/btn flex items-center gap-2 shadow-sm ${urgencyStatus === "sold-out" ? "bg-slate-100 text-slate-400" : "text-black"}`}
             style={
               urgencyStatus !== "sold-out"
-                ? { backgroundColor: KIVO_YELLOW }
+                ? { backgroundColor: SKAUTE_YELLOW }
                 : {}
             }
             disabled={urgencyStatus === "sold-out"}

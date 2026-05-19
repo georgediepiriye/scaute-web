@@ -50,7 +50,7 @@ export default function Features() {
           </h3>
           <p className="text-base font-bold text-amber-900/60 leading-tight mb-8">
             Planning any casual activity or an event? Create it here, set your
-            price, and share your Kivo link. We handle the rest.
+            price, and share your skaute link. We handle the rest.
           </p>
         </div>
 

@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Search, MapPin, ArrowLeft, Clock, ShieldAlert } from "lucide-react";
 import { motion } from "framer-motion";
 
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 // 1. ISOLATED INNER NOT-FOUND LAYOUT
 function NotFoundContent() {
@@ -16,7 +16,7 @@ function NotFoundContent() {
       <div
         className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
         style={{
-          backgroundImage: `radial-gradient(${KIVO_BLUE} 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(${SKAUTE_BLUE} 1px, transparent 1px)`,
           backgroundSize: "32px 32px",
         }}
       />
@@ -35,16 +35,16 @@ function NotFoundContent() {
             className="w-20 h-20 rounded-[28px] bg-white shadow-xl flex items-center justify-center border-4 border-gray-50 z-10"
             style={{ transform: "rotate(-5deg)" }}
           >
-            <Search size={32} style={{ color: KIVO_YELLOW }} />
+            <Search size={32} style={{ color: SKAUTE_YELLOW }} />
           </div>
           <div className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center border-4 border-gray-50">
-            <ShieldAlert size={24} style={{ color: KIVO_BLUE }} />
+            <ShieldAlert size={24} style={{ color: SKAUTE_BLUE }} />
           </div>
         </div>
 
         {/* Text Content */}
         <h1 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-gray-900 mb-6 leading-none">
-          That Move is <span style={{ color: KIVO_BLUE }}>Off-Grid</span>
+          That Move is <span style={{ color: SKAUTE_BLUE }}>Off-Grid</span>
         </h1>
 
         <div className="space-y-4 mb-12">
@@ -79,7 +79,7 @@ function NotFoundContent() {
           <Link
             href="/discover"
             className="group flex-1 py-5 px-8 rounded-[24px] font-black uppercase text-sm flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95"
-            style={{ backgroundColor: KIVO_YELLOW, color: "#000" }}
+            style={{ backgroundColor: SKAUTE_YELLOW, color: "#000" }}
           >
             <MapPin size={18} />
             Explore Other Moves
@@ -98,10 +98,10 @@ function NotFoundContent() {
         <div className="mt-12 pt-8 border-t border-gray-100 flex items-center justify-center gap-2">
           <div
             className="w-2 h-2 rounded-full animate-pulse"
-            style={{ backgroundColor: KIVO_BLUE }}
+            style={{ backgroundColor: SKAUTE_BLUE }}
           />
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-            Kivo • Rivers State
+            skaute • Rivers State
           </p>
         </div>
       </motion.div>

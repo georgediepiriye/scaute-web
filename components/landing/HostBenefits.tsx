@@ -13,7 +13,7 @@ export default function HostBenefits() {
             </h2>
             <p className="text-xl text-slate-400 font-bold mb-10">
               Whether it&apos;s a free hangout at Pleasure Park or a ticketed
-              rave in GRA, Kivo is built to get you started without a budget.
+              rave in GRA, Skaute is built to get you started without a budget.
             </p>
 
             <div className="space-y-6">

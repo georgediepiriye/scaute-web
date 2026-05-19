@@ -26,8 +26,8 @@ import {
 import Navbar from "@/components/layout/NavBar";
 import { useAuth } from "@/components/auth/AuthGuard";
 
-const KIVO_BLUE = "#0052FF";
-const KIVO_YELLOW = "#FFD700";
+const SKAUTE_BLUE = "#0052FF";
+const SKAUTE_YELLOW = "#FFD700";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -59,7 +59,7 @@ export default function ProfilePage() {
 
     const syncCompletePortfolio = async () => {
       try {
-        const token = localStorage.getItem("kivo_token");
+        const token = localStorage.getItem("skaute_token");
 
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/users/profile`,
@@ -98,7 +98,7 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     try {
       setIsSigningOut(true);
-      const token = localStorage.getItem("kivo_token");
+      const token = localStorage.getItem("skaute_token");
 
       if (token) {
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/logout`, {
@@ -113,12 +113,12 @@ export default function ProfilePage() {
       console.error("Logout backend notification skipped:", err);
     } finally {
       // Clean up storage tokens
-      localStorage.removeItem("kivo_token");
+      localStorage.removeItem("skaute_token");
       localStorage.removeItem("user");
 
       // Wipe routing layout proxy cookies immediately
       document.cookie =
-        "kivo_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax;";
+        "skaute_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax;";
 
       logout();
       window.location.href = "/auth/signin";
@@ -137,12 +137,12 @@ export default function ProfilePage() {
             <div className="absolute inset-0 border-4 border-gray-100 rounded-3xl" />
             <div
               className="absolute inset-0 border-4 border-t-transparent rounded-3xl animate-spin"
-              style={{ borderTopColor: KIVO_BLUE }}
+              style={{ borderTopColor: SKAUTE_BLUE }}
             />
           </div>
           <p
             className="font-black text-[10px] uppercase tracking-[0.3em] animate-pulse"
-            style={{ color: KIVO_BLUE }}
+            style={{ color: SKAUTE_BLUE }}
           >
             Synchronizing Portfolios
           </p>
@@ -164,8 +164,8 @@ export default function ProfilePage() {
     (extendedProfile.organizedEvents?.length || 0) - mainHostedCount;
 
   const userDisplay = {
-    name: extendedProfile?.name || "Kivo User",
-    handle: `@${extendedProfile?.name?.toLowerCase().replace(/\s/g, "") || "kivo_member"}`,
+    name: extendedProfile?.name || "skaute User",
+    handle: `@${extendedProfile?.name?.toLowerCase().replace(/\s/g, "") || "skaute_member"}`,
     location: extendedProfile?.location?.city || "Port Harcourt",
     image: extendedProfile?.image || "/images/profile.jpg",
     joined: extendedProfile?.createdAt
@@ -193,7 +193,7 @@ export default function ProfilePage() {
               <div className="relative group w-32 h-32 mx-auto">
                 <div
                   className="absolute -inset-1 rounded-[2.2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"
-                  style={{ backgroundColor: KIVO_BLUE }}
+                  style={{ backgroundColor: SKAUTE_BLUE }}
                 />
                 <div className="relative w-32 h-32 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl bg-slate-50">
                   <Image
@@ -205,7 +205,7 @@ export default function ProfilePage() {
                 </div>
                 <button
                   className="absolute bottom-1 right-1 p-2 bg-white rounded-full shadow-lg border border-slate-100 transition hover:scale-110"
-                  style={{ color: KIVO_BLUE }}
+                  style={{ color: SKAUTE_BLUE }}
                 >
                   <Plus size={14} />
                 </button>
@@ -218,19 +218,19 @@ export default function ProfilePage() {
                   </h2>
                   <ShieldCheck
                     size={16}
-                    style={{ color: KIVO_BLUE }}
+                    style={{ color: SKAUTE_BLUE }}
                     fill="currentColor"
                     fillOpacity={0.1}
                   />
                 </div>
                 <p
                   className="font-bold text-sm mt-1"
-                  style={{ color: KIVO_BLUE }}
+                  style={{ color: SKAUTE_BLUE }}
                 >
                   {userDisplay.handle}
                 </p>
                 <div className="inline-flex items-center gap-1.5 mt-4 px-3 py-1 bg-slate-50 rounded-full text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                  <MapPin size={10} style={{ color: KIVO_BLUE }} />{" "}
+                  <MapPin size={10} style={{ color: SKAUTE_BLUE }} />{" "}
                   {userDisplay.location}
                 </div>
               </div>
@@ -266,8 +266,8 @@ export default function ProfilePage() {
                 <button
                   className="w-full py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg"
                   style={{
-                    backgroundColor: KIVO_BLUE,
-                    boxShadow: `0 10px 15px -3px ${KIVO_BLUE}30`,
+                    backgroundColor: SKAUTE_BLUE,
+                    boxShadow: `0 10px 15px -3px ${SKAUTE_BLUE}30`,
                   }}
                 >
                   Edit Profile
@@ -288,7 +288,7 @@ export default function ProfilePage() {
                     Member Status
                   </span>
                   <h3 className="text-2xl font-black mt-1 uppercase italic">
-                    Kivo Pioneer
+                    skaute Pioneer
                   </h3>
                 </div>
                 <div className="relative z-10">
@@ -298,7 +298,7 @@ export default function ProfilePage() {
                   <div className="mt-3 h-1 w-full bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full w-2/3"
-                      style={{ backgroundColor: KIVO_YELLOW }}
+                      style={{ backgroundColor: SKAUTE_YELLOW }}
                     />
                   </div>
                 </div>
@@ -307,7 +307,8 @@ export default function ProfilePage() {
 
               <div className="bg-white rounded-[2rem] p-8 border border-slate-200/60 shadow-sm">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 flex items-center gap-2">
-                  <TrendingUp size={14} style={{ color: KIVO_BLUE }} /> My Vibe
+                  <TrendingUp size={14} style={{ color: SKAUTE_BLUE }} /> My
+                  Vibe
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {userDisplay.interests.map((tag: string) => (
@@ -326,14 +327,14 @@ export default function ProfilePage() {
             <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden">
               <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                  <TicketIcon size={16} style={{ color: KIVO_BLUE }} /> Active
+                  <TicketIcon size={16} style={{ color: SKAUTE_BLUE }} /> Active
                   Passes
                 </h3>
                 {userDisplay.ticketsCount > 0 && (
                   <button
                     onClick={() => router.push("/tickets")}
                     className="text-[10px] font-black uppercase hover:underline flex items-center gap-1"
-                    style={{ color: KIVO_BLUE }}
+                    style={{ color: SKAUTE_BLUE }}
                   >
                     See All <ArrowUpRight size={12} />
                   </button>
@@ -359,9 +360,9 @@ export default function ProfilePage() {
                             <span className="text-slate-300">•</span>
                             <span
                               className="text-[10px] font-mono font-bold uppercase"
-                              style={{ color: KIVO_BLUE }}
+                              style={{ color: SKAUTE_BLUE }}
                             >
-                              {ticket.checkInCode || "KIVO-PASS"}
+                              {ticket.checkInCode || "skaute-PASS"}
                             </span>
                           </div>
                         </div>
@@ -384,13 +385,13 @@ export default function ProfilePage() {
             <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden">
               <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
-                  <LayoutGrid size={16} style={{ color: KIVO_BLUE }} /> Hosted &
-                  Managed Moves
+                  <LayoutGrid size={16} style={{ color: SKAUTE_BLUE }} /> Hosted
+                  & Managed Moves
                 </h3>
                 <button
                   onClick={() => router.push("/create")}
                   className="p-2 bg-slate-50 rounded-xl transition-all hover:bg-blue-600 hover:text-white"
-                  style={{ color: KIVO_BLUE }}
+                  style={{ color: SKAUTE_BLUE }}
                 >
                   <Plus size={16} />
                 </button>
@@ -546,7 +547,7 @@ export default function ProfilePage() {
                                     >
                                       <Camera
                                         size={14}
-                                        style={{ color: KIVO_YELLOW }}
+                                        style={{ color: SKAUTE_YELLOW }}
                                       />
                                       <span>Scan</span>
                                     </button>

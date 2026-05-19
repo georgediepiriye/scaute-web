@@ -18,7 +18,7 @@ import { getIPLocation } from "@/lib/locationUtils";
 import { useAuth } from "@/components/auth/AuthGuard";
 
 // BRAND COLOR CONSTANTS
-const KIVO_BLUE = "#0052FF";
+const SKAUTE_BLUE = "#0052FF";
 
 export default function OnboardingFlow() {
   const router = useRouter();
@@ -37,7 +37,7 @@ export default function OnboardingFlow() {
     // Hold rendering evaluation until the authentication status resolves
     if (authLoading) return;
 
-    const hasSeen = localStorage.getItem("kivo_onboarded");
+    const hasSeen = localStorage.getItem("skaute_onboarded");
     if (!hasSeen) {
       const timer = setTimeout(() => setIsVisible(true), 1200);
       return () => clearTimeout(timer);
@@ -47,7 +47,7 @@ export default function OnboardingFlow() {
   // Memoized completeOnboarding to prevent function recreation on renders
   const completeOnboarding = useCallback(
     (targetPath?: string) => {
-      localStorage.setItem("kivo_onboarded", "true");
+      localStorage.setItem("skaute_onboarded", "true");
       setIsVisible(false);
       if (targetPath) {
         if (targetPath.includes("google")) {
@@ -137,11 +137,11 @@ export default function OnboardingFlow() {
 
                   <div className="relative z-10">
                     <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-8 border border-zinc-100/80">
-                      <Globe size={22} style={{ color: KIVO_BLUE }} />
+                      <Globe size={22} style={{ color: SKAUTE_BLUE }} />
                     </div>
                     <h2 className="text-3xl md:text-4xl font-black mb-4 text-zinc-900 tracking-tighter leading-none">
                       The city, <br />
-                      <span style={{ color: KIVO_BLUE }} className="italic">
+                      <span style={{ color: SKAUTE_BLUE }} className="italic">
                         personalized.
                       </span>
                     </h2>
@@ -255,7 +255,7 @@ export default function OnboardingFlow() {
                 <div className="w-full md:w-1/2 bg-zinc-900 p-8 md:p-12 flex flex-col justify-between text-white relative min-h-[200px] md:min-h-0">
                   <div className="absolute inset-0 opacity-40">
                     <Image
-                      src="https://res.cloudinary.com/dzhfiblg7/image/upload/v1778054500/kivo_events/inhouse/tower.png"
+                      src="https://res.cloudinary.com/dzhfiblg7/image/upload/v1778054500/kivo/inhouse/tower.png"
                       alt="PH City Vibe"
                       fill
                       className="object-cover grayscale brightness-75"
@@ -267,15 +267,15 @@ export default function OnboardingFlow() {
                   <div className="relative z-10">
                     <p
                       className="font-black text-2xl tracking-tighter uppercase"
-                      style={{ color: KIVO_BLUE }}
+                      style={{ color: SKAUTE_BLUE }}
                     >
-                      KIVO.
+                      SKAUTE.
                     </p>
                   </div>
 
                   <div className="relative z-10 mt-12 md:mt-0">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full mb-4 border border-white/10 backdrop-blur-md">
-                      <Sparkles size={11} style={{ color: KIVO_BLUE }} />
+                      <Sparkles size={11} style={{ color: SKAUTE_BLUE }} />
                       <span className="text-[9px] font-black uppercase tracking-widest">
                         Premium Access
                       </span>
@@ -337,7 +337,7 @@ export default function OnboardingFlow() {
                       onClick={() => completeOnboarding("/map")}
                       className="group w-full py-5 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] hover:opacity-90"
                       style={{
-                        backgroundColor: KIVO_BLUE,
+                        backgroundColor: SKAUTE_BLUE,
                         boxShadow: `0 10px 25px -5px rgba(0,82,255,0.3)`,
                       }}
                     >
@@ -350,7 +350,7 @@ export default function OnboardingFlow() {
                   </div>
 
                   <p className="mt-10 text-[9px] text-zinc-400 font-bold text-center uppercase tracking-widest">
-                    Secured by Kivo Identity Protection
+                    Secured by skaute Identity Protection
                   </p>
                 </div>
               </motion.div>
