@@ -36,6 +36,7 @@ import MapControls from "@/components/map/MapControls";
 import HotspotModal from "@/components/map/HotspotModal";
 import EventDetailsModal from "@/components/map/EventDetailsModal";
 import Link from "next/link.js";
+import MobileNav from "@/components/layout/MobileNav";
 
 const RealMap = dynamic(() => import("@/components/map/RealMap"), {
   ssr: false,
@@ -507,6 +508,7 @@ export default function MapPage() {
           )}
         </AnimatePresence>
       </div>
+      <MobileNav />
     </div>
   );
 }
