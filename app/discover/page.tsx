@@ -20,10 +20,6 @@ const SKAUTE_YELLOW = "#FFD700";
 const DEEP_BLACK = "#000000";
 const USER_LOCATION = { lat: 4.819, lng: 7.038 };
 
-/**
- * PRODUCTION DATE GENERATOR
- * Returns UTC-aligned strings for precise backend filtering.
- */
 const getDateRange = (filter: string) => {
   const now = new Date();
   const start = new Date(now);
@@ -164,16 +160,17 @@ export default function DiscoverPage() {
   const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
+
+      // 💡 FIX 1: Sort by priorityLevel descending first, then fall back to performance metrics
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "12",
-        sort: "-status,-views,-startDate",
+        sort: "-priorityLevel,-views,-startDate",
       });
 
       if (activeCat !== "all") params.append("category", activeCat);
       if (search) params.append("title", search);
 
-      // Sending both keyword and ranges for maximum backend compatibility
       if (dateFilter !== "all") {
         params.append("dateFilter", dateFilter);
         const range = getDateRange(dateFilter);
@@ -198,17 +195,30 @@ export default function DiscoverPage() {
       const result = await response.json();
 
       if (result.status === "success") {
-        const formatted = result.data.events.map((e: any) => ({
-          ...e,
-          id: e._id,
-          displayPrice: e.priceLabel || (e.isFree ? "Free" : "Paid"),
-          isOnline: e.eventFormat === "online" || e.eventFormat === "hybrid",
-          lat: e.location?.coordinates?.[1] || null,
-          lng: e.location?.coordinates?.[0] || null,
-          organizerName: e.organizer?.name || "skaute Host",
-          views: e.views || 0,
-          likes: e.likes || 0,
-        }));
+        const formatted = result.data.events.map((e: any) => {
+          // 💡 FIX 2: Safeguard status array mapping so EventCards receive strings correctly
+          let cardStatuses: string[] = [];
+          if (Array.isArray(e.statusArray)) {
+            cardStatuses = e.statusArray;
+          } else if (typeof e.status === "string") {
+            cardStatuses = [e.status];
+          }
+
+          return {
+            ...e,
+            id: e._id,
+            displayPrice: e.priceLabel || (e.isFree ? "Free" : "Paid"),
+            isOnline: e.eventFormat === "online" || e.eventFormat === "hybrid",
+            lat: e.location?.coordinates?.[1] || null,
+            lng: e.location?.coordinates?.[0] || null,
+            organizerName: e.organizer?.name || "skaute Host",
+            views: e.views || 0,
+            likes: e.likes || 0,
+            statusArray: cardStatuses, // Map directly to what your Card needs
+            isBoosted: e.isBoosted || e.isPromoted || false,
+            isSkauteHosted: e.isSkauteHosted || e.isChoice || false,
+          };
+        });
         setEvents(formatted);
         setTotalPages(result.pagination.pages);
       }
@@ -319,6 +329,7 @@ export default function DiscoverPage() {
         </div>
       </section>
 
+      {/* STICKY FILTER NAVIGATION BAR */}
       <div
         className={`sticky top-[72px] md:top-[80px] z-[40] bg-white/90 backdrop-blur-md border-b border-gray-100 transition-all ${isScrolled ? "py-2 shadow-sm" : "py-4"}`}
       >
@@ -482,29 +493,26 @@ export default function DiscoverPage() {
                 ))}
               </AnimatePresence>
             </div>
+
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-4 mt-12 mb-24">
                 <button
                   disabled={page === 1}
                   onClick={() => {
                     setPage((p) => p - 1);
-                    // Returns the user to the top of the page smoothly
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                   className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center disabled:opacity-20 transition-all hover:bg-gray-50"
                 >
                   <ChevronLeft size={20} />
                 </button>
-
                 <span className="font-black text-xs uppercase tracking-widest text-gray-500">
                   Page {page} of {totalPages}
                 </span>
-
                 <button
                   disabled={page === totalPages}
                   onClick={() => {
                     setPage((p) => p + 1);
-                    // Returns the user to the top of the page smoothly
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                   className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center disabled:opacity-20 transition-all hover:bg-gray-50"
@@ -513,6 +521,7 @@ export default function DiscoverPage() {
                 </button>
               </div>
             )}
+
             <HotListSection
               data={sections.hotList}
               getKm={getKm}
