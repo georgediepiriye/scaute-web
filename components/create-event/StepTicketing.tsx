@@ -55,7 +55,7 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
     { id: "none", label: "No Tickets", sub: "Open entry", icon: Ban },
     {
       id: "internal",
-      label: "skaute Tickets",
+      label: "Skaute Tickets",
       sub: "Sell on app",
       icon: Ticket,
     },

@@ -359,7 +359,7 @@ export default function CreateEventPage() {
         throw new Error(errorData.message || "Broadcast failed.");
       }
 
-      toast.success("Move Submitted! Waiting for skaute Team approval.");
+      toast.success("Move Submitted! Waiting for Skaute Team approval.");
       setTimeout(() => router.push("/profile"), 2500);
     } catch (e: any) {
       toast.error(e.message);

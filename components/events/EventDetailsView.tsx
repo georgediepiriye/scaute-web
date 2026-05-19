@@ -120,7 +120,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
         handleCopy();
       }
     } catch (err) {
-      console.error("skaute Share Error:", err);
+      console.error("Skaute Share Error:", err);
     }
   };
 
@@ -144,11 +144,15 @@ export default function EventDetailsView({ event }: EventViewProps) {
       <nav className="sticky top-0 z-[100] bg-white/90 backdrop-blur-md border-b border-gray-100 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div
-              style={{ backgroundColor: SKAUTE_BLUE }}
-              className="w-9 h-9 rounded-xl flex items-center justify-center rotate-3 shadow-lg shadow-blue-200"
-            >
-              <span className="text-white font-black text-sm italic">K</span>
+            <div className="relative w-16 h-16 group-hover:scale-[1.03] transition-transform duration-300 ease-out">
+              <Image
+                src="/images/skaute_main_logo.jpeg"
+                alt="Skaute Icon"
+                fill
+                className="object-contain"
+                sizes="64px"
+                priority
+              />
             </div>
             <span className="font-black uppercase tracking-tighter text-gray-900 text-lg">
               skaute
@@ -383,7 +387,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
                     Curated by
                   </p>
                   <p className="font-bold text-gray-900 text-sm">
-                    {event.organizerName || "skaute Host"}
+                    {event.organizer.name || "Skaute Host"}
                   </p>
                 </div>
               </div>

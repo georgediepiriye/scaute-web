@@ -105,7 +105,7 @@ export default function Navbar() {
             />
           </div>
           <span className="text-2xl font-black font-sans text-black tracking-tighter uppercase select-none transition-colors group-hover:text-gray-700">
-            Skaute
+            skaute
           </span>
         </Link>
 
