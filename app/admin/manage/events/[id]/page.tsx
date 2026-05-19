@@ -175,7 +175,7 @@ export default function EventManagementPage() {
                     <LogisticsItem
                       icon={<MapPin size={14} className="text-red-500" />}
                       label="Location"
-                      value={event.location?.venueName || "Online"}
+                      value={event.location?.address || "Online"}
                       sub={event.location?.neighborhood || "Global"}
                     />
                   </div>

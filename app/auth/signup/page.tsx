@@ -26,6 +26,7 @@ export default function SignUpPage() {
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -33,6 +34,7 @@ export default function SignUpPage() {
     lastName: "",
     email: "",
     password: "",
+    confirmPassword: "",
     role: "user",
   });
 
@@ -53,6 +55,21 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Client-side Passwords Match Validation Guard
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Your passwords do not match!", {
+        style: {
+          borderRadius: "15px",
+          background: "#111",
+          color: "#fff",
+          fontSize: "14px",
+          fontWeight: "bold",
+        },
+      });
+      return;
+    }
+
     setLoading(true);
 
     const signupAction = async () => {
@@ -66,7 +83,7 @@ export default function SignUpPage() {
         role,
       };
 
-      // 💡 Swapped out native fetch for your customized global API Axios instance
+      // Swapped out native fetch for your customized global API Axios instance
       const response = await API.post("/v1/auth/signup", payload);
       const data = response.data;
 
@@ -88,11 +105,11 @@ export default function SignUpPage() {
         success: (data) => {
           setLoading(false);
 
-          // 💡 Extract user context and commit it to React state right now
+          // Extract user context and commit it to React state right now
           const userData = data.user || data.data?.user;
           updateUser(userData);
 
-          // 💡 Use soft navigation router to keep your context and interceptor state active
+          // Use soft navigation router to keep your context and interceptor state active
           router.push("/profile");
           return `Welcome to Skaute, ${formData.firstName}!`;
         },
@@ -295,6 +312,35 @@ export default function SignUpPage() {
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {/* CONFIRM PASSWORD INPUT BOUNDARY */}
+            <div>
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <input
+                  name="confirmPassword"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </button>
               </div>
             </div>
