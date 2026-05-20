@@ -338,7 +338,6 @@ export default function CreateEventPage() {
         ageRestriction: formData.ageRestriction || "All Ages",
         refundPolicy: formData.refundPolicy || "none",
         organizerType: "individual",
-        status: "casual",
       };
 
       const data = new FormData();
