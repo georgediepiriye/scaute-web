@@ -180,7 +180,7 @@ export default function ProfessionalReviewPage() {
               <p className="text-sm font-medium text-slate-500 leading-relaxed">
                 You are about to{" "}
                 <span className="font-black text-slate-900 underline decoration-yellow-500 underline-offset-4">
-                  {pendingStatus}
+                  {pendingStatus === "approved" ? "approve" : pendingStatus}
                 </span>{" "}
                 this move in Port Harcourt. This action is final.
               </p>

@@ -14,6 +14,8 @@ import mapboxgl, {
 } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Event } from "@/lib/events";
+import { motion, AnimatePresence } from "framer-motion";
+import { MapPin, ZoomIn, X } from "lucide-react";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN as string;
 
@@ -25,7 +27,17 @@ const SKAUTE_THEME = {
   slate: "#1e293b", // Professional Slate
 };
 
-// Helper to get category-specific markers
+// 💡 Geographic Bounding Box for Rivers State, Nigeria
+// [minLng, minLat, maxLng, maxLat] roughly mapping the state perimeter
+const RIVERS_STATE_BOUNDS = {
+  minLng: 6.3,
+  maxLng: 7.6,
+  minLat: 4.3,
+  maxLat: 5.45,
+};
+
+const DEFAULT_CENTER: [number, number] = [7.035, 4.815]; // Port Harcourt
+
 const getHotspotMarkerHTML = (category: string, title: string) => {
   const icons: Record<string, string> = {
     nightlife: "🎵",
@@ -81,17 +93,29 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
     const mapRef = useRef<MapboxMap | null>(null);
     const geolocateControlRef = useRef<GeolocateControl | null>(null);
     const [isMapReady, setIsMapReady] = useState(false);
+    const [showBoundaryModal, setShowBoundaryModal] = useState(false);
+
     const markersRef = useRef<{
       [key: string]: { marker: Marker; status: string };
     }>({});
     const hotspotMarkersRef = useRef<Marker[]>([]);
+
+    const resetToRiversState = () => {
+      mapRef.current?.flyTo({
+        center: DEFAULT_CENTER,
+        zoom: 12.5,
+        speed: 1.5,
+        essential: true,
+      });
+      setShowBoundaryModal(false);
+    };
 
     useImperativeHandle(ref, () => ({
       flyToUser: () => geolocateControlRef.current?.trigger(),
       flyTo: (coords: { lat: number; lng: number }) => {
         mapRef.current?.flyTo({
           center: [coords.lng, coords.lat],
-          zoom: 15.5,
+          zoom: 16.5,
           speed: 1.2,
           essential: true,
         });
@@ -104,13 +128,14 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
       const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/light-v11",
-        center: [7.035, 4.815], // Port Harcourt
-        zoom: 11.5,
+        center: DEFAULT_CENTER,
+        zoom: 13.5,
       });
 
+      // We turn trackUserLocation off by default to stop the map from forcefully locking or jumping away from Rivers State automatically if they are outside
       const geolocate = new mapboxgl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
+        trackUserLocation: false,
         showUserHeading: true,
         showUserLocation: true,
       });
@@ -118,7 +143,45 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
       map.addControl(geolocate);
       geolocateControlRef.current = geolocate;
 
+      // 💡 Check user coordinates when geolocation fires
+      geolocate.on("geolocate", (e: any) => {
+        const { longitude, latitude } = e.coords;
+
+        const isInsideRivers =
+          longitude >= RIVERS_STATE_BOUNDS.minLng &&
+          longitude <= RIVERS_STATE_BOUNDS.maxLng &&
+          latitude >= RIVERS_STATE_BOUNDS.minLat &&
+          latitude <= RIVERS_STATE_BOUNDS.maxLat;
+
+        if (!isInsideRivers) {
+          // Force camera to stay or return back to Port Harcourt instead of panning somewhere else
+          map.flyTo({
+            center: DEFAULT_CENTER,
+            zoom: 12.5,
+          });
+          setShowBoundaryModal(true);
+        }
+      });
+
       map.on("load", () => {
+        const streetLayers = [
+          "road-label",
+          "road-primary",
+          "road-secondary-tertiary",
+          "road-street",
+          "road-minor",
+        ];
+
+        streetLayers.forEach((layer) => {
+          if (map.getLayer(layer)) {
+            if (layer.includes("label")) {
+              map.setPaintProperty(layer, "text-color", "#334155");
+            } else {
+              map.setPaintProperty(layer, "line-color", "#cbd5e1");
+            }
+          }
+        });
+
         map.addSource("events", {
           type: "geojson",
           data: { type: "FeatureCollection", features: [] },
@@ -224,7 +287,7 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
       fetchHotspots();
     }, [isMapReady, showHotspots, hotspotCategory, onSelectHotspot]);
 
-    // --- EVENT MARKER MANAGEMENT (ALIVE & JUMPING) ---
+    // --- EVENT MARKER MANAGEMENT ---
     useEffect(() => {
       if (!isMapReady || !mapRef.current) return;
       const map = mapRef.current;
@@ -265,11 +328,9 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
             return;
           if (markersRef.current[id]) markersRef.current[id].marker.remove();
 
-          // Outer container (Mapbox positioning)
           const el = document.createElement("div");
           el.className = "cursor-pointer";
 
-          // Inner container (Tailwind animations)
           const inner = document.createElement("div");
           inner.className = isLive
             ? "relative flex flex-col items-center animate-bounce duration-1000"
@@ -316,9 +377,58 @@ const RealMap = forwardRef<MapRef, RealMapProps>(
     }, [isMapReady, filteredEvents, onSelect]);
 
     return (
-      <div className="w-full h-full relative">
+      <div className="w-full h-full relative font-sans">
         <div ref={mapContainer} className="w-full h-full" />
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-white/30 via-transparent to-transparent" />
+
+        {/* 💡 BOUNDARY NOTIFICATION MODAL */}
+        <AnimatePresence>
+          {showBoundaryModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[400] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 pointer-events-auto"
+            >
+              <motion.div
+                initial={{ scale: 0.92, y: 15 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.92, y: 15 }}
+                className="bg-white w-full max-w-sm rounded-[32px] p-6 shadow-2xl relative overflow-hidden"
+              >
+                <button
+                  onClick={() => setShowBoundaryModal(false)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-black p-2 transition-colors rounded-full hover:bg-gray-100"
+                >
+                  <X size={18} />
+                </button>
+
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-5 mt-2">
+                  <MapPin size={24} className="animate-pulse" />
+                </div>
+
+                <h3 className="text-xl font-black tracking-tight text-slate-900 mb-2">
+                  Outside Operational Area
+                </h3>
+
+                <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                  Skaute maps are currently only active within{" "}
+                  <strong className="text-slate-800">Rivers State</strong>. Zoom
+                  into or view the Port Harcourt area grid directly to discover
+                  and view ongoing events.
+                </p>
+
+                <button
+                  onClick={resetToRiversState}
+                  className="w-full py-4 bg-black text-white rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-transform active:scale-[0.98] shadow-lg shadow-black/10"
+                >
+                  <ZoomIn size={14} />
+                  Explore Rivers State
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   },

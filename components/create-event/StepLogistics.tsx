@@ -326,14 +326,16 @@ export const StepLogistics = ({
       {formData.eventFormat !== "online" && (
         <div className="space-y-4 pt-6 border-t border-gray-100">
           <div className="flex justify-between items-center">
-            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-              Venue{" "}
-              {formData.eventFormat === "hybrid" && (
-                <span className="lowercase font-medium italic opacity-70">
-                  (Optional)
-                </span>
-              )}
-            </label>
+            <div className="flex flex-col">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                Venue{" "}
+                {formData.eventFormat === "hybrid" && (
+                  <span className="lowercase font-medium italic opacity-70">
+                    (Optional)
+                  </span>
+                )}
+              </label>
+            </div>
             <button
               type="button"
               onClick={useCurrentLocation}
@@ -348,15 +350,36 @@ export const StepLogistics = ({
             </button>
           </div>
 
-          <SearchBox
-            accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN!}
-            value={formData.location}
-            onRetrieve={handleRetrieve}
-            placeholder="Search venue..."
-            theme={{
-              variables: { borderRadius: "24px", fontFamily: "inherit" },
-            }}
-          />
+          {/* Mapbox Core Search Integration */}
+          <div className="relative w-full custom-mapbox-container">
+            <SearchBox
+              accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN as string}
+              value={formData.location}
+              onRetrieve={handleRetrieve}
+              onChange={(val: string) => updateForm("location", val)}
+              placeholder="Type venue name (e.g. Casablanca Lounge, Pleasure Park)..."
+              theme={{
+                variables: {
+                  borderRadius: "24px",
+                  fontFamily: "inherit",
+                  unit: "14px",
+                  border: "2px solid transparent",
+                },
+              }}
+              options={{
+                country: "ng",
+                proximity: [7.0086, 4.8197], // Highly targeted central Port Harcourt coordinates
+                bbox: [6.85, 4.65, 7.25, 5.05], // Limits queries strictly to the Rivers State metropolitan perimeter
+                types: "poi,address,neighborhood,locality",
+                limit: 10,
+              }}
+            />
+          </div>
+
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight ml-1">
+            💡 Tip: If your specific venue doesn&apos;t pop up, type it manually
+            above and use the pin button below to map it.
+          </p>
 
           {(formData.location || formData.neighborhood) && (
             <motion.div
