@@ -233,7 +233,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
                       })
                     }
                     placeholder="PHCITY20"
-                    className="w-full p-4 rounded-2xl bg-white border border-slate-100 text-[10px] font-bold uppercase outline-none focus:border-yellow-400"
+                    className="w-full p-4 rounded-2xl bg-white border border-slate-100 text-base md:text-[10px] font-bold uppercase outline-none focus:border-yellow-400"
                   />
                 </div>
                 <div>
@@ -250,7 +250,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
                       })
                     }
                     placeholder="20"
-                    className="w-full p-4 rounded-2xl bg-white border border-slate-100 text-[10px] font-bold outline-none focus:border-yellow-400"
+                    className="w-full p-4 rounded-2xl bg-white border border-slate-100 text-base md:text-[10px] font-bold outline-none focus:border-yellow-400"
                   />
                 </div>
                 <div>
@@ -264,7 +264,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
                       setFormData({ ...formData, usageLimit: e.target.value })
                     }
                     placeholder="50"
-                    className="w-full p-4 rounded-2xl bg-white border border-slate-100 text-[10px] font-bold outline-none focus:border-yellow-400"
+                    className="w-full p-4 rounded-2xl bg-white border border-slate-100 text-base md:text-[10px] font-bold outline-none focus:border-yellow-400"
                   />
                 </div>
                 <div>
@@ -277,7 +277,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
                     onChange={(e) =>
                       setFormData({ ...formData, expiryDate: e.target.value })
                     }
-                    className="w-full p-4 rounded-2xl bg-white border border-slate-100 text-[10px] font-bold outline-none focus:border-yellow-400"
+                    className="w-full p-4 rounded-2xl bg-white border border-slate-100 text-base md:text-[10px] font-bold outline-none focus:border-yellow-400"
                   />
                 </div>
               </div>
