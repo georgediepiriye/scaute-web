@@ -146,7 +146,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
           <Link href="/" className="flex items-center gap-2">
             <div className="relative w-16 h-16 group-hover:scale-[1.03] transition-transform duration-300 ease-out">
               <Image
-                src="/images/skaute_main_logo.jpeg"
+                src="/images/skaute_logo.jpg"
                 alt="Skaute Icon"
                 fill
                 className="object-contain"

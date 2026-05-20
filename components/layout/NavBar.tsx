@@ -89,14 +89,10 @@ export default function Navbar() {
     /* Changed background from bg-white/80 backdrop-blur-2xl to fully opaque bg-white */
     <nav className="fixed top-0 w-full z-[500] bg-white border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-3 flex justify-between items-center relative z-[600]">
-        {/* LOGO & BRAND TEXT */}
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 cursor-pointer group"
-        >
-          <div className="relative w-16 h-16 group-hover:scale-[1.03] transition-transform duration-300 ease-out">
+        <Link href="/" className="flex items-center gap-0 cursor-pointer group">
+          <div className="relative w-16 h-16 -mr-3.5 group-hover:scale-[1.03] transition-transform duration-300 ease-out z-0">
             <Image
-              src="/images/skaute_main_logo.jpeg"
+              src="/images/skaute_logo.jpg"
               alt="Skaute Icon"
               fill
               className="object-contain"
@@ -104,7 +100,8 @@ export default function Navbar() {
               priority
             />
           </div>
-          <span className="text-2xl font-black font-sans text-black tracking-tighter uppercase select-none transition-colors group-hover:text-gray-700">
+
+          <span className="relative z-10 text-2xl font-black font-sans text-black tracking-tighter uppercase transition-colors group-hover:text-gray-700">
             skaute
           </span>
         </Link>
@@ -299,7 +296,6 @@ export default function Navbar() {
               </div>
 
               {/* Fixed Footer Block */}
-              {/* Changed container context background from transparent blur to flat bg-white */}
               <div className="mt-8 pt-6 border-t border-gray-100 bg-white sticky bottom-0">
                 {user ? (
                   <button

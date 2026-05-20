@@ -422,13 +422,63 @@ export default function MapPage() {
       <AnimatePresence>
         {isLoading && (
           <motion.div
+            initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center"
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="fixed inset-0 z-[1000] bg-white flex flex-col items-center justify-center select-none"
           >
-            <div className="font-black text-3xl text-gray-900 mb-4 tracking-tighter italic">
-              skaute
+            <div className="flex flex-col items-center justify-center">
+              {/* ANIMATED LOGO CONTAINER */}
+              <motion.div
+                initial={{ scale: 0.92, opacity: 0 }}
+                animate={{
+                  scale: [0.95, 1.02, 0.95],
+                  opacity: 1,
+                }}
+                transition={{
+                  scale: {
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  },
+                  opacity: { duration: 0.3 },
+                }}
+                className="relative w-24 h-24 mb-1"
+              >
+                <Image
+                  src="/images/skaute_logo.jpg"
+                  alt="Skaute Loading Icon"
+                  fill
+                  className="object-contain"
+                  sizes="96px"
+                  priority
+                />
+              </motion.div>
+
+              {/* ANIMATED TEXT BRAND */}
+              <motion.div
+                initial={{ opacity: 0, letterSpacing: "-0.05em", y: 5 }}
+                animate={{ opacity: 1, letterSpacing: "-0.02em", y: 0 }}
+                transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
+                className="font-black text-3xl text-black tracking-tighter uppercase font-sans"
+              >
+                skaute
+              </motion.div>
             </div>
-            <Loader2 className="animate-spin text-gray-200" size={32} />
+
+            {/* MINIMALIST LINE PROGRESS INDICATOR */}
+            <div className="absolute bottom-16 w-32 h-[2px] bg-gray-100 overflow-hidden rounded-full">
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: "100%" }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 1.4,
+                  ease: "easeInOut",
+                }}
+                className="w-1/2 h-full bg-blue-600 rounded-full"
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
