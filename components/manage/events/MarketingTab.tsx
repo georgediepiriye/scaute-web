@@ -53,6 +53,16 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
     try {
       const token = localStorage.getItem("skaute_token"); // Retrieve JWT
 
+      // If no ticket is selected, automatically apply to all non-free tiers
+      const finalApplicableTickets =
+        formData.applicableTickets.length > 0
+          ? formData.applicableTickets
+          : (initialEvent.ticketTiers || [])
+              .filter(
+                (ticket: any) => ticket.price > 0 && ticket.type !== "free",
+              )
+              .map((ticket: any) => ticket.name);
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/discounts`,
         {
@@ -69,7 +79,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
               ? Number(formData.usageLimit)
               : null,
             expiryDate: formData.expiryDate || null,
-            applicableTickets: formData.applicableTickets,
+            applicableTickets: finalApplicableTickets,
           }),
         },
       );
