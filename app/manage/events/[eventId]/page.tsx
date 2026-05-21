@@ -9,6 +9,8 @@ import {
   ExternalLink,
   Mail,
   Shield,
+  Wallet,
+  ShieldCheck,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -22,6 +24,8 @@ import { AttendeesTab } from "@/components/manage/events/AttendeesTab";
 import { MarketingTab } from "@/components/manage/events/MarketingTab";
 import { BroadcastTab } from "@/components/manage/events/BroadcastTab";
 import { SettingsTab } from "@/components/manage/events/SettingsTab";
+import { PayoutRequestForm } from "@/components/manage/PayoutRequestForm";
+import { GateControlTab } from "@/components/manage/events/GateControlTab";
 
 export default function ManageEventDashboard() {
   const params = useParams();
@@ -42,6 +46,11 @@ export default function ManageEventDashboard() {
   // Access Control State
   const [coOrgEmail, setCoOrgEmail] = useState("");
   const [addingCoOrg, setAddingCoOrg] = useState(false);
+
+  // Payout Settlements State Matrix
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [payouts, setPayouts] = useState<any[]>([]);
+  const [fetchingPayouts, setFetchingPayouts] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -84,9 +93,45 @@ export default function ManageEventDashboard() {
     }
   }, [id, router]);
 
+  /**
+   * FETCH SETTLEMENT TRANSACTION ENTRIES
+   */
+  const fetchPayoutData = useCallback(async () => {
+    setFetchingPayouts(true);
+    try {
+      const token = localStorage.getItem("skaute_token");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/v1/payouts/organizer`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        },
+      );
+      const result = await response.json();
+      if (response.ok) {
+        setPayouts(result.data.payouts || []);
+      }
+    } catch (err) {
+      console.error("Failed to sync settlement history logs.", err);
+    } finally {
+      setFetchingPayouts(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (id) fetchDashboardData();
   }, [id, fetchDashboardData]);
+
+  // Handle lazy loading of settlements and clear search pages on switch
+  useEffect(() => {
+    setCurrentPage(1);
+    if (activeTab === "settlements") {
+      fetchPayoutData();
+    }
+  }, [activeTab, fetchPayoutData]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -204,8 +249,8 @@ export default function ManageEventDashboard() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return sourceList.filter((ticket: any) => {
       const fullName =
-        `${ticket.buyerInfo.firstName} ${ticket.buyerInfo.lastName}`.toLowerCase();
-      const email = ticket.buyerInfo.email.toLowerCase();
+        `${ticket.buyerInfo?.firstName || ""} ${ticket.buyerInfo?.lastName || ""}`.toLowerCase();
+      const email = (ticket.buyerInfo?.email || "").toLowerCase();
       const search = searchTerm.toLowerCase();
       return fullName.includes(search) || email.includes(search);
     });
@@ -260,12 +305,24 @@ export default function ManageEventDashboard() {
     { id: "overview", label: "Insights", icon: BarChart3, visible: true },
     { id: "attendees", label: "Guest List", icon: Users, visible: true },
     {
+      id: "gate-control",
+      label: "Gate Control",
+      icon: ShieldCheck,
+      visible: canScanTickets,
+    },
+    {
       id: "broadcast",
       label: "Broadcast",
       icon: Mail,
       visible: canSendBroadcasts,
     },
     { id: "marketing", label: "Growth", icon: Share2, visible: isOrganizer },
+    {
+      id: "settlements",
+      label: "Settlements",
+      icon: Wallet,
+      visible: isOrganizer,
+    },
     { id: "settings", label: "Settings", icon: Shield, visible: isOrganizer }, // LOCKED to main host only
   ].filter((tab) => tab.visible);
 
@@ -324,6 +381,10 @@ export default function ManageEventDashboard() {
                 />
               )}
 
+              {activeTab === "gate-control" && canScanTickets && (
+                <GateControlTab eventId={id} />
+              )}
+
               {activeTab === "broadcast" && canSendBroadcasts && (
                 <BroadcastTab
                   attendeesCount={data.metrics.totalTicketsSold}
@@ -333,6 +394,137 @@ export default function ManageEventDashboard() {
 
               {activeTab === "marketing" && isOrganizer && (
                 <MarketingTab id={id} event={data.event} />
+              )}
+
+              {/* SETTLEMENT TRACKER & WALLET ACTIONS VIEW */}
+              {activeTab === "settlements" && isOrganizer && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                  <div>
+                    <h3 className="text-xl font-black uppercase tracking-tight text-slate-900 italic">
+                      Payouts &{" "}
+                      <span className="text-blue-600">Settlements</span>
+                    </h3>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                      Manage platform payouts and ledger tracking configurations
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        Withdrawable Balance
+                      </p>
+                      <h4 className="text-2xl font-black text-slate-900 mt-2">
+                        ₦
+                        {data?.metrics?.withdrawableBalance?.toLocaleString() ??
+                          "0.00"}
+                      </h4>
+                    </div>
+                    <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        Total Settled Outflow
+                      </p>
+                      <h4 className="text-2xl font-black text-slate-400 mt-2">
+                        ₦
+                        {payouts
+                          .filter((p) => p.status === "completed")
+                          .reduce(
+                            (sum, current) => sum + Number(current.amount || 0),
+                            0,
+                          )
+                          .toLocaleString()}
+                      </h4>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                    <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-900 mb-4 flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-blue-600 animate-pulse"></span>{" "}
+                      Settlement Processing Portal
+                    </h4>
+
+                    <PayoutRequestForm
+                      availableBalance={data?.metrics?.withdrawableBalance ?? 0}
+                      onSuccess={() => {
+                        fetchDashboardData();
+                        fetchPayoutData();
+                      }}
+                      eventId={id}
+                    />
+                  </div>
+
+                  <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
+                    <div className="p-6 border-b border-gray-50">
+                      <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-900">
+                        Ledger Tracking History
+                      </h4>
+                    </div>
+
+                    {fetchingPayouts ? (
+                      <div className="p-12 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        Syncing ledger records...
+                      </div>
+                    ) : payouts.length === 0 ? (
+                      <div className="p-12 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        No previous payout allocations detected.
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-slate-50 text-[9px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100">
+                              <th className="p-4">Reference / ID</th>
+                              <th className="p-4">Destination Bank</th>
+                              <th className="p-4">Amount Allocation</th>
+                              <th className="p-4">Status Flag</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-50 text-[11px]">
+                            {payouts.map((payout) => (
+                              <tr
+                                key={payout._id}
+                                className="hover:bg-slate-50/50 transition-colors font-medium"
+                              >
+                                <td className="p-4">
+                                  <span className="font-mono text-slate-900 font-bold block">
+                                    {payout.paymentReference || "---"}
+                                  </span>
+                                  <span className="text-[9px] text-gray-400 block mt-0.5">
+                                    {new Date(
+                                      payout.requestedAt,
+                                    ).toLocaleDateString()}
+                                  </span>
+                                </td>
+                                <td className="p-4 uppercase font-bold text-slate-700">
+                                  {payout.bankDetails?.bankName}{" "}
+                                  <span className="text-gray-400 font-normal block font-mono text-[10px]">
+                                    {payout.bankDetails?.accountNumber}
+                                  </span>
+                                </td>
+                                <td className="p-4 font-bold text-slate-900">
+                                  ₦{Number(payout.amount || 0).toLocaleString()}
+                                </td>
+                                <td className="p-4">
+                                  <span
+                                    className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-tight ${
+                                      payout.status === "completed"
+                                        ? "bg-green-50 text-green-600"
+                                        : payout.status === "pending"
+                                          ? "bg-amber-50 text-amber-600"
+                                          : "bg-rose-50 text-rose-600"
+                                    }`}
+                                  >
+                                    {payout.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
 
               {/* CRITICAL: Strict fallback block preventing non-host markup execution */}

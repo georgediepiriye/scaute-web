@@ -3,7 +3,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import {
   Users,
   Activity,
@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   Search,
   Filter,
+  Radio,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -24,8 +25,10 @@ import Navbar from "@/components/layout/NavBar";
 import { ModerationTable } from "@/components/admin/ModerationTable";
 import { UserManagementTable } from "@/components/admin/UserManagementTable";
 import { PulseAnalytics } from "@/components/admin/PulseAnalytics";
+import { PayoutManagementTable } from "@/components/admin/PayoutManagementTable";
+import { GateTelemetryTab } from "@/components/admin/GateTelemetryTab";
 
-type AdminTab = "events" | "users" | "analytics";
+type AdminTab = "events" | "users" | "analytics" | "payouts" | "telemetry";
 type EventStatus = "pending" | "approved" | "rejected" | "all";
 
 function AdminDashboardContent() {
@@ -62,107 +65,175 @@ function AdminDashboardContent() {
   const [eventTotalPages, setEventTotalPages] = useState(1);
   const [userPage, setUserPage] = useState(1);
   const [userTotalPages, setUserTotalPages] = useState(1);
+  const [payouts, setPayouts] = useState<any[]>([]);
+  const [payoutFilter, setPayoutFilter] = useState<
+    "pending" | "completed" | "all"
+  >("pending");
+  const [payoutPage, setPayoutPage] = useState(1);
+  const [payoutTotalPages, setPayoutTotalPages] = useState(1);
   const limit = 10;
 
   // BASE AUTHENTICATED HEADERS GENERATOR
-  const getAuthHeaders = () => {
+  const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem("skaute_token");
     return {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
-  };
-
-  // FETCH EVENTS (TRIGGERED ONLY FOR EVENTS TAB)
-  const fetchEvents = async () => {
-    setLoading(true);
-    try {
-      const query = new URLSearchParams({
-        page: eventPage.toString(),
-        limit: limit.toString(),
-        ...(eventFilter !== "all" && { approvalStatus: eventFilter }),
-        ...(eventSearch && { title: eventSearch }),
-      });
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/events?${query}`,
-        { method: "GET", headers: getAuthHeaders() },
-      );
-      if (!res.ok) throw new Error("Sync failed");
-      const result = await res.json();
-
-      setEvents(result.data?.events || []);
-      setEventTotalPages(result.pagination?.totalPages || 1);
-
-      if (result.pagination?.counts) {
-        setEventStats((prev) => ({
-          ...prev,
-          pending: result.pagination.counts.pending,
-          approved: result.pagination.counts.approved,
-          rejected: result.pagination.counts.rejected,
-          all: result.pagination.counts.all,
-        }));
-      }
-    } catch (error) {
-      toast.error("Failed to sync structural events loop");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // FETCH USERS (TRIGGERED VIA USERS TAB WITH SEARCH & PIPELINES)
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const query = new URLSearchParams({
-        page: userPage.toString(),
-        limit: limit.toString(),
-        ...(userSearch && { search: userSearch }), // Maps directly to your aggregate search filter
-      });
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/users?${query}`,
-        { method: "GET", headers: getAuthHeaders() },
-      );
-      if (!res.ok) throw new Error("User sync failed");
-      const result = await res.json();
-
-      setUsers(result.data?.users || []);
-      setUserTotalPages(result.pagination?.totalPages || 1);
-
-      if (result.pagination) {
-        setEventStats((prev) => ({
-          ...prev,
-          totalUsers: result.pagination.totalUsers || 0,
-        }));
-        if (result.pagination.counts) {
-          setUserStatusCounts(result.pagination.counts);
-        }
-      }
-    } catch (error) {
-      toast.error("Could not load platform directory users");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, []);
 
   // FETCH PULSE METRICS
-  const fetchPulse = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/pulse`,
-        { method: "GET", headers: getAuthHeaders() },
-      );
-      const result = await res.json();
-      if (result.status === "success") {
-        setPulseData(result.data);
+  const fetchPulse = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true);
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/pulse`,
+          {
+            method: "GET",
+            headers: getAuthHeaders(),
+          },
+        );
+        const result = await res.json();
+        if (result.status === "success") {
+          setPulseData(result.data);
+        }
+      } catch (error) {
+        toast.error("Failed to sync metric analytics");
+      } finally {
+        if (!silent) setLoading(false);
       }
-    } catch (error) {
-      toast.error("Failed to sync metric analytics");
-    } finally {
-      setLoading(false);
+    },
+    [getAuthHeaders],
+  );
+
+  // FETCH EVENTS
+  const fetchEvents = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true);
+      try {
+        const query = new URLSearchParams({
+          page: eventPage.toString(),
+          limit: limit.toString(),
+          ...(eventFilter !== "all" && { approvalStatus: eventFilter }),
+          ...(eventSearch && { title: eventSearch }),
+        });
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/events?${query}`,
+          {
+            method: "GET",
+            headers: getAuthHeaders(),
+          },
+        );
+        if (!res.ok) throw new Error("Sync failed");
+        const result = await res.json();
+
+        setEvents(result.data?.events || []);
+        setEventTotalPages(result.pagination?.totalPages || 1);
+
+        if (result.pagination?.counts) {
+          setEventStats((prev) => ({
+            ...prev,
+            pending: result.pagination.counts.pending,
+            approved: result.pagination.counts.approved,
+            rejected: result.pagination.counts.rejected,
+            all: result.pagination.counts.all,
+          }));
+        }
+      } catch (error) {
+        toast.error("Failed to sync structural events loop");
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [eventPage, eventFilter, eventSearch, getAuthHeaders],
+  );
+
+  // FETCH USERS
+  const fetchUsers = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true);
+      try {
+        const query = new URLSearchParams({
+          page: userPage.toString(),
+          limit: limit.toString(),
+          ...(userSearch && { search: userSearch }),
+        });
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/users?${query}`,
+          {
+            method: "GET",
+            headers: getAuthHeaders(),
+          },
+        );
+        if (!res.ok) throw new Error("User sync failed");
+        const result = await res.json();
+
+        setUsers(result.data?.users || []);
+        setUserTotalPages(result.pagination?.totalPages || 1);
+
+        if (result.pagination) {
+          setEventStats((prev) => ({
+            ...prev,
+            totalUsers: result.pagination.totalUsers || 0,
+          }));
+          if (result.pagination.counts) {
+            setUserStatusCounts(result.pagination.counts);
+          }
+        }
+      } catch (error) {
+        toast.error("Could not load platform directory users");
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [userPage, userSearch, getAuthHeaders],
+  );
+
+  // FETCH PAYOUT REQUESTS
+  const fetchPayouts = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true);
+      try {
+        const query = new URLSearchParams({
+          page: payoutPage.toString(),
+          limit: limit.toString(),
+          ...(payoutFilter !== "all" && { status: payoutFilter }),
+        });
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/payouts?${query}`,
+          {
+            method: "GET",
+            headers: getAuthHeaders(),
+          },
+        );
+        if (!res.ok) throw new Error("Payout sync failed");
+        const result = await res.json();
+
+        setPayouts(result.data?.payouts || []);
+        setPayoutTotalPages(result.pagination?.totalPages || 1);
+      } catch (error) {
+        toast.error("Could not sync settlement request queue");
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [payoutPage, payoutFilter, getAuthHeaders],
+  );
+
+  // COMPREHENSIVE REFRESH CHAIN AFTER ADMINISTRATIVE ACTIONS
+  const refreshGlobalState = async () => {
+    if (activeTab === "events") {
+      await fetchEvents(true);
+    } else if (activeTab === "users") {
+      await fetchUsers(true);
+    } else if (activeTab === "payouts") {
+      await fetchPayouts(true);
     }
+    await fetchPulse(true); // Soft sync counters silently to update live metric cards
   };
 
   // ACTION CONTROLLER: APPROVE VERIFICATION PROMPT
@@ -182,13 +253,13 @@ function AdminDashboardContent() {
       toast.success(
         result.message || "Host account verification successfully approved!",
       );
-      fetchUsers(); // Live reload data view components
+      refreshGlobalState();
     } catch (err) {
       toast.error("Could not execute account approval verification");
     }
   };
 
-  // ACTION CONTROLLER: TOGGLE ACTIVE STATUS VIA NEW STRING STATUS ENUM
+  // ACTION CONTROLLER: TOGGLE ACTIVE STATUS
   const handleToggleUserStatus = async (
     userId: string,
     targetStatus: "active" | "suspended",
@@ -199,46 +270,51 @@ function AdminDashboardContent() {
         {
           method: "PATCH",
           headers: getAuthHeaders(),
-          body: JSON.stringify({ status: targetStatus }), // Directly passes target state structure
+          body: JSON.stringify({ status: targetStatus }),
         },
       );
       if (!res.ok) throw new Error("Status modulation failed");
       const result = await res.json();
 
       toast.success(result.message || `Account status set to ${targetStatus}`);
-      fetchUsers(); // Live reload data view components
+      refreshGlobalState();
     } catch (err) {
       toast.error("Could not complete profile status operational flag");
     }
   };
 
-  // DECOUPLED TAB SWITCHING EFFECT
+  // TAB INITIALIZATION AND SYNCHRONIZATION RUNTIME
   useEffect(() => {
-    if (activeTab === "analytics") {
-      fetchPulse();
-    } else if (activeTab === "events") {
-      fetchEvents();
-    } else if (activeTab === "users") {
-      fetchUsers();
-    }
-  }, [activeTab]);
+    if (activeTab === "analytics") fetchPulse();
+    if (activeTab === "events") fetchEvents();
+    if (activeTab === "users") fetchUsers();
+    if (activeTab === "payouts") fetchPayouts();
+  }, [activeTab, fetchPulse, fetchEvents, fetchUsers, fetchPayouts]);
 
-  // ISOLATED DEBOUNCED SEARCH WATCHERS FOR SEPARATE CONSOLES
+  // TRACK PAYOUT SUBSCRIPTION SEPARATELY TO PREVENT CROSS-TAB BUGS
+  useEffect(() => {
+    if (activeTab === "payouts") {
+      fetchPayouts();
+    }
+  }, [payoutFilter, payoutPage, activeTab, fetchPayouts]);
+
+  // DEBOUNCED ENGINE FOR EVENTS SEARCH
   useEffect(() => {
     if (activeTab !== "events") return;
     const delayDebounceFn = setTimeout(() => {
       fetchEvents();
-    }, 500);
+    }, 400);
     return () => clearTimeout(delayDebounceFn);
-  }, [eventSearch, eventFilter, eventPage]);
+  }, [eventSearch, eventFilter, eventPage, activeTab, fetchEvents]);
 
+  // DEBOUNCED ENGINE FOR USERS SEARCH
   useEffect(() => {
     if (activeTab !== "users") return;
     const delayDebounceFn = setTimeout(() => {
       fetchUsers();
-    }, 500);
+    }, 400);
     return () => clearTimeout(delayDebounceFn);
-  }, [userSearch, userPage]);
+  }, [userSearch, userPage, activeTab, fetchUsers]);
 
   return (
     <div className="min-h-screen bg-[#FDFDFD]">
@@ -269,6 +345,18 @@ function AdminDashboardContent() {
                 onClick={() => setActiveTab("events")}
                 icon={<CalendarDays size={16} />}
                 label="Events Console"
+              />
+              <SidebarButton
+                active={activeTab === "payouts"}
+                onClick={() => setActiveTab("payouts")}
+                icon={<Wallet size={16} />}
+                label="Payouts & Settlements"
+              />
+              <SidebarButton
+                active={activeTab === "telemetry"}
+                onClick={() => setActiveTab("telemetry")}
+                icon={<Radio size={16} />}
+                label="Gate Telemetry Room"
               />
             </nav>
           </div>
@@ -304,6 +392,16 @@ function AdminDashboardContent() {
                     Vibe <span className="text-blue-600">Pulse</span>
                   </>
                 )}
+                {activeTab === "payouts" && (
+                  <>
+                    Settlement <span className="text-blue-600">Clearance</span>
+                  </>
+                )}
+                {activeTab === "telemetry" && (
+                  <>
+                    Telemetry <span className="text-blue-600">Command</span>
+                  </>
+                )}
               </h1>
               <p className="text-[10px] font-bold text-gray-400 uppercase mt-1 tracking-widest">
                 Realtime Administration Pipeline
@@ -311,7 +409,7 @@ function AdminDashboardContent() {
             </div>
 
             {/* INTEGRATED CONDITIONAL ACTIVE FILTER ENGINE SEARCH */}
-            {activeTab !== "analytics" && (
+            {activeTab !== "analytics" && activeTab !== "telemetry" && (
               <div className="relative group w-full lg:w-auto">
                 <Search
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
@@ -353,13 +451,15 @@ function AdminDashboardContent() {
             />
             <StatCard
               label="Live Moves"
-              value={eventStats.approved}
+              value={
+                pulseData?.events?.totalActiveEvents ?? eventStats.approved
+              }
               color="white"
               icon={<Activity size={14} />}
             />
             <StatCard
               label="Total Directory Users"
-              value={eventStats.totalUsers}
+              value={pulseData?.users?.totalUsersCount ?? eventStats.totalUsers}
               color="white"
               icon={<Users size={14} />}
             />
@@ -382,6 +482,7 @@ function AdminDashboardContent() {
                 key="events"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 className="space-y-6"
               >
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -431,7 +532,7 @@ function AdminDashboardContent() {
                 ) : (
                   <ModerationTable
                     events={events}
-                    onStatusUpdate={fetchEvents}
+                    onStatusUpdate={refreshGlobalState}
                   />
                 )}
               </motion.section>
@@ -442,6 +543,7 @@ function AdminDashboardContent() {
                 key="users"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 className="space-y-6"
               >
                 <div className="flex justify-between items-center">
@@ -480,6 +582,7 @@ function AdminDashboardContent() {
                 key="analytics"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 className="w-full"
               >
                 {loading && !pulseData ? (
@@ -489,6 +592,68 @@ function AdminDashboardContent() {
                 ) : (
                   <PulseAnalytics data={pulseData || { eventStats }} />
                 )}
+              </motion.section>
+            )}
+
+            {activeTab === "payouts" && (
+              <motion.section
+                key="payouts"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-6"
+              >
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="flex bg-gray-100 p-1 rounded-xl overflow-x-auto max-w-full">
+                    {(["pending", "completed", "all"] as const).map(
+                      (status) => (
+                        <button
+                          key={status}
+                          onClick={() => {
+                            setPayoutFilter(status);
+                            setPayoutPage(1);
+                          }}
+                          className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-tight transition-all whitespace-nowrap ${payoutFilter === status ? "bg-white text-blue-600 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
+                        >
+                          {status} Requests
+                        </button>
+                      ),
+                    )}
+                  </div>
+
+                  {payoutTotalPages > 1 && (
+                    <Pagination
+                      current={payoutPage}
+                      total={payoutTotalPages}
+                      onPageChange={setPayoutPage}
+                    />
+                  )}
+                </div>
+
+                {loading ? (
+                  <div className="h-64 flex items-center justify-center bg-white rounded-3xl border border-gray-100 shadow-sm">
+                    <Loader2 className="animate-spin text-blue-600" />
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+                    <PayoutManagementTable
+                      payouts={payouts}
+                      onPayoutProcessed={refreshGlobalState}
+                    />
+                  </div>
+                )}
+              </motion.section>
+            )}
+
+            {activeTab === "telemetry" && (
+              <motion.section
+                key="telemetry"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="w-full"
+              >
+                <GateTelemetryTab />
               </motion.section>
             )}
           </AnimatePresence>

@@ -40,11 +40,32 @@ export default function TicketScannerPage() {
   const [syncStatus, setSyncStatus] = useState<"syncing" | "idle" | "error">(
     "idle",
   );
+  const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
 
   // --- REFS ---
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const processingRef = useRef(false);
   const hasFetchedOnMount = useRef(false);
+
+  // --- INITIALIZE DEVICE FINGERPRINT ---
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Retrieve existing fingerprint or generate a new persistent cryptographic hardware hash
+    let fingerprint = localStorage.getItem("kivo_scanner_fingerprint");
+    if (!fingerprint) {
+      const platformInfo =
+        navigator.userAgent + navigator.hardwareConcurrency + screen.colorDepth;
+      const cleanPlatform = platformInfo.replace(/[^a-zA-Z0-9]/g, "");
+      const randomBits = Math.random()
+        .toString(36)
+        .substring(2, 10)
+        .toUpperCase();
+      fingerprint = `SCAN-${cleanPlatform.substring(0, 8).toUpperCase()}-${randomBits}`;
+      localStorage.setItem("kivo_scanner_fingerprint", fingerprint);
+    }
+    setDeviceFingerprint(fingerprint);
+  }, []);
 
   const playSound = (type: "success" | "error") => {
     if (typeof window === "undefined") return;
@@ -155,7 +176,10 @@ export default function TicketScannerPage() {
                 "Content-Type": "application/json",
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
               },
-              body: JSON.stringify({ checkInCode: cleanCode }),
+              body: JSON.stringify({
+                checkInCode: cleanCode,
+                deviceFingerprint: deviceFingerprint, // <-- Telemetry payload shipped down to backend logic
+              }),
             },
           );
 
@@ -272,6 +296,8 @@ export default function TicketScannerPage() {
               checkInCode: cleanCode,
               eventId: targetEventId,
               timestamp: Date.now(),
+              // Offline logs track fingerprints locally too for subsequent queue operations
+              deviceFingerprint: deviceFingerprint,
             });
           }
         }
@@ -286,7 +312,7 @@ export default function TicketScannerPage() {
         }, 1500); // 1.5-second scan throttle window
       }
     },
-    [targetEventId],
+    [targetEventId, deviceFingerprint],
   );
 
   // --- CAMERA CONTROL ---
@@ -480,7 +506,10 @@ export default function TicketScannerPage() {
               className={`w-2 h-2 rounded-full ${cameraReady || showManualInput ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" : "bg-red-500"} animate-pulse`}
             />
             <span className="text-[10px] font-black uppercase text-white/30 tracking-[0.2em]">
-              Hardware: {showManualInput ? "Keyboard" : "Camera Active"}
+              ID:{" "}
+              {deviceFingerprint
+                ? deviceFingerprint.substring(0, 13)
+                : "Initializing..."}
             </span>
           </div>
         </footer>

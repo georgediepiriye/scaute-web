@@ -5,6 +5,7 @@ export interface PendingSync {
   checkInCode: string;
   eventId: string;
   timestamp: number;
+  deviceFingerprint: string; // <-- Add this field here
 }
 
 export interface LocalTicket {
@@ -24,7 +25,8 @@ export class SkauteScannerDB extends Dexie {
   constructor() {
     super("SkauteScannerDB");
 
-    this.version(3).stores({
+    // Incremented to version 4 to accommodate the new offline telemetry field
+    this.version(4).stores({
       tickets:
         "id, eventId, checkInCode, status, updatedAt, [checkInCode+eventId]",
 
