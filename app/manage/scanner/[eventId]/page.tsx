@@ -13,16 +13,17 @@ import {
   Camera,
   ArrowRight,
   Loader2,
+  WifiOff,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { db } from "@/lib/db";
+import { useOutboxSync } from "@/hooks/useOutboxSync";
 import AuthGuard from "@/components/auth/AuthGuard";
 
 export default function TicketScannerPage() {
   const params = useParams();
   const router = useRouter();
 
-  // Next.js Routing Shield: Resolves dynamic path parameters regardless of folder naming configuration
   const targetEventId = (params.id || params.eventId) as string;
 
   // --- STATE ---
@@ -42,6 +43,14 @@ export default function TicketScannerPage() {
   );
   const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
 
+  // --- BACKGROUND OUTBOX WORKER ENGINE LINK ---
+  const { isOnline } = useOutboxSync(
+    useCallback(() => {
+      // Automatically trigger a live downstream pull once background uploads finish
+      performSync(false);
+    }, [targetEventId]),
+  );
+
   // --- REFS ---
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const processingRef = useRef(false);
@@ -51,7 +60,6 @@ export default function TicketScannerPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Retrieve existing fingerprint or generate a new persistent cryptographic hardware hash
     let fingerprint = localStorage.getItem("kivo_scanner_fingerprint");
     if (!fingerprint) {
       const platformInfo =
@@ -94,7 +102,8 @@ export default function TicketScannerPage() {
   // --- SYNC ENGINE (PULL GUESTLIST DOWN) ---
   const performSync = useCallback(
     async (manual = false) => {
-      if (!targetEventId || syncStatus === "syncing") return;
+      if (!targetEventId || syncStatus === "syncing" || !navigator.onLine)
+        return;
       setSyncStatus("syncing");
 
       try {
@@ -146,7 +155,7 @@ export default function TicketScannerPage() {
   );
 
   useEffect(() => {
-    if (!hasFetchedOnMount.current && targetEventId) {
+    if (!hasFetchedOnMount.current && targetEventId && navigator.onLine) {
       hasFetchedOnMount.current = true;
       performSync(false);
     }
@@ -168,6 +177,10 @@ export default function TicketScannerPage() {
       try {
         // 1. Primary Path: Validate against Live Database
         try {
+          if (!navigator.onLine) {
+            throw new Error("Offline status forced configuration routing");
+          }
+
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/check-in/${targetEventId}`,
             {
@@ -178,7 +191,7 @@ export default function TicketScannerPage() {
               },
               body: JSON.stringify({
                 checkInCode: cleanCode,
-                deviceFingerprint: deviceFingerprint, // <-- Telemetry payload shipped down to backend logic
+                deviceFingerprint: deviceFingerprint,
               }),
             },
           );
@@ -188,7 +201,6 @@ export default function TicketScannerPage() {
           if (response.ok && result.status === "success") {
             const remoteData = result.data;
 
-            // Resolve existing ticket key to maintain structure integrity inside IndexedDB
             const ticketInDb = await db.tickets
               .where("checkInCode")
               .equals(cleanCode)
@@ -208,14 +220,14 @@ export default function TicketScannerPage() {
             playSound("success");
             setLastResult({
               success: true,
-              guestName: remoteData.guestName,
+              // Using remoteData.guestName and remoteData.tier exactly matches your backend return properties
+              guestName: remoteData.guestName || "Guest",
               tier: remoteData.alreadyProcessed
-                ? "⚠️ ALREADY VERIFIED (WITHIN 2 MINS)"
-                : remoteData.tier,
+                ? "⚠️ ALREADY VERIFIED"
+                : remoteData.tier || "General Admission",
             });
             return;
           } else {
-            // Catches AppError models (e.g., 400, 403, 404, 409 Conflict) from your service layer
             playSound("error");
             setLastResult({
               success: false,
@@ -224,11 +236,10 @@ export default function TicketScannerPage() {
             return;
           }
         } catch (networkError) {
-          // 2. Fallback Path: Offline Verification Mode (Runs only when remote API is unreachable)
+          // 2. Fallback Path: Offline Verification Mode (Runs when remote API or internet is unreachable)
           const localTicket = await db.tickets
-            .where("checkInCode")
-            .equals(cleanCode)
-            .filter((t) => t.eventId === targetEventId)
+            .where("[checkInCode+eventId]")
+            .equals([cleanCode, targetEventId])
             .first();
 
           if (!localTicket) {
@@ -240,7 +251,6 @@ export default function TicketScannerPage() {
             return;
           }
 
-          // Evaluate offline cache rules
           if (
             localTicket.status === "used" ||
             localTicket.status === "checked-in"
@@ -282,7 +292,7 @@ export default function TicketScannerPage() {
               message: "INACTIVE TICKET STATE",
             });
           } else {
-            // Locally execute offline pass activation and drop into persistent storage sync queue
+            // Locally execute offline pass activation
             playSound("success");
             setLastResult({
               success: true,
@@ -290,13 +300,14 @@ export default function TicketScannerPage() {
               tier: localTicket.tier,
             });
 
+            // Update local state record immediately to block double scans offline
             await db.tickets.update(localTicket.id, { status: "used" });
 
+            // Push transaction payload straight to Dexie Outbox database
             await db.outbox.add({
               checkInCode: cleanCode,
               eventId: targetEventId,
               timestamp: Date.now(),
-              // Offline logs track fingerprints locally too for subsequent queue operations
               deviceFingerprint: deviceFingerprint,
             });
           }
@@ -309,7 +320,7 @@ export default function TicketScannerPage() {
         setManualCode("");
         setTimeout(() => {
           processingRef.current = false;
-        }, 1500); // 1.5-second scan throttle window
+        }, 1500);
       }
     },
     [targetEventId, deviceFingerprint],
@@ -365,6 +376,14 @@ export default function TicketScannerPage() {
       <div className="min-h-screen bg-[#060606] text-white flex flex-col font-sans overflow-hidden">
         <Toaster position="top-center" />
 
+        {/* OFFLINE MODE TELEMETRY STATUS BAR BANNER */}
+        {!isOnline && (
+          <div className="bg-amber-600 text-black font-black text-[10px] tracking-widest text-center py-2 flex items-center justify-center gap-2 uppercase animate-pulse z-[100]">
+            <WifiOff size={12} /> Local Storage Cache Mode Active • Sync
+            Suspended
+          </div>
+        )}
+
         <header className="p-5 flex items-center justify-between bg-black/80 border-b border-white/5 z-50 backdrop-blur-xl">
           <button
             onClick={() => router.back()}
@@ -379,8 +398,8 @@ export default function TicketScannerPage() {
             </h1>
             <button
               onClick={() => performSync(true)}
-              disabled={syncStatus === "syncing"}
-              className="flex items-center gap-1.5 mx-auto mt-1 text-[10px] font-bold text-yellow-500 uppercase active:scale-95 transition-all disabled:opacity-30"
+              disabled={syncStatus === "syncing" || !isOnline}
+              className="flex items-center gap-1.5 mx-auto mt-1 text-[10px] font-bold text-yellow-500 uppercase active:scale-95 transition-all disabled:opacity-20"
             >
               <RefreshCw
                 size={10}

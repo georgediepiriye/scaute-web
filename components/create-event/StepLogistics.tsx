@@ -357,7 +357,7 @@ export const StepLogistics = ({
               value={formData.location}
               onRetrieve={handleRetrieve}
               onChange={(val: string) => updateForm("location", val)}
-              placeholder="Type venue name (e.g. Casablanca Lounge, Pleasure Park)..."
+              placeholder="Type location (e.g. Old Gra, Aggrey Road)"
               theme={{
                 variables: {
                   borderRadius: "24px",

@@ -1,11 +1,12 @@
-import Dexie, { Table } from "dexie";
+// @/lib/db.ts
+import Dexie, { type Table } from "dexie";
 
 export interface PendingSync {
   id?: number;
   checkInCode: string;
   eventId: string;
   timestamp: number;
-  deviceFingerprint: string; // <-- Add this field here
+  deviceFingerprint: string;
 }
 
 export interface LocalTicket {
@@ -25,12 +26,13 @@ export class SkauteScannerDB extends Dexie {
   constructor() {
     super("SkauteScannerDB");
 
-    // Incremented to version 4 to accommodate the new offline telemetry field
     this.version(4).stores({
+      // Compound index ensures lightning fast scanning matching during gate control checks
       tickets:
         "id, eventId, checkInCode, status, updatedAt, [checkInCode+eventId]",
 
-      outbox: "++id, checkInCode, eventId, timestamp",
+      // Clean and minimal indexing footprint optimized for FIFO (First-In, First-Out) queuing
+      outbox: "++id, eventId",
     });
   }
 }
