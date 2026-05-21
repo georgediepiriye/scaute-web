@@ -141,10 +141,15 @@ export default function EventDetailsView({ event }: EventViewProps) {
       />
 
       {/* --- NAVIGATION --- */}
-      <nav className="sticky top-0 z-[100] bg-white/90 backdrop-blur-md border-b border-gray-100 px-4 py-3">
+      <nav className="sticky top-0 z-[100] bg-white border-b border-gray-100 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="relative w-16 h-16 group-hover:scale-[1.03] transition-transform duration-300 ease-out">
+          {/* Changed gap-2 to gap-0 and added group class for consistent interactivity */}
+          <Link
+            href="/"
+            className="flex items-center gap-0 cursor-pointer group"
+          >
+            {/* Added -mr-3.5 negative spacing and group-hover tracking effect */}
+            <div className="relative w-16 h-16 -mr-3.5 group-hover:scale-[1.03] transition-transform duration-300 ease-out z-0">
               <Image
                 src="/images/skaute_logo.jpg"
                 alt="Skaute Icon"
@@ -154,7 +159,9 @@ export default function EventDetailsView({ event }: EventViewProps) {
                 priority
               />
             </div>
-            <span className="font-black uppercase tracking-tighter text-gray-900 text-lg">
+
+            {/* Added relative z-10 and matching letter formatting variables */}
+            <span className="relative z-10 text-2xl font-black font-sans text-black tracking-tighter uppercase transition-colors group-hover:text-gray-700">
               skaute
             </span>
           </Link>
@@ -169,7 +176,6 @@ export default function EventDetailsView({ event }: EventViewProps) {
           </div>
         </div>
       </nav>
-
       {/* 1. HERO */}
       <div className="relative h-[45vh] md:h-[60vh] w-full overflow-hidden bg-black">
         {event.bannerImage || event.image ? (
