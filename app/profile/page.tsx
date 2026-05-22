@@ -4,6 +4,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { AnimatePresence } from "framer-motion";
+import toast, { Toaster } from "react-hot-toast"; // 1. Standardized imports here
 import {
   MapPin,
   ShieldCheck,
@@ -25,6 +27,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/layout/NavBar";
 import { useAuth } from "@/components/auth/AuthGuard";
+import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 
 const SKAUTE_BLUE = "#0052FF";
 const SKAUTE_YELLOW = "#FFD700";
@@ -32,8 +35,13 @@ const SKAUTE_YELLOW = "#FFD700";
 export default function ProfilePage() {
   const router = useRouter();
 
-  // 💡 Hook directly back into your master Auth Provider to utilize its global route guards
-  const { user: authUser, loading: authLoading, logout } = useAuth();
+  // Hook directly into the master Auth Provider to utilize its global credentials
+  const {
+    user: authUser,
+    loading: authLoading,
+    logout,
+    updateUser,
+  } = useAuth();
 
   // Unified dynamic dataset state (combining user data + relational data)
   const [extendedProfile, setExtendedProfile] = useState<any>(null);
@@ -41,16 +49,19 @@ export default function ProfilePage() {
   const [isMounted, setIsMounted] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
+  // Intercept state for missing user attributes
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // 💡 Sync profile collections only after the Auth Guard certifies the session is ready
+  // Sync profile collections only after the Auth Guard certifies the session is ready
   useEffect(() => {
     if (authLoading) return;
 
     if (!authUser) {
-      // If the global provider definitively confirms no user exists, route to gateway
+      // If the global provider confirms no user exists, route to gateway
       if (!isSigningOut) {
         window.location.href = "/auth/signin";
       }
@@ -72,21 +83,38 @@ export default function ProfilePage() {
           },
         );
 
+        let activeProfileData = authUser;
+
         if (response.ok) {
           const result = await response.json();
           if (result.status === "success" && result.data) {
-            setExtendedProfile(result.data);
-          } else {
-            // Fallback gracefully to base auth data if payload is misformed
-            setExtendedProfile(authUser);
+            activeProfileData = result.data;
           }
+        }
+
+        setExtendedProfile(activeProfileData);
+
+        // 💡 Trigger Onboarding layout check if user role is standard and interests are unpopulated
+        if (
+          activeProfileData.role === "user" &&
+          (!activeProfileData.interests ||
+            activeProfileData.interests.length === 0)
+        ) {
+          setShowOnboarding(true);
         } else {
-          // If endpoint fails but session is valid, fall back to avoid locking the UI
-          setExtendedProfile(authUser);
+          setShowOnboarding(false);
         }
       } catch (error) {
         console.error("Failed to compile extended profile portfolios:", error);
         setExtendedProfile(authUser);
+
+        // Fallback checks even during service connection issues
+        if (
+          authUser.role === "user" &&
+          (!authUser.interests || authUser.interests.length === 0)
+        ) {
+          setShowOnboarding(true);
+        }
       } finally {
         setDataLoading(false);
       }
@@ -94,6 +122,52 @@ export default function ProfilePage() {
 
     syncCompletePortfolio();
   }, [authUser, authLoading, isSigningOut]);
+  const handleOnboardingComplete = async (updatedData?: any) => {
+    // 1. Guard safely against missing payload contexts
+    const actualPayload =
+      updatedData?.data || updatedData?.user || updatedData || {};
+
+    const combinedProfile = {
+      ...extendedProfile,
+      ...actualPayload,
+      // If onboarding didn't pass anything, it will smoothly retain the existing interests
+      interests: actualPayload?.interests || extendedProfile?.interests || [],
+    };
+
+    setExtendedProfile(combinedProfile);
+
+    // 2. Commit updates up to the global localStorage session caches
+    if (typeof updateUser === "function") {
+      updateUser(combinedProfile, false);
+    }
+
+    // 3. Dismount the wizard layout blocking element
+    setShowOnboarding(false);
+
+    // 4. Extract target parameters for notification display
+    const firstName = combinedProfile?.name?.split(" ")[0] || "skaute";
+
+    // 🚀 FIX: Defer execution past the layout repaint cycle to protect tracking instances
+    setTimeout(() => {
+      toast.success(
+        `Welcome to skaute, ${firstName}! Your vibe is officially locked in. ⚡`,
+        {
+          duration: 5000,
+          icon: "🎉",
+          style: {
+            background: "#111111",
+            color: "#ffffff",
+            borderRadius: "16px",
+            border: "1px solid #27272a",
+            fontSize: "12px",
+            fontWeight: "bold",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+          },
+        },
+      );
+    }, 50);
+  };
 
   const handleSignOut = async () => {
     try {
@@ -125,7 +199,7 @@ export default function ProfilePage() {
     }
   };
 
-  // 💡 Comprehensive Guard: Prevents UI flickering or endless spinner deadlocks
+  // Comprehensive Guard: Prevents UI flickering or endless spinner deadlocks
   const currentLoadingState =
     !isMounted || authLoading || (dataLoading && !isSigningOut);
 
@@ -153,7 +227,7 @@ export default function ProfilePage() {
 
   if (!extendedProfile) return null;
 
-  // Calculate distinct event metrics using our new populated dataset arrays
+  // Calculate distinct event metrics using populated dataset arrays
   const mainHostedCount =
     extendedProfile.organizedEvents?.filter((event: any) => {
       const organizerId = event.organizer?._id || event.organizer;
@@ -177,15 +251,35 @@ export default function ProfilePage() {
     interests:
       extendedProfile?.interests?.length > 0
         ? extendedProfile.interests.slice(0, 5)
-        : ["Live Music", "Networking"],
+        : [],
     ticketsCount: extendedProfile?.tickets?.length || 0,
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-slate-900 font-sans selection:bg-blue-100">
+    <div className="min-h-screen bg-[#FDFDFD] text-slate-900 font-sans selection:bg-blue-100 relative">
+      {/* 2. Embedded Toaster context wrapper layer to capture triggers local to this window context */}
+      <Toaster position="top-right" reverseOrder={false} />
+
       <Navbar />
 
-      <main className="max-w-6xl mx-auto px-4 md:px-8 pt-32 pb-24">
+      {/* FULL-SCREEN ONBOARDING WIZARD INTERCEPT OVERLAY */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <OnboardingWizard
+            user={extendedProfile}
+            onComplete={() => handleOnboardingComplete()} // Call it anonymously with no arguments
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Apply accessibility blocking states if onboarding is dynamically active */}
+      <main
+        className={`max-w-6xl mx-auto px-4 md:px-8 pt-32 pb-24 transition-all duration-300 ${
+          showOnboarding
+            ? "pointer-events-none select-none blur-md scale-[0.99]"
+            : ""
+        }`}
+      >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* --- LEFT SIDEBAR: IDENTITY --- */}
           <aside className="lg:col-span-4">
@@ -311,14 +405,20 @@ export default function ProfilePage() {
                   Vibe
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {userDisplay.interests.map((tag: string) => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1.5 bg-slate-50 text-slate-800 border border-slate-100 rounded-xl text-[10px] font-black uppercase"
-                    >
-                      {tag}
+                  {userDisplay.interests.length > 0 ? (
+                    userDisplay.interests.map((tag: string) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1.5 bg-slate-50 text-slate-800 border border-slate-100 rounded-xl text-[10px] font-black uppercase"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-slate-400 font-medium italic">
+                      Setting up preferences...
                     </span>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>

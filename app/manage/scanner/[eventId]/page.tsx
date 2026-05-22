@@ -162,6 +162,7 @@ export default function TicketScannerPage() {
   }, [performSync, targetEventId]);
 
   // --- CORE VALIDATION LOGIC ---
+  // --- CORE VALIDATION LOGIC ---
   const processValidation = useCallback(
     async (code: string) => {
       if (processingRef.current) return;
@@ -173,6 +174,24 @@ export default function TicketScannerPage() {
       setIsProcessing(true);
 
       const token = localStorage.getItem("skaute_token");
+
+      // FIXED: Fetch the fingerprint directly from localStorage to bypass React closure state isolation
+      let activeFingerprint = localStorage.getItem("kivo_scanner_fingerprint");
+
+      // Fallback if local storage hasn't initialized yet
+      if (!activeFingerprint) {
+        const platformInfo =
+          navigator.userAgent +
+          navigator.hardwareConcurrency +
+          screen.colorDepth;
+        const cleanPlatform = platformInfo.replace(/[^a-zA-Z0-9]/g, "");
+        const randomBits = Math.random()
+          .toString(36)
+          .substring(2, 10)
+          .toUpperCase();
+        activeFingerprint = `SCAN-${cleanPlatform.substring(0, 8).toUpperCase()}-${randomBits}`;
+        localStorage.setItem("kivo_scanner_fingerprint", activeFingerprint);
+      }
 
       try {
         // 1. Primary Path: Validate against Live Database
@@ -191,7 +210,7 @@ export default function TicketScannerPage() {
               },
               body: JSON.stringify({
                 checkInCode: cleanCode,
-                deviceFingerprint: deviceFingerprint,
+                deviceFingerprint: activeFingerprint, // FIXED: Sent the fresh synchronous string reference
               }),
             },
           );
@@ -220,7 +239,6 @@ export default function TicketScannerPage() {
             playSound("success");
             setLastResult({
               success: true,
-              // Using remoteData.guestName and remoteData.tier exactly matches your backend return properties
               guestName: remoteData.guestName || "Guest",
               tier: remoteData.alreadyProcessed
                 ? "⚠️ ALREADY VERIFIED"
@@ -236,7 +254,7 @@ export default function TicketScannerPage() {
             return;
           }
         } catch (networkError) {
-          // 2. Fallback Path: Offline Verification Mode (Runs when remote API or internet is unreachable)
+          // 2. Fallback Path: Offline Verification Mode
           const localTicket = await db.tickets
             .where("[checkInCode+eventId]")
             .equals([cleanCode, targetEventId])
@@ -292,7 +310,6 @@ export default function TicketScannerPage() {
               message: "INACTIVE TICKET STATE",
             });
           } else {
-            // Locally execute offline pass activation
             playSound("success");
             setLastResult({
               success: true,
@@ -300,15 +317,13 @@ export default function TicketScannerPage() {
               tier: localTicket.tier,
             });
 
-            // Update local state record immediately to block double scans offline
             await db.tickets.update(localTicket.id, { status: "used" });
 
-            // Push transaction payload straight to Dexie Outbox database
             await db.outbox.add({
               checkInCode: cleanCode,
               eventId: targetEventId,
               timestamp: Date.now(),
-              deviceFingerprint: deviceFingerprint,
+              deviceFingerprint: activeFingerprint,
             });
           }
         }
@@ -323,7 +338,7 @@ export default function TicketScannerPage() {
         }, 1500);
       }
     },
-    [targetEventId, deviceFingerprint],
+    [targetEventId], // Removed deviceFingerprint state dependency dependency loop
   );
 
   // --- CAMERA CONTROL ---

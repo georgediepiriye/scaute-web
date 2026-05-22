@@ -331,7 +331,7 @@ export default function DiscoverPage() {
 
       {/* STICKY FILTER NAVIGATION BAR */}
       <div
-        className={`sticky top-[72px] md:top-[80px] z-[40] bg-white/90 backdrop-blur-md border-b border-gray-100 transition-all ${isScrolled ? "py-2 shadow-sm" : "py-4"}`}
+        className={`sticky top-[72px] md:top-[80px] z-[30] bg-white/90 backdrop-blur-md border-b border-gray-100 transition-all ${isScrolled ? "py-2 shadow-sm" : "py-4"}`}
       >
         <div className="max-w-6xl mx-auto px-6 flex flex-col gap-3">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">

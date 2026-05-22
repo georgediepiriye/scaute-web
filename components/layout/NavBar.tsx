@@ -86,11 +86,10 @@ export default function Navbar() {
   };
 
   return (
-    /* Changed background from bg-white/80 backdrop-blur-2xl to fully opaque bg-white */
-    <nav className="fixed top-0 w-full z-[500] bg-white border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-6 md:px-8 py-3 flex justify-between items-center relative z-[600]">
+    <nav className="fixed top-0 w-full z-40 bg-white border-b border-gray-100 unified-nav-transition">
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-3 flex justify-between items-center relative z-10">
         <Link href="/" className="flex items-center gap-0 cursor-pointer group">
-          <div className="relative w-16 h-16 -mr-3.5 group-hover:scale-[1.03] transition-transform duration-300 ease-out z-0">
+          <div className="relative w-16 h-16 -mr-3.5 group-hover:scale-[1.03] transition-transform duration-300 ease-out">
             <Image
               src="/images/skaute_logo.jpg"
               alt="Skaute Icon"
@@ -120,7 +119,7 @@ export default function Navbar() {
         </div>
 
         {/* ACTIONS */}
-        <div className="flex items-center gap-4 relative z-[610]">
+        <div className="flex items-center gap-4 relative z-20">
           {!loading && (
             <>
               {user ? (
@@ -198,7 +197,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* LIGHT SYSTEM MOBILE OVERLAY */}
+      {/* SOLID WHITE SYSTEM MOBILE OVERLAY */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -206,14 +205,10 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 w-full h-[100dvh] bg-white z-[500] md:hidden flex flex-col"
+            className="fixed inset-0 w-full h-[100dvh] bg-white z-30 md:hidden flex flex-col border-b border-gray-200"
           >
-            {/* Soft Ambient Background Highlights */}
-            <div className="absolute top-0 left-[-10%] w-[60%] h-[40%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-0 right-[-10%] w-[50%] h-[35%] bg-gray-100 blur-[100px] rounded-full pointer-events-none" />
-
             {/* Main Scrolling Canvas Frame */}
-            <div className="flex-1 flex flex-col justify-between pt-28 px-8 pb-8 overflow-y-auto relative z-10">
+            <div className="flex-1 flex flex-col justify-between pt-28 px-8 pb-8 overflow-y-auto relative z-10 bg-white">
               <div>
                 {/* Profile Widget */}
                 {!loading && user && (

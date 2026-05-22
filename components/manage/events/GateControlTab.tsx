@@ -134,7 +134,7 @@ export function GateControlTab({ eventId }: GateControlProps) {
         </div>
 
         <div
-          className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm============= border-l-2"
+          className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm border-l-2"
           style={{
             borderColor: summary.fraudAlertsCount > 0 ? "#EF4444" : "#E5E7EB",
           }}
@@ -217,8 +217,9 @@ export function GateControlTab({ eventId }: GateControlProps) {
                   <th className="p-4">Timestamp</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-gray-50 text-[11px]">
-                {telemetry.liveFeed.map((feed: any) => (
+                {telemetry?.liveFeed?.map((feed: any) => (
                   <tr
                     key={feed.ticketId}
                     className="hover:bg-slate-50/40 transition-colors font-medium"

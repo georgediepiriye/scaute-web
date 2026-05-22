@@ -28,6 +28,9 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Short-circuits UI rendering to block sign-up elements from flashing back during router transitions
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
   // Form State
   const [formData, setFormData] = useState({
     firstName: "",
@@ -38,7 +41,7 @@ export default function SignUpPage() {
     role: "user",
   });
 
-  // Handle auto-routing as a pure side-effect if a valid token is found on the client
+  // Handle auto-routing as a pure side-effect if an authenticated token is found on the client
   useEffect(() => {
     if (token && token !== "SERVER_RENDER") {
       router.replace("/profile");
@@ -56,7 +59,6 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Client-side Passwords Match Validation Guard
     if (formData.password !== formData.confirmPassword) {
       toast.error("Your passwords do not match!", {
         style: {
@@ -83,11 +85,9 @@ export default function SignUpPage() {
         role,
       };
 
-      // Swapped out native fetch for your customized global API Axios instance
       const response = await API.post("/v1/auth/signup", payload);
       const data = response.data;
 
-      // Safely parse and store token string into localStorage on successful signup
       if (data.token) {
         localStorage.setItem("skaute_token", data.token);
       }
@@ -104,13 +104,16 @@ export default function SignUpPage() {
         loading: "Creating your skaute account...",
         success: (data) => {
           setLoading(false);
-
-          // Extract user context and commit it to React state right now
           const userData = data.user || data.data?.user;
-          updateUser(userData);
 
-          // Use soft navigation router to keep your context and interceptor state active
+          // Enable loading layout block screen immediately
+          setIsRedirecting(true);
+
+          // Update global context state. The profile engine layout will
+          // automatically catch if their interests array is empty and show onboarding!
+          updateUser(userData, false);
           router.push("/profile");
+
           return `Welcome to Skaute, ${formData.firstName}!`;
         },
         error: (err: any) => {
@@ -133,18 +136,17 @@ export default function SignUpPage() {
     );
   };
 
-  // 1. If it's the server rendering, or if a token already exists, render loader fallback
-  if (token === "SERVER_RENDER" || token !== null) {
+  // Block the signup UI block from flashing if already logged in or navigating away
+  if (token === "SERVER_RENDER" || token !== null || isRedirecting) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white z-50 fixed inset-0">
         <Loader2 className="w-10 h-10 animate-spin text-[#0052FF]" />
       </div>
     );
   }
 
-  // 2. Render clean signup template for unauthenticated users
   return (
-    <div className="flex h-screen w-full bg-white font-sans text-gray-900 overflow-hidden">
+    <div className="flex h-screen w-full bg-white font-sans text-gray-900 overflow-hidden relative">
       <Toaster position="top-center" reverseOrder={false} />
       <Navbar />
 
@@ -166,7 +168,7 @@ export default function SignUpPage() {
             />
           </div>
           <h1 className="text-4xl font-black tracking-tighter text-gray-900 leading-tight uppercase">
-            Explore the <br /> <span className="text-blue-600">the vibe.</span>
+            Explore <br /> <span className="text-blue-600">the vibe.</span>
           </h1>
         </motion.div>
       </div>
@@ -316,7 +318,6 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            {/* CONFIRM PASSWORD INPUT BOUNDARY */}
             <div>
               <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
                 Confirm Password

@@ -12,14 +12,12 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 const isProd = process.env.NODE_ENV === "production";
 
-// Client-side helper to set cookies so Next.js middleware can read them
 const setClientCookie = (name: string, value: string, days: number) => {
   const expires = new Date();
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
   document.cookie = `${name}=${value};path=/;expires=${expires.toUTCString()};SameSite=Lax;secure=${isProd}`;
 };
 
-// 💡 FIX: Upgraded deletion framework to ensure it dynamically matches production attributes
 const deleteClientCookie = (name: string) => {
   document.cookie = `${name}=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT;SameSite=Lax${isProd ? ";secure" : ""}`;
 };
@@ -30,7 +28,7 @@ interface AuthContextType {
   loading: boolean;
   logout: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  updateUser: (userData: any) => void;
+  updateUser: (userData: any, bypassRedirect?: boolean) => void;
 }
 
 const AuthUserContext = createContext<AuthContextType | null>(null);
@@ -50,6 +48,11 @@ function AuthRedirectListener({
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    // 💡 FIX: Check if a local onboarding layout lock exists before forcing standard dashboard redirection
+    const isOnboardingActive =
+      localStorage.getItem("skaute_onboarding_lock") === "true";
+    if (isOnboardingActive) return;
+
     if (
       !loading &&
       user &&
@@ -78,7 +81,6 @@ export default function AuthProvider({
   useEffect(() => {
     const bootstrapSession = async () => {
       try {
-        // Grab token out of URL if arriving from a Google OAuth redirect frame
         if (typeof window !== "undefined") {
           const params = new URLSearchParams(window.location.search);
           const urlToken = params.get("token");
@@ -87,13 +89,11 @@ export default function AuthProvider({
             localStorage.setItem("skaute_token", urlToken);
             setClientCookie("skaute_token", urlToken, 7);
 
-            // Clean up the URL string immediately so the raw token string is hidden
             const cleanUrl = window.location.pathname + window.location.hash;
             window.history.replaceState({}, document.title, cleanUrl);
           }
         }
 
-        // Load local fallback user text immediately to avoid layout flickering
         const localUser = localStorage.getItem("user");
         if (localUser) {
           setUser(JSON.parse(localUser));
@@ -115,7 +115,6 @@ export default function AuthProvider({
       } catch (err: any) {
         const status = err.response?.status || err.status;
 
-        // Ignore standard 401s (unauthenticated users visiting public areas)
         if (status !== 401) {
           console.error(
             "Session bootstrap failed due to an unexpected server issue:",
@@ -123,11 +122,11 @@ export default function AuthProvider({
           );
         }
 
-        // 💡 FIX: Force-clear BOTH potential cookie keys if credentials expire or become missing
         if (status === 401 || !localStorage.getItem("skaute_token")) {
           setUser(null);
           localStorage.removeItem("user");
           localStorage.removeItem("skaute_token");
+          localStorage.removeItem("skaute_onboarding_lock");
           deleteClientCookie("skaute_token");
           deleteClientCookie("token");
         }
@@ -143,8 +142,8 @@ export default function AuthProvider({
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("skaute_token");
+    localStorage.removeItem("skaute_onboarding_lock");
 
-    // 💡 FIX: Evict both cookie definitions entirely to break the middleware redirection loops
     deleteClientCookie("skaute_token");
     deleteClientCookie("token");
 
@@ -152,7 +151,10 @@ export default function AuthProvider({
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateUser = (userData: any) => {
+  const updateUser = (userData: any, bypassRedirect = false) => {
+    if (bypassRedirect) {
+      localStorage.setItem("skaute_onboarding_lock", "true");
+    }
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
     const token = localStorage.getItem("skaute_token");
@@ -161,7 +163,6 @@ export default function AuthProvider({
 
   return (
     <AuthUserContext.Provider value={{ user, loading, logout, updateUser }}>
-      {/* 3. SAFETY BOUNDARY INJECTION */}
       <Suspense fallback={null}>
         <AuthRedirectListener user={user} loading={loading} />
       </Suspense>
