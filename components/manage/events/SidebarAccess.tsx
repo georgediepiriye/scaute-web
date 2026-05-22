@@ -94,17 +94,21 @@ export const SidebarAccess = ({
               Add Partner
             </p>
             <div className="flex gap-2">
-              <input
-                type="email"
-                value={coOrgEmail}
-                onChange={(e) => setCoOrgEmail(e.target.value)}
-                className="flex-1 bg-slate-50 p-3 rounded-xl text-[10px] font-bold outline-none border border-transparent focus:border-yellow-400 focus:bg-white transition-all"
-                placeholder="Partner email"
-              />
+              <div className="flex-1 relative h-[46px]">
+                {" "}
+                {/* Explicit height container to hold the scaled input */}
+                <input
+                  type="email"
+                  value={coOrgEmail}
+                  onChange={(e) => setCoOrgEmail(e.target.value)}
+                  className="absolute inset-0 w-[160%] h-[160%] origin-top-left scale-[0.625] bg-slate-50 p-5 rounded-[19px] text-[16px] font-bold outline-none border border-transparent focus:border-yellow-400 focus:bg-white transition-all"
+                  placeholder="Partner email"
+                />
+              </div>
               <button
                 onClick={onAdd}
                 disabled={adding || !coOrgEmail}
-                className="bg-black text-white p-3 rounded-xl active:scale-95 disabled:opacity-50 disabled:active:scale-100 transition-all shadow-lg shadow-slate-200"
+                className="bg-black text-white p-3 h-[46px] w-[46px] flex items-center justify-center rounded-xl active:scale-95 disabled:opacity-50 disabled:active:scale-100 transition-all shadow-lg shadow-slate-200"
               >
                 {adding ? (
                   <Loader2 size={14} className="animate-spin" />

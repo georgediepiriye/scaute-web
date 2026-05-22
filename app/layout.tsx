@@ -14,8 +14,8 @@ export const viewport: Viewport = {
 
 const cabinetGrotesk = localFont({
   src: "./fonts/CabinetGrotesk-Variable.woff2",
-  variable: "--font-cabinet", // Defines the CSS variable name
-  display: "swap", // Prevents invisible text while loading
+  variable: "--font-cabinet",
+  display: "swap",
 });
 
 export default function RootLayout({ children }: { children: ReactNode }) {

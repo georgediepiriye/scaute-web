@@ -71,7 +71,9 @@ export default function Navbar() {
   ];
 
   const containerVariants: Variants = {
+    close: { opacity: 0 },
     open: {
+      opacity: 1,
       transition: { staggerChildren: 0.05, delayChildren: 0.1 },
     },
   };
@@ -205,12 +207,44 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 w-full h-[100dvh] bg-white z-30 md:hidden flex flex-col border-b border-gray-200"
+            className="fixed inset-0 w-full h-[100dvh] bg-white z-50 md:hidden flex flex-col"
           >
+            {/* 🚀 FIXED TOP HEADER INSIDE OVERLAY */}
+            <div className="w-full px-6 py-3 flex justify-between items-center border-b border-gray-100 bg-white">
+              <Link
+                href="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-0"
+              >
+                {/* Negative margin pulls the text closer, matching desktop */}
+                <div className="relative w-16 h-16 -mr-3.5">
+                  <Image
+                    src="/images/skaute_logo.jpg"
+                    alt="Skaute Icon"
+                    fill
+                    className="object-contain"
+                    sizes="64px"
+                    priority
+                  />
+                </div>
+                {/* relative z-10 ensures the 'S' sits on top of any overlapping image container layers */}
+                <span className="relative z-10 text-2xl font-black font-sans text-black tracking-tighter uppercase">
+                  skaute
+                </span>
+              </Link>
+
+              {/* Close Action Trigger */}
+              <button
+                className="w-11 h-11 flex items-center justify-center rounded-xl bg-black text-white border border-black rotate-90 active:scale-90 transition-transform"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <HiX size={22} />
+              </button>
+            </div>
             {/* Main Scrolling Canvas Frame */}
-            <div className="flex-1 flex flex-col justify-between pt-28 px-8 pb-8 overflow-y-auto relative z-10 bg-white">
+            <div className="flex-1 flex flex-col justify-between px-8 py-6 overflow-y-auto bg-white">
               <div>
-                {/* Profile Widget */}
+                {/* Profile Widget Container */}
                 {!loading && user && (
                   <div className="pb-6 flex items-center gap-4 border-b border-gray-100 mb-6">
                     <div className="w-12 h-12 rounded-xl bg-gray-50 relative overflow-hidden flex-shrink-0 border border-gray-200">
@@ -220,6 +254,7 @@ export default function Navbar() {
                           alt="User"
                           fill
                           className="object-cover"
+                          sizes="48px"
                         />
                       ) : (
                         <UserIcon
@@ -270,6 +305,7 @@ export default function Navbar() {
                     </motion.div>
                   )}
 
+                  {/* Standard Links Map */}
                   {navLinks.map((link) => (
                     <motion.div key={link.href} variants={itemVariants}>
                       <Link

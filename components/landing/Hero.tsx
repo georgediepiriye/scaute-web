@@ -157,8 +157,8 @@ export default function Hero() {
             variants={itemVariants}
             className="mt-6 md:mt-8 text-[#94A3B8] text-sm md:text-xl font-medium max-w-[280px] sm:max-w-xl mx-auto leading-relaxed"
           >
-            Real-time access to local events, trending spots, and curated moves
-            across the city.
+            Real-time access to local events and activities, trending spots, and
+            curated moves across the garden city.
           </motion.p>
         </div>
 
