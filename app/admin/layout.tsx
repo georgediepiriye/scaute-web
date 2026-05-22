@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/components/auth/AuthGuard.js";
+import { useAuth } from "@/components/auth/AuthGuard";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
