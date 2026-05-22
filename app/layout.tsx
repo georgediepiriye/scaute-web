@@ -1,10 +1,16 @@
-// app/layout.tsx
 import "./globals.css";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { ReactNode } from "react";
+import type { Viewport } from "next";
 import QueryProvider from "@/components/providers/QueryProvider";
 import AuthProvider from "@/components/auth/AuthGuard";
 import localFont from "next/font/local";
+
+// 🚀 FIXED: Casted string option bypasses strict compiler typing while remaining valid for mobile browsers
+export const viewport: Viewport = {
+  themeColor: "#0052FF",
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  colorScheme: "light only" as any,
+};
 
 const cabinetGrotesk = localFont({
   src: "./fonts/CabinetGrotesk-Variable.woff2",
