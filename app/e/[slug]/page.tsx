@@ -5,52 +5,46 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-// Next.js 15 instruction: Prevents Next.js from crashing during the build phase
-// by deferring ungenerated dynamic event paths to be resolved at server runtime.
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
-/**
- * skaute Event Slug Page
- * Optimized for Next.js 15 with strict error handling and
- * performance safety nets.
- */
 export default async function SlugEventPage({ params }: PageProps) {
-  // 1. Await params for Next.js 15 compliance
   const { slug } = await params;
 
-  // 2. Fetch with a timeout signal to prevent long application-code hangs
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
 
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/v1/events/slug/${slug}`,
       {
-        next: { revalidate: 30 },
+        cache: "no-store", // Bypasses the Next.js server routing cache completely
         signal: controller.signal,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       },
     );
 
     clearTimeout(timeoutId);
 
-    // 3. Handle specific status codes immediately
-    if (res.status === 404) {
-      return notFound();
-    }
-
-    if (!res.ok) {
-      // For 500s or other severe errors, throw to the nearest error.tsx boundary
-      throw new Error(`Event fetch failed with status: ${res.status}`);
-    }
+    if (res.status === 404) return notFound();
+    if (!res.ok) throw new Error(`Fetch status returned error: ${res.status}`);
 
     const json = await res.json();
     const eventData = json.data?.event;
 
-    // 4. Final safety check on the data object
+    // 1. Structural safety boundary check
     if (!eventData) {
+      return notFound();
+    }
+
+    // 2. Strict explicit approval status validation
+    // Matches your schema constraint: approvalStatus: "pending" | "approved" | "rejected"
+    if (eventData.approvalStatus !== "approved") {
+      return notFound();
+    }
+
+    // 3. Optional: Block deactivated or cancelled moves
+    if (eventData.isCancelled === true) {
       return notFound();
     }
 
@@ -63,8 +57,6 @@ export default async function SlugEventPage({ params }: PageProps) {
   } catch (error: any) {
     clearTimeout(timeoutId);
 
-    // 5. Short-circuit: Let Next.js's internal HTTP error handling run its redirect logic
-    // without triggering false alarms in your server logging framework.
     if (
       error.message?.includes("NEXT_HTTP_ERROR_FALLBACK") ||
       error.digest?.includes("NEXT_HTTP_ERROR_FALLBACK")
@@ -72,15 +64,7 @@ export default async function SlugEventPage({ params }: PageProps) {
       throw error;
     }
 
-    // Handle AbortError (Timeout)
-    if (error.name === "AbortError") {
-      console.error(`Fetch timed out for slug: ${slug}`);
-      return notFound();
-    }
-
-    console.error("API Fetch Error:", error);
-
-    // In production, triggering a fallback 404 is safer than crashing the app
+    console.error("Critical Page Error Tracker:", error);
     return notFound();
   }
 }

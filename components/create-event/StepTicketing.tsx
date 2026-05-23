@@ -42,13 +42,28 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
 
     // Handle numeric casting for Price and Capacity
     if (field === "price" || field === "capacity") {
-      // If the user clears the input, we keep it as an empty string temporarily
-      // or set it to 0. Number("") returns 0, which is what we want for the state.
-      formattedValue = value === "" ? 0 : Number(value);
+      // Clean character values and ensure nothing drops below 0
+      const parsedNum = value === "" ? 0 : Number(value);
+      formattedValue = isNaN(parsedNum) || parsedNum < 0 ? 0 : parsedNum;
     }
 
     newTiers[index] = { ...newTiers[index], [field]: formattedValue };
     updateForm("ticketTiers", newTiers);
+  };
+
+  // Prevent invalid special character entries completely at the keystroke level
+  const handleNumericKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "-" || e.key === "+" || e.key === "e" || e.key === "E") {
+      e.preventDefault();
+    }
+  };
+
+  // Block pasting malicious non-positive strings
+  const handleNumericPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasteData = e.clipboardData.getData("text");
+    if (/[^0-9.]/.test(pasteData) || Number(pasteData) < 0) {
+      e.preventDefault();
+    }
   };
 
   const TICKET_OPTIONS = [
@@ -151,9 +166,11 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                   </label>
                   <input
                     type="number"
+                    min="0"
                     placeholder="0"
-                    // Show empty string if 0 so placeholder is visible
                     value={tier.price === 0 ? "" : tier.price}
+                    onKeyDown={handleNumericKeyDown}
+                    onPaste={handleNumericPaste}
                     onChange={(e) => updateTier(idx, "price", e.target.value)}
                     className="w-full p-4 rounded-2xl bg-white font-bold text-base outline-none shadow-sm focus:ring-2 transition-all"
                     style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
@@ -168,8 +185,11 @@ export const StepTicketing = ({ formData, updateForm }: any) => {
                   <div className="relative">
                     <input
                       type="number"
+                      min="0"
                       placeholder="100"
                       value={tier.capacity === 0 ? "" : tier.capacity}
+                      onKeyDown={handleNumericKeyDown}
+                      onPaste={handleNumericPaste}
                       onChange={(e) =>
                         updateTier(idx, "capacity", e.target.value)
                       }

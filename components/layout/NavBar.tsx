@@ -33,6 +33,7 @@ export default function Navbar() {
       document.body.style.overflow = "unset";
     };
   }, [isMobileMenuOpen]);
+
   const handleSignOut = async () => {
     setMobileMenuOpen(false);
 
@@ -69,10 +70,12 @@ export default function Navbar() {
       }
     }
   };
+
   const navLinks = [
     { href: "/map", label: "Live Map" },
     { href: "/discover", label: "Discover" },
     { href: "/create", label: "Host Event" },
+    { href: "/pricing", label: "Pricing" }, // Inserted explicitly for organizer discovery
     { href: "/about", label: "Our Story" },
     { href: "/contact", label: "Support" },
   ];
@@ -223,7 +226,6 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-0"
               >
-                {/* Negative margin pulls the text closer, matching desktop */}
                 <div className="relative w-16 h-16 -mr-3.5">
                   <Image
                     src="/images/skaute_logo.jpg"
@@ -234,7 +236,6 @@ export default function Navbar() {
                     priority
                   />
                 </div>
-                {/* relative z-10 ensures the 'S' sits on top of any overlapping image container layers */}
                 <span className="relative z-10 text-2xl font-black font-sans text-black tracking-tighter uppercase">
                   skaute
                 </span>

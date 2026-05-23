@@ -8,11 +8,9 @@ import { motion } from "framer-motion";
 const SKAUTE_BLUE = "#0052FF";
 const SKAUTE_YELLOW = "#FFD700";
 
-// 1. ISOLATED INNER NOT-FOUND LAYOUT
 function NotFoundContent() {
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-white overflow-hidden px-6">
-      {/* Background Decorative Grid */}
       <div
         className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
         style={{
@@ -26,7 +24,6 @@ function NotFoundContent() {
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 w-full max-w-2xl bg-gray-50/50 border border-gray-100 rounded-[48px] p-8 md:p-16 text-center shadow-2xl shadow-gray-200/50"
       >
-        {/* Status Icons Row */}
         <div className="flex justify-center -space-x-4 mb-8">
           <div className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center border-4 border-gray-50">
             <Clock size={24} className="text-gray-400" />
@@ -42,7 +39,6 @@ function NotFoundContent() {
           </div>
         </div>
 
-        {/* Text Content */}
         <h1 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-gray-900 mb-6 leading-none">
           That Move is <span style={{ color: SKAUTE_BLUE }}>Off-Grid</span>
         </h1>
@@ -74,7 +70,6 @@ function NotFoundContent() {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
           <Link
             href="/discover"
@@ -94,7 +89,6 @@ function NotFoundContent() {
           </Link>
         </div>
 
-        {/* Rivers State Marker */}
         <div className="mt-12 pt-8 border-t border-gray-100 flex items-center justify-center gap-2">
           <div
             className="w-2 h-2 rounded-full animate-pulse"
@@ -109,7 +103,7 @@ function NotFoundContent() {
   );
 }
 
-// 2. MAIN SYSTEM DELEGATE WRAPPED IN SUSPENSE
+// Fixed: The component accepts zero function arguments
 export default function NotFound() {
   return (
     <Suspense
