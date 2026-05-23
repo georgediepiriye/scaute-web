@@ -33,7 +33,6 @@ export default function Navbar() {
       document.body.style.overflow = "unset";
     };
   }, [isMobileMenuOpen]);
-
   const handleSignOut = async () => {
     setMobileMenuOpen(false);
 
@@ -52,16 +51,24 @@ export default function Navbar() {
     } catch (error) {
       console.error("Server cleanup during logout failed:", error);
     } finally {
+      // 1. Clear Context State & Local Storage Data
       if (logout) {
         logout();
       } else {
         localStorage.removeItem("skaute_token");
         localStorage.removeItem("user");
+        localStorage.removeItem("skaute_onboarding_lock");
+
+        // 2. Clear Server Cookies to prevent Middleware routing loops
+        document.cookie =
+          "skaute_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+        document.cookie =
+          "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+
         router.push("/auth/signin");
       }
     }
   };
-
   const navLinks = [
     { href: "/map", label: "Live Map" },
     { href: "/discover", label: "Discover" },
