@@ -16,9 +16,23 @@ export default function AuthLayout({
 
   useEffect(() => {
     const token = localStorage.getItem("skaute_token");
+    const localUser = localStorage.getItem("user");
 
     if (token) {
-      // If they are logged in, redirect them directly without setting local layout state.
+      // Check if the already logged-in user is an admin
+      if (localUser) {
+        try {
+          const parsedUser = JSON.parse(localUser);
+          if (parsedUser?.role === "admin") {
+            router.replace("/admin/dashboard");
+            return;
+          }
+        } catch (error) {
+          console.error("Failed to parse local user profile context:", error);
+        }
+      }
+
+      // Default fallback destination for standard authenticated accounts
       router.replace("/profile");
     } else {
       // Push the state change to the next tick of the event loop.

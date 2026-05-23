@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { API } from "@/lib/api";
 import {
   useEffect,
   useState,
@@ -9,13 +9,14 @@ import {
   Suspense,
 } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { API } from "@/lib/api";
 
 const isProd = process.env.NODE_ENV === "production";
 
 const setClientCookie = (name: string, value: string, days: number) => {
   const expires = new Date();
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${value};path=/;expires=${expires.toUTCString()};SameSite=Lax;secure=${isProd}`;
+  document.cookie = `${name}=${encodeURIComponent(value)};path=/;expires=${expires.toUTCString()};SameSite=Lax${isProd ? ";secure" : ""}`;
 };
 
 const deleteClientCookie = (name: string) => {
@@ -23,23 +24,18 @@ const deleteClientCookie = (name: string) => {
 };
 
 interface AuthContextType {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   user: any;
   loading: boolean;
   logout: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateUser: (userData: any, bypassRedirect?: boolean) => void;
 }
 
 const AuthUserContext = createContext<AuthContextType | null>(null);
 
-// 1. ISOLATED REDIRECTION ENGINE
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function AuthRedirectListener({
   user,
   loading,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   user: any;
   loading: boolean;
 }) {
@@ -48,25 +44,25 @@ function AuthRedirectListener({
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // 💡 FIX: Check if a local onboarding layout lock exists before forcing standard dashboard redirection
     const isOnboardingActive =
       localStorage.getItem("skaute_onboarding_lock") === "true";
     if (isOnboardingActive) return;
 
-    if (
-      !loading &&
-      user &&
-      (pathname === "/auth/signin" || pathname === "/auth/signup")
-    ) {
-      const callbackUrl = searchParams.get("callbackUrl") || "/profile";
-      router.push(callbackUrl);
+    if (!loading && user) {
+      if (pathname === "/auth/signin" || pathname === "/auth/signup") {
+        if (user.role === "admin") {
+          router.replace("/admin/dashboard");
+        } else {
+          const callbackUrl = searchParams.get("redirect") || "/profile";
+          router.replace(callbackUrl);
+        }
+      }
     }
   }, [user, loading, pathname, searchParams, router]);
 
   return null;
 }
 
-// 2. MAIN PROVIDER COMPONENT
 export default function AuthProvider({
   children,
 }: {
@@ -74,8 +70,19 @@ export default function AuthProvider({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [user, setUser] = useState<any>(null);
+
+  const [user, setUser] = useState<any>(() => {
+    if (typeof window !== "undefined") {
+      const localUser = localStorage.getItem("user");
+      try {
+        return localUser ? JSON.parse(localUser) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -88,47 +95,31 @@ export default function AuthProvider({
           if (urlToken) {
             localStorage.setItem("skaute_token", urlToken);
             setClientCookie("skaute_token", urlToken, 7);
-
             const cleanUrl = window.location.pathname + window.location.hash;
             window.history.replaceState({}, document.title, cleanUrl);
           }
         }
 
-        const localUser = localStorage.getItem("user");
-        if (localUser) {
-          setUser(JSON.parse(localUser));
-        }
-
-        let freshUser = null;
-
         const response = await API.get("/v1/auth/me");
-        freshUser = response.data?.data?.user || response.data?.user;
+        const freshUser = response.data?.data?.user || response.data?.user;
 
         if (freshUser) {
           setUser(freshUser);
           localStorage.setItem("user", JSON.stringify(freshUser));
+          setClientCookie("user_role", freshUser.role, 7);
 
           const token = localStorage.getItem("skaute_token");
           if (token) setClientCookie("skaute_token", token, 7);
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         const status = err.response?.status || err.status;
-
-        if (status !== 401) {
-          console.error(
-            "Session bootstrap failed due to an unexpected server issue:",
-            err,
-          );
-        }
-
         if (status === 401 || !localStorage.getItem("skaute_token")) {
           setUser(null);
           localStorage.removeItem("user");
           localStorage.removeItem("skaute_token");
           localStorage.removeItem("skaute_onboarding_lock");
           deleteClientCookie("skaute_token");
-          deleteClientCookie("token");
+          deleteClientCookie("user_role");
         }
       } finally {
         setLoading(false);
@@ -143,20 +134,18 @@ export default function AuthProvider({
     localStorage.removeItem("user");
     localStorage.removeItem("skaute_token");
     localStorage.removeItem("skaute_onboarding_lock");
-
     deleteClientCookie("skaute_token");
-    deleteClientCookie("token");
-
+    deleteClientCookie("user_role");
     router.push("/auth/signin");
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateUser = (userData: any, bypassRedirect = false) => {
     if (bypassRedirect) {
       localStorage.setItem("skaute_onboarding_lock", "true");
     }
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
+    setClientCookie("user_role", userData.role, 7);
     const token = localStorage.getItem("skaute_token");
     if (token) setClientCookie("skaute_token", token, 7);
   };

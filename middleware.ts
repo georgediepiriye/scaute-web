@@ -1,61 +1,41 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose"; // Run: npm install jose
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
-
-export async function middleware(request: NextRequest) {
-  const token = request.cookies.get("skaute_token")?.value;
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isProtectedRoute =
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/profile") ||
-    pathname.startsWith("/manage") ||
-    pathname.startsWith("/tickets");
+  // Read auth tokens safely from request cookies
+  const token = request.cookies.get("skaute_token")?.value;
+  const userRole = request.cookies.get("user_role")?.value;
 
-  const isAuthPage = pathname === "/auth/signin" || pathname === "/auth/signup";
-
-  // 1. Unauthenticated user trying to access protected paths
-  if (isProtectedRoute && !token) {
-    const loginUrl = new URL("/auth/signin", request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // 2. Role Verification for Admin routes
-  if (pathname.startsWith("/admin") && token) {
-    try {
-      // Decode and verify the JWT token
-      const { payload } = await jwtVerify(token, JWT_SECRET);
-
-      // Adjust payload.role based on how your backend structures the user claims
-      if (payload.role !== "admin") {
-        // Redirect non-admins to unauthorized page or profile
-        return NextResponse.redirect(new URL("/profile", request.url));
-      }
-    } catch (error) {
-      // Token is invalid or expired
+  // 1. GATE RESTRICTED LOCATIONS: /admin/* and /profile
+  if (pathname.startsWith("/admin") || pathname === "/profile") {
+    if (!token) {
       const loginUrl = new URL("/auth/signin", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
+    }
+
+    // Role Enforcement Barrier
+    if (pathname.startsWith("/admin") && userRole !== "admin") {
+      return NextResponse.redirect(new URL("/profile", request.url));
     }
   }
 
-  // 3. Authenticated user trying to look at a Sign In page
-  if (isAuthPage && token) {
-    return NextResponse.redirect(new URL("/profile", request.url));
+  // 2. GATE PUBLIC AUTH FORMS: /auth/signin and /auth/signup
+  if (pathname.startsWith("/auth")) {
+    if (token) {
+      if (userRole === "admin") {
+        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+      }
+      return NextResponse.redirect(new URL("/profile", request.url));
+    }
   }
 
   return NextResponse.next();
 }
 
+// Strictly configure which paths pass through authorization checks
 export const config = {
-  matcher: [
-    "/admin/:path*",
-    "/profile/:path*",
-    "/manage/:path*",
-    "/tickets/:path*",
-    "/auth/signin",
-    "/auth/signup",
-  ],
+  matcher: ["/admin/:path*", "/profile", "/auth/:path*"],
 };

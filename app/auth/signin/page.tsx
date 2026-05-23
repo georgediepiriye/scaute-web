@@ -39,6 +39,19 @@ export default function SignInPage() {
   // Handle auto-routing as a pure side-effect when a valid token is found on the client
   useEffect(() => {
     if (token && token !== "SERVER_RENDER") {
+      // Prioritize sending admin users straight to the dashboard if a valid session exists
+      const localUser = localStorage.getItem("user");
+      if (localUser) {
+        try {
+          const parsed = JSON.parse(localUser);
+          if (parsed?.role === "admin") {
+            router.replace("/admin/dashboard");
+            return;
+          }
+        } catch (e) {
+          console.error("Failed to parse local user role check", e);
+        }
+      }
       router.replace(redirectTo);
     }
   }, [token, router, redirectTo]);
@@ -71,12 +84,23 @@ export default function SignInPage() {
         success: (data) => {
           setIsLoading(false);
 
-          // Extract user context and commit it to React state right now
+          // Extract user context data
           const userData = data.data?.user || data.user;
+
+          // 1. Write the cookie immediately so Layouts and Middleware pick it up on the exact same thread
+          const isProd = process.env.NODE_ENV === "production";
+          document.cookie = `skaute_token=${data.token};path=/;max-age=${7 * 24 * 60 * 60};SameSite=Lax${isProd ? ";secure" : ""}`;
+
+          // 2. Commit the user details cleanly into the parent React state provider
           updateUser(userData);
 
-          // Route the user directly to their intended destination target instead of blindly hitting /profile
-          router.push(redirectTo);
+          // 3. Prevent structural race conditions by managing the role route selection logic directly here
+          if (userData?.role === "admin") {
+            router.push("/admin/dashboard");
+          } else {
+            router.push(redirectTo);
+          }
+
           return "Welcome back to skaute!";
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
