@@ -34,7 +34,7 @@ export const PreviewModal = ({
 
   if (!isOpen) return null;
 
-  const eventLink = `kivo-isca.onrender.com/e/${data.slug}`;
+  const eventLink = `skaute.onrender.com/e/${data.slug}`;
 
   const handleCopy = async () => {
     try {

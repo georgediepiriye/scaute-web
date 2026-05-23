@@ -35,7 +35,7 @@ export const MarketingTab = ({ id, event: initialEvent }: any) => {
     applicableTickets: [] as string[],
   });
 
-  const eventLink = `https://kivo-isca.onrender.com/e/${initialEvent.slug}`;
+  const eventLink = `https://skaute.onrender.com/e/${initialEvent.slug}`;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);

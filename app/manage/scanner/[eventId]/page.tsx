@@ -60,7 +60,7 @@ export default function TicketScannerPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let fingerprint = localStorage.getItem("kivo_scanner_fingerprint");
+    let fingerprint = localStorage.getItem("skaute_scanner_fingerprint");
     if (!fingerprint) {
       const platformInfo =
         navigator.userAgent + navigator.hardwareConcurrency + screen.colorDepth;
@@ -70,7 +70,7 @@ export default function TicketScannerPage() {
         .substring(2, 10)
         .toUpperCase();
       fingerprint = `SCAN-${cleanPlatform.substring(0, 8).toUpperCase()}-${randomBits}`;
-      localStorage.setItem("kivo_scanner_fingerprint", fingerprint);
+      localStorage.setItem("skaute_scanner_fingerprint", fingerprint);
     }
     setDeviceFingerprint(fingerprint);
   }, []);
@@ -176,7 +176,9 @@ export default function TicketScannerPage() {
       const token = localStorage.getItem("skaute_token");
 
       // FIXED: Fetch the fingerprint directly from localStorage to bypass React closure state isolation
-      let activeFingerprint = localStorage.getItem("kivo_scanner_fingerprint");
+      let activeFingerprint = localStorage.getItem(
+        "skaute_scanner_fingerprint",
+      );
 
       // Fallback if local storage hasn't initialized yet
       if (!activeFingerprint) {
@@ -190,7 +192,7 @@ export default function TicketScannerPage() {
           .substring(2, 10)
           .toUpperCase();
         activeFingerprint = `SCAN-${cleanPlatform.substring(0, 8).toUpperCase()}-${randomBits}`;
-        localStorage.setItem("kivo_scanner_fingerprint", activeFingerprint);
+        localStorage.setItem("skaute_scanner_fingerprint", activeFingerprint);
       }
 
       try {
