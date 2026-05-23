@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Map, Compass, PlusCircle, Bot } from "lucide-react";
+import { Map, Compass, PlusCircle, Headphones } from "lucide-react"; // Swapped Bot for Headphones
 
 export default function MobileNav() {
   const pathname = usePathname();
@@ -11,7 +11,7 @@ export default function MobileNav() {
     { name: "Map", href: "/map", icon: Map },
     { name: "Discover", href: "/discover", icon: Compass },
     { name: "Create", href: "/create", icon: PlusCircle },
-    { name: "AI", href: "/chat", icon: Bot },
+    { name: "Help", href: "/contact", icon: Headphones }, // Updated to point directly to support channels
   ];
 
   return (
