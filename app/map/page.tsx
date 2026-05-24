@@ -418,21 +418,21 @@ export default function MapPage() {
           </>
         )}
       </AnimatePresence>
-
       <AnimatePresence>
         {isLoading && (
           <motion.div
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeInOut" }}
-            className="fixed inset-0 z-[1000] bg-white flex flex-col items-center justify-center select-none"
+            className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center select-none"
           >
             <div className="flex flex-col items-center justify-center">
               {/* ANIMATED LOGO CONTAINER */}
+
               <motion.div
                 initial={{ scale: 0.92, opacity: 0 }}
                 animate={{
-                  scale: [0.95, 1.02, 0.95],
+                  scale: [0.95, 1.04, 0.95],
                   opacity: 1,
                 }}
                 transition={{
@@ -443,31 +443,21 @@ export default function MapPage() {
                   },
                   opacity: { duration: 0.3 },
                 }}
-                className="relative w-24 h-24 mb-1"
+                className="relative w-44 h-44 md:w-56 md:h-56 mb-2"
               >
                 <Image
-                  src="/images/skaute_logo.jpg"
+                  src="/images/skaute_logo.webp"
                   alt="Skaute Loading Icon"
                   fill
                   className="object-contain"
-                  sizes="96px"
+                  sizes="(max-width: 768px) 176px, 224px"
                   priority
                 />
-              </motion.div>
-
-              {/* ANIMATED TEXT BRAND */}
-              <motion.div
-                initial={{ opacity: 0, letterSpacing: "-0.05em", y: 5 }}
-                animate={{ opacity: 1, letterSpacing: "-0.02em", y: 0 }}
-                transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
-                className="font-black text-3xl text-black tracking-tighter uppercase font-sans"
-              >
-                skaute
               </motion.div>
             </div>
 
             {/* MINIMALIST LINE PROGRESS INDICATOR */}
-            <div className="absolute bottom-16 w-32 h-[2px] bg-gray-100 overflow-hidden rounded-full">
+            <div className="absolute bottom-16 w-32 h-[2px] bg-white/10 overflow-hidden rounded-full">
               <motion.div
                 initial={{ x: "-100%" }}
                 animate={{ x: "100%" }}
@@ -476,7 +466,7 @@ export default function MapPage() {
                   duration: 1.4,
                   ease: "easeInOut",
                 }}
-                className="w-1/2 h-full bg-blue-600 rounded-full"
+                className="w-1/2 h-full bg-blue-500 rounded-full"
               />
             </div>
           </motion.div>

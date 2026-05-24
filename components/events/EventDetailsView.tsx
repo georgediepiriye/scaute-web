@@ -39,6 +39,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
           `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/me`,
           { credentials: "include" },
         );
+
         const data = await res.json();
 
         if (res.ok) {
@@ -51,12 +52,10 @@ export default function EventDetailsView({ event }: EventViewProps) {
         console.error("Auth fetch failed:", e);
       }
     };
+
     fetchUser();
   }, []);
 
-  /**
-   * GLOBAL REFINED SOLD OUT DETECTOR ENGINE
-   */
   const isSoldOut = useMemo(() => {
     if (!event) return false;
     if (event.isSoldOut) return true;
@@ -65,15 +64,14 @@ export default function EventDetailsView({ event }: EventViewProps) {
       return event.ticketTiers.every((tier: any) => {
         const manualSoldOut = tier.isSoldOut === true;
         const capacityReached = tier.capacity > 0 && tier.sold >= tier.capacity;
+
         return manualSoldOut || capacityReached;
       });
     }
+
     return false;
   }, [event]);
 
-  /**
-   * AVAILABLE MINIMUM PRICE RANGE MATRIX CALCULATOR
-   */
   const displayPrice = useMemo(() => {
     if (!event) return "";
     if (isSoldOut) return "Sold Out";
@@ -82,18 +80,22 @@ export default function EventDetailsView({ event }: EventViewProps) {
     if (event.ticketTiers && event.ticketTiers.length > 0) {
       const availableTiers = event.ticketTiers.filter((t: any) => {
         const tierFull = t.capacity > 0 && t.sold >= t.capacity;
+
         return !t.isSoldOut && !tierFull;
       });
 
-      const TiersToEvaluate =
+      const tiersToEvaluate =
         availableTiers.length > 0 ? availableTiers : event.ticketTiers;
-      const prices = TiersToEvaluate.map((t: any) => t.price);
+
+      const prices = tiersToEvaluate.map((t: any) => t.price);
+
       const min = Math.min(...prices);
       const max = Math.max(...prices);
 
       if (min === 0 && max > 0) return "Free +";
       if (min === 0 && max === 0) return "Free";
       if (min === max) return `₦${min.toLocaleString()}`;
+
       return `From ₦${min.toLocaleString()}`;
     }
 
@@ -102,7 +104,9 @@ export default function EventDetailsView({ event }: EventViewProps) {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(eventLink);
+
     setCopied(true);
+
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -132,52 +136,44 @@ export default function EventDetailsView({ event }: EventViewProps) {
   });
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] pb-32">
+    <div className="min-h-screen bg-[#F8F9FB] pb-40 lg:pb-20">
       <Toaster position="top-center" reverseOrder={false} />
+
       <CheckoutPanel
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
         event={event}
       />
 
-      {/* --- NAVIGATION --- */}
-      <nav className="sticky top-0 z-[100] bg-white border-b border-gray-100 px-4 py-3">
+      {/* NAVIGATION */}
+      <nav className="sticky top-0 z-[100] bg-black border-b border-zinc-900 px-4 sm:px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Changed gap-2 to gap-0 and added group class for consistent interactivity */}
-          <Link
-            href="/"
-            className="flex items-center gap-0 cursor-pointer group"
-          >
-            {/* Added -mr-3.5 negative spacing and group-hover tracking effect */}
-            <div className="relative w-16 h-16 -mr-3.5 group-hover:scale-[1.03] transition-transform duration-300 ease-out z-0">
+          <Link href="/" className="flex items-center cursor-pointer group">
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 -my-10 sm:-my-12 md:-my-14 -ml-4 sm:-ml-5 md:-ml-6 group-hover:scale-[1.02] transition-transform duration-300 ease-out">
               <Image
-                src="/images/skaute_logo.jpg"
-                alt="Skaute Icon"
+                src="/images/skaute_logo.webp"
+                alt="Skaute Brand Logo"
                 fill
                 className="object-contain"
-                sizes="64px"
+                sizes="176px"
                 priority
               />
             </div>
-
-            {/* Added relative z-10 and matching letter formatting variables */}
-            <span className="relative z-10 text-2xl font-black font-sans text-black tracking-tighter uppercase transition-colors group-hover:text-gray-700">
-              skaute
-            </span>
           </Link>
 
           <div className="flex items-center gap-4">
             <Link
               href="/discover"
-              className="text-[10px] font-black uppercase text-gray-400 hover:text-[#0052FF] transition-colors"
+              className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 hover:text-blue-500 transition-colors"
             >
               Explore
             </Link>
           </div>
         </div>
       </nav>
-      {/* 1. HERO */}
-      <div className="relative h-[45vh] md:h-[60vh] w-full overflow-hidden bg-black">
+
+      {/* HERO */}
+      <div className="relative h-[36vh] sm:h-[42vh] md:h-[50vh] lg:h-[60vh] w-full overflow-hidden bg-black">
         {event.bannerImage || event.image ? (
           <Image
             src={event.bannerImage || event.image}
@@ -188,14 +184,15 @@ export default function EventDetailsView({ event }: EventViewProps) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-blue-900 to-indigo-950">
-            <span className="text-white/5 font-black text-[12vw] uppercase tracking-tighter italic">
+            <span className="text-white/5 font-black text-[16vw] md:text-[12vw] uppercase tracking-tighter italic">
               skaute
             </span>
           </div>
         )}
+
         <div className="absolute inset-0 bg-gradient-to-t from-[#F8F9FB] via-transparent to-[#FFD700]/5" />
 
-        <div className="absolute top-6 right-6 flex gap-3">
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex gap-3">
           <button
             onClick={handleShareMove}
             className="p-3 bg-white/10 backdrop-blur-xl rounded-full text-white border border-white/20 hover:bg-white/20 transition-all active:scale-90"
@@ -205,35 +202,40 @@ export default function EventDetailsView({ event }: EventViewProps) {
         </div>
       </div>
 
-      {/* 2. CONTENT CONTAINER */}
-      <div className="max-w-7xl mx-auto px-4 -mt-32 relative z-20">
-        <div className="flex flex-col lg:flex-row gap-8">
+      {/* CONTENT */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 sm:-mt-24 md:-mt-28 lg:-mt-32 relative z-20">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          {/* MAIN */}
           <div className="flex-1 space-y-6">
-            <div className="bg-white p-6 md:p-10 rounded-[44px] shadow-sm border border-gray-100">
+            <div className="bg-white p-5 sm:p-7 md:p-10 rounded-[28px] sm:rounded-[36px] md:rounded-[44px] shadow-sm border border-gray-100">
               <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-3">
-                  <span className="px-4 py-1.5 bg-blue-50 text-[10px] font-black text-[#0052FF] uppercase rounded-full border border-blue-100 tracking-widest">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="px-4 py-1.5 bg-blue-50 text-[9px] sm:text-[10px] font-black text-[#0052FF] uppercase rounded-full border border-blue-100 tracking-widest">
                     {event.category || "General"}
                   </span>
+
                   {event.status === "verified" && (
-                    <span className="flex items-center gap-1 text-[10px] font-black text-gray-900 uppercase tracking-widest bg-[#FFD700] px-3 py-1.5 rounded-full shadow-sm">
-                      <ShieldCheck size={12} /> Verified Move
+                    <span className="flex items-center gap-1 text-[9px] sm:text-[10px] font-black text-gray-900 uppercase tracking-widest bg-[#FFD700] px-3 py-1.5 rounded-full shadow-sm">
+                      <ShieldCheck size={12} />
+                      Verified Move
                     </span>
                   )}
                 </div>
-                <p className="text-blue-600 font-black text-sm uppercase tracking-tighter">
+
+                <p className="text-blue-600 font-black text-xs sm:text-sm uppercase tracking-tighter">
                   {formattedDate}
                 </p>
-                <h1 className="text-4xl md:text-6xl font-black text-gray-900 leading-[1.1] tracking-tighter italic uppercase">
+
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-[1.05] tracking-tighter italic uppercase break-words">
                   {event.title}
                 </h1>
               </div>
 
-              {/* Action Bar */}
+              {/* ACTIONS */}
               <div className="flex flex-wrap gap-3 mb-10">
                 <button
                   onClick={handleCopy}
-                  className="flex items-center gap-2 px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl hover:border-[#FFD700] transition-all group"
+                  className="flex items-center gap-2 px-4 sm:px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl hover:border-[#FFD700] transition-all group"
                 >
                   {copied ? (
                     <Check size={16} className="text-green-600" />
@@ -243,6 +245,7 @@ export default function EventDetailsView({ event }: EventViewProps) {
                       className="text-gray-400 group-hover:text-black"
                     />
                   )}
+
                   <span className="text-[10px] font-black uppercase text-gray-600 tracking-widest group-hover:text-black">
                     {copied ? "Link Copied" : "Copy Link"}
                   </span>
@@ -253,12 +256,13 @@ export default function EventDetailsView({ event }: EventViewProps) {
                     href={event.communityLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-5 py-3 bg-gray-900 text-white rounded-2xl hover:bg-[#FFD700] hover:text-black transition-all group"
+                    className="flex items-center gap-2 px-4 sm:px-5 py-3 bg-gray-900 text-white rounded-2xl hover:bg-[#FFD700] hover:text-black transition-all group"
                   >
                     <MessageSquare
                       size={16}
                       className="text-[#FFD700] group-hover:text-black"
                     />
+
                     <span className="text-[10px] font-black uppercase tracking-widest">
                       Join Community
                     </span>
@@ -266,38 +270,48 @@ export default function EventDetailsView({ event }: EventViewProps) {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6 bg-gray-50 rounded-[32px] border border-gray-100">
-                <div className="flex items-center gap-4">
-                  <div className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center shadow-sm text-blue-600 border-b-4 border-[#FFD700]">
-                    <MapPin size={22} />
+              {/* INFO GRID */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-6 bg-gray-50 rounded-[24px] sm:rounded-[32px] border border-gray-100">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="h-12 w-12 sm:h-14 sm:w-14 bg-white rounded-2xl flex items-center justify-center shadow-sm text-blue-600 border-b-4 border-[#FFD700] flex-shrink-0">
+                    <MapPin size={20} />
                   </div>
-                  <div>
+
+                  <div className="min-w-0">
                     <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">
                       Location
                     </p>
-                    <p className="font-bold text-gray-900 text-sm">
+
+                    <p className="font-bold text-gray-900 text-sm truncate">
                       {event.location?.address || "Port Harcourt"}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center shadow-sm text-blue-600 border-b-4 border-[#FFD700]">
-                    <Users size={22} />
+
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="h-12 w-12 sm:h-14 sm:w-14 bg-white rounded-2xl flex items-center justify-center shadow-sm text-blue-600 border-b-4 border-[#FFD700] flex-shrink-0">
+                    <Users size={20} />
                   </div>
-                  <div>
+
+                  <div className="min-w-0">
                     <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">
                       Vibe
                     </p>
-                    <p className="font-bold text-gray-900 text-sm uppercase">
+
+                    <p className="font-bold text-gray-900 text-sm uppercase truncate">
                       {event.ageRestriction || "Open"}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-10 space-y-6">
-                <h3 className="text-xl font-black text-gray-900">Overview</h3>
-                <div className="prose prose-blue max-w-none text-gray-600 font-medium leading-relaxed whitespace-pre-line border-l-4 border-gray-100 pl-6">
+              {/* DESCRIPTION */}
+              <div className="mt-10 space-y-5">
+                <h3 className="text-lg sm:text-xl font-black text-gray-900">
+                  Overview
+                </h3>
+
+                <div className="prose prose-sm sm:prose-base prose-blue max-w-none text-gray-600 font-medium leading-relaxed whitespace-pre-line border-l-4 border-gray-100 pl-4 sm:pl-6 break-words">
                   {event.description}
                 </div>
               </div>
@@ -305,41 +319,50 @@ export default function EventDetailsView({ event }: EventViewProps) {
           </div>
 
           {/* SIDEBAR */}
-          <div className="w-full lg:w-[400px]">
+          <div className="w-full lg:w-[380px] xl:w-[400px]">
             <div className="lg:sticky lg:top-24 space-y-4">
-              <div className="bg-white p-8 rounded-[44px] shadow-xl border-2 border-gray-100 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-[#FFD700] -mr-12 -mt-12 rotate-45" />
+              <div className="bg-white p-5 sm:p-6 md:p-8 rounded-[28px] sm:rounded-[36px] md:rounded-[44px] shadow-xl border-2 border-gray-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-[#FFD700] -mr-10 -mt-10 sm:-mr-12 sm:-mt-12 rotate-45" />
+
                 <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6 relative z-10 flex items-center gap-2">
-                  <Ticket size={14} className="text-[#0052FF]" /> Available
-                  Passes
+                  <Ticket size={14} className="text-[#0052FF]" />
+                  Available Passes
                 </h3>
 
                 <div className="space-y-3 relative z-10">
                   {event.ticketTiers?.map((tier: any) => {
-                    // Compute specific individual operational status parameters inside mapping context
                     const isTierManualSoldOut = tier.isSoldOut === true;
+
                     const isTierCapacityReached =
                       tier.capacity > 0 && tier.sold >= tier.capacity;
+
                     const isTierSoldOut =
                       isTierManualSoldOut || isTierCapacityReached;
 
                     return (
                       <div
                         key={tier.name}
-                        className={`flex items-center justify-between p-5 rounded-2xl border transition-all ${
+                        className={`flex items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl border transition-all ${
                           isTierSoldOut
                             ? "bg-slate-50 border-slate-200/60 opacity-60 select-none"
                             : "bg-gray-50/50 border-gray-100"
                         }`}
                       >
-                        <div>
+                        <div className="min-w-0">
                           <p
-                            className={`font-black uppercase text-[10px] ${isTierSoldOut ? "text-slate-400 line-through" : "text-gray-900"}`}
+                            className={`font-black uppercase text-[10px] break-words ${
+                              isTierSoldOut
+                                ? "text-slate-400 line-through"
+                                : "text-gray-900"
+                            }`}
                           >
                             {tier.name}
                           </p>
+
                           <p
-                            className={`text-xs font-bold ${isTierSoldOut ? "text-slate-400" : "text-blue-600"}`}
+                            className={`text-xs font-bold ${
+                              isTierSoldOut ? "text-slate-400" : "text-blue-600"
+                            }`}
                           >
                             {isTierSoldOut
                               ? "SOLD OUT"
@@ -348,21 +371,25 @@ export default function EventDetailsView({ event }: EventViewProps) {
                                 : `₦${tier.price.toLocaleString()}`}
                           </p>
                         </div>
+
                         <div
-                          className={`h-2 w-2 rounded-full ${isTierSoldOut ? "bg-slate-300" : "bg-[#FFD700]"}`}
+                          className={`h-2 w-2 rounded-full flex-shrink-0 ${
+                            isTierSoldOut ? "bg-slate-300" : "bg-[#FFD700]"
+                          }`}
                         />
                       </div>
                     );
                   })}
                 </div>
 
-                {/* PRIMARY DESKTOP BOOKING CTA BUTTON */}
+                {/* DESKTOP CTA */}
                 {isSoldOut ? (
                   <button
                     disabled
                     className="hidden lg:flex w-full mt-8 py-5 rounded-[24px] bg-slate-100 border border-slate-200 text-slate-400 font-black text-[11px] uppercase tracking-[0.3em] items-center justify-center gap-2 cursor-not-allowed"
                   >
-                    <Lock size={12} /> Sold Out
+                    <Lock size={12} />
+                    Sold Out
                   </button>
                 ) : (
                   <button
@@ -381,19 +408,22 @@ export default function EventDetailsView({ event }: EventViewProps) {
                 </p>
               </div>
 
-              <div className="bg-white p-6 rounded-[32px] border border-gray-100 flex items-center gap-4 shadow-sm">
+              {/* ORGANIZER */}
+              <div className="bg-white p-5 sm:p-6 rounded-[24px] sm:rounded-[32px] border border-gray-100 flex items-center gap-4 shadow-sm">
                 <div
                   style={{ backgroundColor: SKAUTE_BLUE }}
-                  className="h-10 w-10 rounded-xl flex items-center justify-center font-black text-white italic"
+                  className="h-10 w-10 rounded-xl flex items-center justify-center font-black text-white italic flex-shrink-0"
                 >
                   {event.organizerName?.charAt(0) || "K"}
                 </div>
-                <div>
+
+                <div className="min-w-0">
                   <p className="text-[8px] font-black uppercase text-gray-400">
                     Curated by
                   </p>
-                  <p className="font-bold text-gray-900 text-sm">
-                    {event.organizer.name || "Skaute Host"}
+
+                  <p className="font-bold text-gray-900 text-sm truncate">
+                    {event.organizer?.name || "Skaute Host"}
                   </p>
                 </div>
               </div>
@@ -402,27 +432,31 @@ export default function EventDetailsView({ event }: EventViewProps) {
         </div>
       </div>
 
-      {/* MOBILE BOTTOM BAR */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-50 p-5 z-[100] flex items-center justify-between shadow-[0_-15px_40px_rgba(0,0,0,0.08)]">
-        <div>
+      {/* MOBILE CTA */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] z-[100] flex items-center justify-between gap-4 shadow-[0_-15px_40px_rgba(0,0,0,0.08)]">
+        <div className="min-w-0">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
             Entry status
           </p>
-          <p className="text-xl font-black text-gray-900">{displayPrice}</p>
+
+          <p className="text-lg sm:text-xl font-black text-gray-900 truncate">
+            {displayPrice}
+          </p>
         </div>
 
         {isSoldOut ? (
           <button
             disabled
-            className="px-10 py-4 rounded-2xl bg-slate-100 border border-slate-200 text-slate-400 font-black text-[11px] uppercase tracking-[0.2em] cursor-not-allowed flex items-center gap-1.5"
+            className="px-6 sm:px-8 py-4 rounded-2xl bg-slate-100 border border-slate-200 text-slate-400 font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] cursor-not-allowed flex items-center gap-1.5 flex-shrink-0"
           >
-            <Lock size={12} /> Full
+            <Lock size={12} />
+            Full
           </button>
         ) : (
           <button
             onClick={() => setIsCheckoutOpen(true)}
             style={{ backgroundColor: SKAUTE_BLUE }}
-            className="px-10 py-4 rounded-2xl text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-blue-100 active:scale-95 transition-all"
+            className="px-6 sm:px-8 py-4 rounded-2xl text-white font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-blue-100 active:scale-95 transition-all flex-shrink-0"
           >
             Secure Pass
           </button>

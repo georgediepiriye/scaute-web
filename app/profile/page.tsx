@@ -147,26 +147,14 @@ export default function ProfilePage() {
     // 4. Extract target parameters for notification display
     const firstName = combinedProfile?.name?.split(" ")[0] || "skaute";
 
-    // 🚀 FIX: Defer execution past the layout repaint cycle to protect tracking instances
     setTimeout(() => {
       toast.success(
-        `Welcome to skaute, ${firstName}! Your vibe is officially locked in. ⚡`,
+        `Welcome to Skaute, ${firstName}! Your vibe is officially locked in.`,
         {
-          duration: 5000,
-          icon: "🎉",
-          style: {
-            background: "#111111",
-            color: "#ffffff",
-            borderRadius: "16px",
-            border: "1px solid #27272a",
-            fontSize: "12px",
-            fontWeight: "bold",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-          },
+          icon: "⚡",
         },
       );
-    }, 50);
+    }, 80);
   };
 
   const handleSignOut = async () => {
@@ -258,7 +246,60 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-slate-900 font-sans selection:bg-blue-100 relative">
       {/* 2. Embedded Toaster context wrapper layer to capture triggers local to this window context */}
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        gutter={12}
+        containerStyle={{
+          top: 96,
+          right: 20,
+        }}
+        toastOptions={{
+          duration: 5000,
+
+          style: {
+            background: "rgba(15, 23, 42, 0.92)",
+            color: "#ffffff",
+            borderRadius: "22px",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+            padding: "16px 18px",
+            fontSize: "12px",
+            fontWeight: 800,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            maxWidth: "420px",
+          },
+
+          success: {
+            iconTheme: {
+              primary: "#0052FF",
+              secondary: "#ffffff",
+            },
+
+            style: {
+              background: "rgba(2, 6, 23, 0.92)",
+              color: "#ffffff",
+              border: "1px solid rgba(0, 82, 255, 0.18)",
+            },
+          },
+
+          error: {
+            iconTheme: {
+              primary: "#ef4444",
+              secondary: "#ffffff",
+            },
+
+            style: {
+              background: "rgba(28, 10, 10, 0.95)",
+              color: "#ffffff",
+              border: "1px solid rgba(239,68,68,0.18)",
+            },
+          },
+        }}
+      />
 
       <Navbar />
 

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
 "use client";
+
 import React, { useState, useEffect, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,7 +29,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Short-circuits UI rendering to block sign-up elements from flashing back during router transitions
+  // Prevent flashing during redirects
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Form State
@@ -41,7 +42,7 @@ export default function SignUpPage() {
     role: "user",
   });
 
-  // Handle auto-routing as a pure side-effect if an authenticated token is found on the client
+  // Redirect authenticated users
   useEffect(() => {
     if (token && token !== "SERVER_RENDER") {
       router.replace("/profile");
@@ -49,11 +50,17 @@ export default function SignUpPage() {
   }, [token, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleRoleSelect = (role: string) => {
-    setFormData({ ...formData, role });
+    setFormData({
+      ...formData,
+      role,
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,13 +69,15 @@ export default function SignUpPage() {
     if (formData.password !== formData.confirmPassword) {
       toast.error("Your passwords do not match!", {
         style: {
-          borderRadius: "15px",
-          background: "#111",
-          color: "#fff",
+          borderRadius: "18px",
+          background: "#111111",
+          color: "#ffffff",
           fontSize: "14px",
-          fontWeight: "bold",
+          fontWeight: 800,
+          padding: "16px 18px",
         },
       });
+
       return;
     }
 
@@ -78,6 +87,7 @@ export default function SignUpPage() {
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       const { firstName, lastName, email, password, role } = formData;
+
       const payload = {
         name: `${firstName} ${lastName}`.trim(),
         email,
@@ -86,6 +96,7 @@ export default function SignUpPage() {
       };
 
       const response = await API.post("/v1/auth/signup", payload);
+
       const data = response.data;
 
       if (data.token) {
@@ -93,6 +104,7 @@ export default function SignUpPage() {
       }
 
       const userData = data.user || data.data?.user;
+
       localStorage.setItem("user", JSON.stringify(userData));
 
       return data;
@@ -102,282 +114,392 @@ export default function SignUpPage() {
       signupAction(),
       {
         loading: "Creating your skaute account...",
+
         success: (data) => {
           setLoading(false);
+
           const userData = data.user || data.data?.user;
 
-          // Enable loading layout block screen immediately
           setIsRedirecting(true);
 
-          // Update global context state. The profile engine layout will
-          // automatically catch if their interests array is empty and show onboarding!
           updateUser(userData, false);
+
           router.push("/profile");
 
           return `Welcome to Skaute, ${formData.firstName}!`;
         },
+
         error: (err: any) => {
           setLoading(false);
+
           return err.response?.data?.message || err.message || "Signup failed";
         },
       },
       {
-        style: {
-          borderRadius: "15px",
-          background: "#111",
-          color: "#fff",
-          fontSize: "14px",
-          fontWeight: "bold",
+        loading: {
+          style: {
+            borderRadius: "18px",
+            background: "rgba(15, 23, 42, 0.92)",
+            backdropFilter: "blur(18px)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: 800,
+            padding: "16px 18px",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.25)",
+          },
+
+          iconTheme: {
+            primary: "#3B82F6",
+            secondary: "#ffffff",
+          },
         },
+
         success: {
-          iconTheme: { primary: "#2563eb", secondary: "#fff" },
+          style: {
+            borderRadius: "18px",
+            background: "#111111",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: 800,
+            padding: "16px 18px",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.25)",
+          },
+
+          iconTheme: {
+            primary: "#2563eb",
+            secondary: "#ffffff",
+          },
+        },
+
+        error: {
+          style: {
+            borderRadius: "18px",
+            background: "#1A0F10",
+            border: "1px solid rgba(239,68,68,0.15)",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: 800,
+            padding: "16px 18px",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.25)",
+          },
+
+          iconTheme: {
+            primary: "#ef4444",
+            secondary: "#ffffff",
+          },
         },
       },
     );
   };
 
-  // Block the signup UI block from flashing if already logged in or navigating away
+  // Prevent flash
   if (token === "SERVER_RENDER" || token !== null || isRedirecting) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white z-50 fixed inset-0">
-        <Loader2 className="w-10 h-10 animate-spin text-[#0052FF]" />
+      <div className="fixed inset-0 z-50 flex min-h-screen items-center justify-center bg-white">
+        <Loader2 className="h-10 w-10 animate-spin text-[#0052FF]" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-full bg-white font-sans text-gray-900 overflow-hidden relative">
+    <div className="relative min-h-screen w-full overflow-hidden bg-white font-sans text-gray-900">
       <Toaster position="top-center" reverseOrder={false} />
+
       <Navbar />
 
-      {/* LEFT SIDE: BRAND/VISUAL - FIXED ON DESKTOP */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-[#F8FAFC] items-center justify-center p-12 overflow-hidden">
-        <div className="absolute top-[-5%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/5 blur-3xl" />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative z-10 text-center max-w-md w-full"
-        >
-          <div className="relative w-full aspect-square mb-10">
-            <Image
-              src="https://res.cloudinary.com/dzhfiblg7/image/upload/f_auto,q_auto,w_800/v1778054500/kivo_events/inhouse/park.png"
-              alt="Join Skaute"
-              fill
-              className="drop-shadow-2xl rounded-[40px] object-cover border-4 border-white shadow-blue-600/10"
-              priority
-            />
-          </div>
-          <h1 className="text-4xl font-black tracking-tighter text-gray-900 leading-tight uppercase">
-            Explore <br /> <span className="text-blue-600">the vibe.</span>
-          </h1>
-        </motion.div>
-      </div>
+      {/* MAIN WRAPPER */}
+      <div className="flex min-h-screen flex-col lg:flex-row">
+        {/* LEFT SIDE */}
+        <div className="relative hidden lg:flex lg:w-1/2 items-center justify-center overflow-hidden bg-[#F8FAFC] px-10 py-32 xl:px-16">
+          {/* Background blur */}
+          <div className="absolute right-[-10%] top-[-5%] h-[500px] w-[500px] rounded-full bg-blue-600/5 blur-3xl" />
 
-      {/* RIGHT SIDE: SIGN UP FORM - INDEPENDENT SCROLL */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center relative h-screen overflow-y-auto pt-32 pb-20 px-6 md:px-20">
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm"
-        >
-          <div className="mb-8 text-center lg:text-left">
-            <h2 className="text-3xl font-black tracking-tight mb-2 uppercase">
-              Join the Scene
-            </h2>
-            <p className="text-gray-400 text-sm font-medium">
-              Be the first to know where the move is in Port Harcourt.
-            </p>
-          </div>
-
-          {/* GOOGLE SIGN UP */}
-          <button
-            type="button"
-            onClick={() =>
-              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/google`)
-            }
-            className="w-full py-4 px-6 border-2 border-gray-100 rounded-2xl flex items-center justify-center gap-4 font-black text-[10px] uppercase tracking-widest text-gray-700 hover:bg-gray-50 hover:border-blue-600 transition-all active:scale-[0.98] mb-8"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.35 }}
+            className="relative z-10 w-full max-w-xl"
           >
-            <Image
-              src="/images/google_icon.png"
-              alt="Google"
-              width={20}
-              height={20}
-              className="w-5 h-5"
-            />
-            Join with Google
-          </button>
-
-          <div className="relative mb-8 text-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-100"></div>
-            </div>
-            <span className="relative bg-white px-4 text-[10px] font-black uppercase text-gray-300 tracking-widest">
-              or use email
-            </span>
-          </div>
-
-          {/* ROLE SELECTION */}
-          <div className="mb-8">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-3 block">
-              I am joining as...
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handleRoleSelect("user")}
-                className={`py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border-2 ${
-                  formData.role === "user"
-                    ? "border-blue-600 bg-blue-50 text-blue-600"
-                    : "border-gray-50 text-gray-400 hover:border-gray-200"
-                }`}
-              >
-                Normal User
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRoleSelect("organizer")}
-                className={`py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border-2 ${
-                  formData.role === "organizer"
-                    ? "border-blue-600 bg-blue-50 text-blue-600"
-                    : "border-gray-50 text-gray-400 hover:border-gray-200"
-                }`}
-              >
-                Organizer/Host
-              </button>
-            </div>
-          </div>
-
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
-                  First Name
-                </label>
-                <input
-                  name="firstName"
-                  required
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  type="text"
-                  placeholder="John"
-                  className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
-                  Last Name
-                </label>
-                <input
-                  name="lastName"
-                  required
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  type="text"
-                  placeholder="Doe"
-                  className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
-                Email Address
-              </label>
-              <input
-                name="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                type="email"
-                placeholder="name@example.com"
-                className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base"
+            {/* IMAGE */}
+            <div className="relative aspect-[0.92] w-full overflow-hidden rounded-[42px] border-4 border-white shadow-2xl shadow-blue-600/10">
+              <Image
+                src="https://res.cloudinary.com/dzhfiblg7/image/upload/f_auto,q_auto,w_1200/v1778054500/kivo_events/inhouse/park.png"
+                alt="Join Skaute"
+                fill
+                priority
+                className="object-cover"
               />
             </div>
 
-            <div>
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create a password"
-                  className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base pr-12"
+            {/* WELCOME CARD */}
+            <div className="relative mx-auto -mt-16 w-[88%] rounded-[34px] border border-white/60 bg-white/85 px-8 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl">
+              <h1 className="text-4xl font-black uppercase leading-[0.95] tracking-tighter text-gray-900 xl:text-5xl">
+                Explore
+                <br />
+                <span className="text-blue-600">the vibe.</span>
+              </h1>
+
+              <p className="mt-5 text-sm font-medium leading-relaxed text-gray-500 xl:text-[15px]">
+                Join thousands discovering events, lounges, nightlife, and
+                hidden gems happening live around Port Harcourt.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* RIGHT SIDE */}
+        <div className="relative flex w-full flex-1 items-start justify-center overflow-y-auto px-5 pb-14 pt-28 sm:px-8 md:px-12 lg:w-1/2 lg:px-16 lg:pt-32">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="w-full max-w-md"
+          >
+            {/* MOBILE HERO */}
+            <div className="mb-8 overflow-hidden rounded-[30px] bg-[#F8FAFC] p-4 shadow-sm lg:hidden">
+              <div className="relative mb-5 aspect-[1.2] w-full overflow-hidden rounded-[24px]">
+                <Image
+                  src="https://res.cloudinary.com/dzhfiblg7/image/upload/f_auto,q_auto,w_1200/v1778054500/kivo_events/inhouse/park.png"
+                  alt="Join Skaute"
+                  fill
+                  priority
+                  className="object-cover"
                 />
+              </div>
+
+              <div className="rounded-[24px] bg-white p-5 shadow-sm">
+                <h1 className="text-3xl font-black uppercase leading-none tracking-tighter text-gray-900">
+                  Explore
+                  <br />
+                  <span className="text-blue-600">the vibe.</span>
+                </h1>
+
+                <p className="mt-3 text-sm leading-relaxed text-gray-500">
+                  Discover the best events, activies, and hotspots around you.
+                </p>
+              </div>
+            </div>
+
+            {/* HEADER */}
+            <div className="mb-8 rounded-[28px] border border-gray-100 bg-white px-6 py-6 shadow-[0_10px_40px_rgba(0,0,0,0.04)]">
+              <h2 className="mb-2 text-center text-3xl font-black uppercase tracking-tight text-gray-900 lg:text-left">
+                Join the Scene
+              </h2>
+
+              <p className="text-center text-sm font-medium leading-relaxed text-gray-500 lg:text-left">
+                Be the first to know where the move is in Port Harcourt.
+              </p>
+            </div>
+
+            {/* GOOGLE BUTTON */}
+            <button
+              type="button"
+              onClick={() =>
+                (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/v1/auth/google`)
+              }
+              className="mb-8 flex w-full items-center justify-center gap-4 rounded-2xl border-2 border-gray-100 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 transition-all hover:border-blue-600 hover:bg-gray-50 active:scale-[0.98]"
+            >
+              <Image
+                src="/images/google_icon.png"
+                alt="Google"
+                width={20}
+                height={20}
+                className="h-5 w-5"
+              />
+              Join with Google
+            </button>
+
+            {/* DIVIDER */}
+            <div className="relative mb-8 text-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-100"></div>
+              </div>
+
+              <span className="relative bg-white px-4 text-[10px] font-black uppercase tracking-widest text-gray-300">
+                or use email
+              </span>
+            </div>
+
+            {/* ROLE SELECTION */}
+            <div className="mb-8">
+              <label className="mb-3 ml-1 block text-[10px] font-black uppercase tracking-wider text-gray-400">
+                I am joining as...
+              </label>
+
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
+                  onClick={() => handleRoleSelect("user")}
+                  className={`rounded-2xl border-2 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
+                    formData.role === "user"
+                      ? "border-blue-600 bg-blue-50 text-blue-600"
+                      : "border-gray-100 text-gray-400 hover:border-gray-200"
+                  }`}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  Normal User
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleRoleSelect("organizer")}
+                  className={`rounded-2xl border-2 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
+                    formData.role === "organizer"
+                      ? "border-blue-600 bg-blue-50 text-blue-600"
+                      : "border-gray-100 text-gray-400 hover:border-gray-200"
+                  }`}
+                >
+                  Organizer/Host
                 </button>
               </div>
             </div>
 
-            <div>
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider ml-1 mb-2 block">
-                Confirm Password
-              </label>
-              <div className="relative">
+            {/* FORM */}
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-wider text-gray-400">
+                    First Name
+                  </label>
+
+                  <input
+                    name="firstName"
+                    required
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    type="text"
+                    placeholder="John"
+                    className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-5 py-4 text-base font-bold outline-none transition-all focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-wider text-gray-400">
+                    Last Name
+                  </label>
+
+                  <input
+                    name="lastName"
+                    required
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    type="text"
+                    placeholder="Doe"
+                    className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-5 py-4 text-base font-bold outline-none transition-all focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-wider text-gray-400">
+                  Email Address
+                </label>
+
                 <input
-                  name="confirmPassword"
+                  name="email"
                   required
-                  value={formData.confirmPassword}
+                  value={formData.email}
                   onChange={handleChange}
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
-                  className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 outline-none transition-all font-bold text-base pr-12"
+                  type="email"
+                  placeholder="name@example.com"
+                  className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-5 py-4 text-base font-bold outline-none transition-all focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5"
                 />
+              </div>
+
+              {/* PASSWORD */}
+              <div>
+                <label className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-wider text-gray-400">
+                  Password
+                </label>
+
+                <div className="relative">
+                  <input
+                    name="password"
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a password"
+                    className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-5 py-4 pr-12 text-base font-bold outline-none transition-all focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-blue-600"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* CONFIRM PASSWORD */}
+              <div>
+                <label className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-wider text-gray-400">
+                  Confirm Password
+                </label>
+
+                <div className="relative">
+                  <input
+                    name="confirmPassword"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm your password"
+                    className="w-full rounded-2xl border-2 border-transparent bg-gray-50 px-5 py-4 pr-12 text-base font-bold outline-none transition-all focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-600/5"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-blue-600"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={18} />
+                    ) : (
+                      <Eye size={18} />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* SUBMIT */}
+              <div className="pt-2">
                 <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-black py-5 text-[10px] font-black uppercase tracking-widest text-white shadow-xl shadow-blue-600/10 transition-all hover:bg-blue-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff size={18} />
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Joining...
+                    </>
                   ) : (
-                    <Eye size={18} />
+                    "Create Account"
                   )}
                 </button>
               </div>
-            </div>
+            </form>
 
-            <div className="pt-2">
-              <button
-                disabled={loading}
-                className="w-full py-5 bg-black text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-600/10 hover:bg-blue-600 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+            {/* FOOTER LINKS */}
+            <p className="mt-8 text-center text-sm font-medium text-gray-400">
+              Already a member?{" "}
+              <Link
+                href="/auth/signin"
+                className="text-[10px] font-black uppercase text-blue-600 underline-offset-4 hover:underline"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Joining...
-                  </>
-                ) : (
-                  "Create Account"
-                )}
-              </button>
+                Sign In
+              </Link>
+            </p>
+
+            {/* COPYRIGHT */}
+            <div className="mt-14 flex justify-center pb-4 lg:mt-16">
+              <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">
+                © 2026 Skaute Social. All rights reserved.
+              </p>
             </div>
-          </form>
-
-          <p className="mt-8 text-center text-sm text-gray-400 font-medium pb-10">
-            Already a member?{" "}
-            <Link
-              href="/auth/signin"
-              className="text-blue-600 font-black hover:underline underline-offset-4 uppercase text-[10px]"
-            >
-              Sign In
-            </Link>
-          </p>
-        </motion.div>
-
-        <div className="hidden sm:block absolute bottom-8 text-center">
-          <p className="text-[10px] text-gray-300 font-black uppercase tracking-tighter">
-            © 2026 Skaute Social. All rights reserved.
-          </p>
+          </motion.div>
         </div>
       </div>
     </div>
