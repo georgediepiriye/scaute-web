@@ -255,7 +255,7 @@ export default function EventDetailsPage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-md bg-white rounded-[40px] p-10 text-center shadow-2xl"
+              className="relative w-full max-w-md bg-white rounded-[28px] sm:rounded-[40px] p-10 text-center shadow-2xl"
             >
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
                 <ExternalLink size={32} />
@@ -286,9 +286,9 @@ export default function EventDetailsPage() {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 pt-20 pb-12 md:pt-28">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex items-center justify-between mb-8">
+      <main className="flex-1 pt-20 pb-32 md:pb-16 md:pt-28">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between mb-8 mt-4 sm:mt-6">
             <button
               onClick={() => router.back()}
               className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black"
@@ -304,9 +304,9 @@ export default function EventDetailsPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12">
             <div className="lg:col-span-8 space-y-12">
-              <div className="relative aspect-[16/9] w-full rounded-[40px] overflow-hidden shadow-2xl border border-gray-100">
+              <div className="relative aspect-[16/9] w-full rounded-[28px] sm:rounded-[40px] overflow-hidden shadow-2xl border border-gray-100">
                 <Image
                   src={
                     event.image || "https://picsum.photos/seed/skaute/1200/800"
@@ -345,7 +345,7 @@ export default function EventDetailsPage() {
               </div>
 
               <div className="space-y-8">
-                <h1 className="text-4xl md:text-7xl font-black tracking-tighter text-gray-900 leading-[0.85] uppercase italic">
+                <h1 className="text-3xl sm:text-5xl md:text-7xl font-black tracking-tighter text-gray-900 leading-[0.85] uppercase italic">
                   {event.title}
                 </h1>
 
@@ -447,7 +447,7 @@ export default function EventDetailsPage() {
                 </h3>
                 <div className="relative">
                   <p
-                    className={`text-gray-600 leading-relaxed font-medium whitespace-pre-wrap transition-all duration-500 ${!showFullDescription ? "max-h-[200px] overflow-hidden" : "max-h-full"}`}
+                    className={`text-gray-600 leading-relaxed font-medium whitespace-pre-wrap transition-all duration-500 ${!showFullDescription ? "max-h-[160px] sm:max-h-[200px] overflow-hidden" : "max-h-full"}`}
                   >
                     {event.description}
                   </p>
@@ -480,7 +480,7 @@ export default function EventDetailsPage() {
                     <Ticket size={20} className="text-blue-600" /> Ticket
                     Options
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                     {event.ticketTiers.map((tier: any, idx: number) => {
                       const tierSoldOut =
                         tier.isSoldOut === true ||
@@ -521,7 +521,7 @@ export default function EventDetailsPage() {
             </div>
 
             <div className="lg:col-span-4 space-y-6">
-              <div className="hidden lg:block sticky top-28 p-8 bg-white rounded-[40px] border border-gray-100 shadow-2xl shadow-black/5 space-y-8">
+              <div className="hidden lg:block lg:sticky lg:top-24 self-start p-8 bg-white rounded-[28px] sm:rounded-[40px] border border-gray-100 shadow-2xl shadow-black/5 space-y-8">
                 <div>
                   <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">
                     Pricing
@@ -607,7 +607,7 @@ export default function EventDetailsPage() {
                     className="group"
                   >
                     <div
-                      className="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 hover:-translate-y-2"
+                      className="bg-white rounded-[28px] sm:rounded-[40px] overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 hover:-translate-y-2"
                       style={{
                         boxShadow: "0 20px 40px -20px rgba(255, 215, 0, 0.3)",
                       }}
@@ -672,7 +672,7 @@ export default function EventDetailsPage() {
         </div>
       </main>
 
-      <div className="lg:hidden fixed bottom-6 left-6 right-6 z-[100]">
+      <div className="lg:hidden fixed bottom-6 left-6 right-6 z-[30]">
         <button
           onClick={handleCTA}
           disabled={event.isCancelled || hasReserved || isSoldOut}
