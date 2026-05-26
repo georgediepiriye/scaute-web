@@ -255,7 +255,7 @@ export default function OnboardingFlow() {
                 <div className="w-full md:w-1/2 bg-zinc-900 p-8 md:p-12 flex flex-col justify-between text-white relative min-h-[200px] md:min-h-0">
                   <div className="absolute inset-0 opacity-40">
                     <Image
-                      src="https://res.cloudinary.com/dzhfiblg7/image/upload/v1778054500/kivo/inhouse/tower.png"
+                      src="/images/pleasure.webp"
                       alt="PH City Vibe"
                       fill
                       className="object-cover grayscale brightness-75"

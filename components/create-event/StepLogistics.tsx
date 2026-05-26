@@ -7,6 +7,9 @@ import {
   Link as LinkIcon,
   Calendar,
   Clock,
+  Sparkles,
+  Globe,
+  MapPinned,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -20,7 +23,7 @@ const SearchBox = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-14 w-full bg-gray-50 animate-pulse rounded-[24px]" />
+      <div className="h-16 w-full bg-gray-100 animate-pulse rounded-[28px]" />
     ),
   },
 );
@@ -40,6 +43,7 @@ export const StepLogistics = ({
     const newDays = currentDays.includes(day)
       ? currentDays.filter((d: string) => d !== day)
       : [...currentDays, day];
+
     updateForm("selectedDays", newDays);
   };
 
@@ -50,389 +54,511 @@ export const StepLogistics = ({
     <motion.div
       initial={{ x: 20, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      className="bg-white p-6 md:p-10 rounded-[32px] md:rounded-[40px] border border-gray-100 shadow-sm space-y-8"
+      className="bg-white border border-gray-100 shadow-[0_20px_60px_rgba(0,0,0,0.06)] rounded-[36px] md:rounded-[44px] overflow-hidden"
     >
-      {/* 1. Format Toggle */}
-      <div className="flex p-1 bg-gray-50 rounded-2xl w-fit border border-gray-100">
-        {["physical", "online", "hybrid"].map((f) => (
-          <button
-            key={f}
-            type="button"
-            onClick={() => updateForm("eventFormat", f)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${
-              formData.eventFormat === f
-                ? "bg-white shadow-sm border border-gray-200"
-                : "text-gray-400"
-            }`}
-            style={{
-              color: formData.eventFormat === f ? "#000" : "",
-              backgroundColor: formData.eventFormat === f ? SKAUTE_YELLOW : "",
-            }}
-          >
-            {f}
-          </button>
-        ))}
+      {/* HEADER */}
+      <div className="px-6 md:px-10 pt-8 md:pt-10 pb-6 border-b border-gray-100 bg-gradient-to-b from-[#FFFDF3] to-white">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FFD700] text-black text-[10px] font-black uppercase tracking-wider shadow-sm mb-5">
+          <Sparkles size={12} fill="currentColor" />
+          Location & Schedule
+        </div>
+
+        <h2 className="text-2xl md:text-4xl font-black tracking-tight uppercase text-slate-950 leading-none">
+          Set The <span className="text-[#0052FF]">Logistics</span>
+        </h2>
+
+        <p className="mt-3 text-sm md:text-base text-slate-500 font-medium max-w-xl leading-relaxed">
+          Choose when your move happens, where people should go, and whether it
+          repeats over time.
+        </p>
       </div>
 
-      {/* 2. Overhauled Date & Time Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* START DATE & TIME */}
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
-            Start <span className="text-red-500">*</span>
-          </label>
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Date Input Wrap */}
-            <div className="relative flex-1 group">
-              <Calendar
-                size={16}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors z-10 pointer-events-none"
-              />
-              <input
-                type="date"
-                required
-                value={formData.startDate}
-                onChange={(e) => updateForm("startDate", e.target.value)}
-                className="w-full pl-11 pr-4 py-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:bg-white focus:border-black transition-all cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-              />
-            </div>
-            {/* Time Input Wrap */}
-            <div className="relative w-full sm:w-2/5 group">
-              <Clock
-                size={16}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors z-10 pointer-events-none"
-              />
-              <input
-                type="time"
-                value={formData.startTime}
-                required
-                onChange={(e) => updateForm("startTime", e.target.value)}
-                className="w-full pl-11 pr-4 py-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:bg-white focus:border-black transition-all cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-              />
-            </div>
+      <div className="p-6 md:p-10 space-y-10">
+        {/* FORMAT TOGGLE */}
+        <div className="space-y-4">
+          <div>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+              Move Format
+            </label>
           </div>
-        </div>
 
-        {/* END DATE & TIME */}
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
-            End <span className="text-red-500">*</span>
-          </label>
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Date Input Wrap */}
-            <div className="relative flex-1 group">
-              <Calendar
-                size={16}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors z-10 pointer-events-none"
-              />
-              <input
-                type="date"
-                required
-                value={formData.endDate}
-                onChange={(e) => updateForm("endDate", e.target.value)}
-                className="w-full pl-11 pr-4 py-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:bg-white focus:border-black transition-all cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-              />
-            </div>
-            {/* Time Input Wrap */}
-            <div className="relative w-full sm:w-2/5 group">
-              <Clock
-                size={16}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors z-10 pointer-events-none"
-              />
-              <input
-                type="time"
-                required
-                value={formData.endTime}
-                onChange={(e) => updateForm("endTime", e.target.value)}
-                className="w-full pl-11 pr-4 py-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:bg-white focus:border-black transition-all cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              {
+                key: "physical",
+                label: "Physical",
+                icon: <MapPinned size={18} />,
+              },
+              {
+                key: "online",
+                label: "Online",
+                icon: <Globe size={18} />,
+              },
+              {
+                key: "hybrid",
+                label: "Hybrid",
+                icon: <Video size={18} />,
+              },
+            ].map((item) => {
+              const active = formData.eventFormat === item.key;
 
-      {/* 3. Meeting Link Section (Conditional) */}
-      <AnimatePresence>
-        {isOnlineOrHybrid && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="pt-6 border-t border-gray-100 space-y-4 overflow-hidden"
-          >
-            <div className="flex items-center gap-2">
-              <Video size={16} style={{ color: SKAUTE_BLUE }} />
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                Meeting Link <span className="text-red-500">*</span>
-              </label>
-            </div>
-            <div className="relative">
-              <input
-                type="url"
-                required
-                placeholder="https://zoom.us/j/..., Google Meet, etc."
-                value={formData.meetingLink || ""}
-                onChange={(e) => updateForm("meetingLink", e.target.value)}
-                className="w-full p-5 bg-gray-50 rounded-[24px] font-bold outline-none text-sm border border-transparent focus:bg-white focus:ring-2 transition-all shadow-sm pl-12"
-                style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
-              />
-              <LinkIcon
-                size={16}
-                className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300"
-              />
-            </div>
-            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight ml-2">
-              Ensure attendees can access this link at the start time.
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 4. Recurrence Section */}
-      <div className="pt-6 border-t border-gray-100 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <p className="text-sm font-black uppercase flex items-center gap-2">
-              <Repeat size={16} style={{ color: SKAUTE_BLUE }} /> Recurring
-              Move?
-            </p>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
-              Does this happen more than once?
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => updateForm("isRecurring", !formData.isRecurring)}
-            className={`w-14 h-8 rounded-full transition-all relative ${formData.isRecurring ? "" : "bg-gray-200"}`}
-            style={{
-              backgroundColor: formData.isRecurring ? SKAUTE_YELLOW : "",
-            }}
-          >
-            <motion.div
-              animate={{ x: formData.isRecurring ? 24 : 4 }}
-              className="absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm"
-            />
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {formData.isRecurring && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="space-y-6 overflow-hidden"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-gray-400">
-                    Frequency
-                  </label>
-                  <select
-                    value={formData.recurrenceFrequency ?? ""}
-                    onChange={(e) =>
-                      updateForm("recurrenceFrequency", e.target.value)
-                    }
-                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:bg-white border-none focus:ring-2"
-                    style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => updateForm("eventFormat", item.key)}
+                  className={`relative overflow-hidden rounded-[26px] p-4 md:p-5 border-2 transition-all duration-300 ${
+                    active
+                      ? "border-[#FFD700] bg-[#FFF9D7] shadow-[0_12px_30px_rgba(255,215,0,0.18)] scale-[1.02]"
+                      : "border-gray-100 bg-gray-50 hover:bg-white hover:border-gray-200"
+                  }`}
+                >
+                  <div
+                    className={`w-12 h-12 rounded-2xl mx-auto flex items-center justify-center mb-3 transition-all ${
+                      active
+                        ? "bg-[#FFD700] text-black"
+                        : "bg-white text-gray-500"
+                    }`}
                   >
-                    <option value="none">Select...</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-gray-400">
-                    Every (Interval)
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="1"
-                    value={formData.recurrenceInterval ?? ""}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value);
-                      if (val < 1) {
-                        updateForm("recurrenceInterval", 1);
-                      } else {
-                        updateForm("recurrenceInterval", e.target.value);
-                      }
-                    }}
-                    className="w-full p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm focus:ring-2"
-                    style={{ "--tw-ring-color": `${SKAUTE_YELLOW}40` } as any}
-                  />
+                    {item.icon}
+                  </div>
+
+                  <p
+                    className={`text-[11px] md:text-xs font-black uppercase tracking-wide ${
+                      active ? "text-black" : "text-gray-500"
+                    }`}
+                  >
+                    {item.label}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* DATE + TIME */}
+        <div className="space-y-6">
+          <div>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+              Schedule
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* START */}
+            <div className="rounded-[30px] border border-gray-100 bg-gray-50/70 p-5 md:p-6 space-y-5">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-[#0052FF] text-white flex items-center justify-center">
+                  <Calendar size={16} />
                 </div>
 
-                {/* RECURRENCE END DATE */}
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-gray-400">
-                    Ending On
-                  </label>
-                  <div className="relative group">
-                    <Calendar
-                      size={14}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors z-10 pointer-events-none"
-                    />
-                    <input
-                      type="date"
-                      value={formData.recurrenceEndDate ?? ""}
-                      onChange={(e) =>
-                        updateForm("recurrenceEndDate", e.target.value)
-                      }
-                      className="w-full pl-10 pr-4 p-4 bg-gray-50 rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:bg-white focus:border-black transition-all cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                    />
-                  </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    Starts
+                  </p>
+                  <p className="text-sm font-bold text-slate-900">
+                    When your move begins
+                  </p>
                 </div>
               </div>
 
-              {formData.recurrenceFrequency === "weekly" && (
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase text-gray-400">
-                    Repeat On
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {DAYS_OF_WEEK.map((day) => (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => toggleDay(day)}
-                        className={`w-12 h-12 rounded-xl text-[10px] font-black uppercase border-2 transition-all ${
-                          formData.selectedDays?.includes(day)
-                            ? "text-black shadow-lg shadow-yellow-400/20"
-                            : "border-gray-100 bg-gray-50 text-gray-400"
-                        }`}
-                        style={{
-                          backgroundColor: formData.selectedDays?.includes(day)
-                            ? SKAUTE_YELLOW
-                            : "",
-                          borderColor: formData.selectedDays?.includes(day)
-                            ? SKAUTE_YELLOW
-                            : "",
-                        }}
-                      >
-                        {day[0]}
-                      </button>
-                    ))}
-                  </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1 group">
+                  <Calendar
+                    size={16}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"
+                  />
+
+                  <input
+                    type="date"
+                    required
+                    value={formData.startDate}
+                    onChange={(e) => updateForm("startDate", e.target.value)}
+                    className="w-full pl-11 pr-4 py-4 bg-white rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:border-[#FFD700] transition-all appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full"
+                  />
                 </div>
-              )}
+
+                <div className="relative w-full sm:w-40 group">
+                  <Clock
+                    size={16}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"
+                  />
+
+                  <input
+                    type="time"
+                    required
+                    value={formData.startTime}
+                    onChange={(e) => updateForm("startTime", e.target.value)}
+                    className="w-full pl-11 pr-4 py-4 bg-white rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:border-[#FFD700] transition-all appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* END */}
+            <div className="rounded-[30px] border border-gray-100 bg-gray-50/70 p-5 md:p-6 space-y-5">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center">
+                  <Clock size={16} />
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    Ends
+                  </p>
+                  <p className="text-sm font-bold text-slate-900">
+                    When everything wraps up
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1 group">
+                  <Calendar
+                    size={16}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"
+                  />
+
+                  <input
+                    type="date"
+                    required
+                    value={formData.endDate}
+                    onChange={(e) => updateForm("endDate", e.target.value)}
+                    className="w-full pl-11 pr-4 py-4 bg-white rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:border-[#FFD700] transition-all appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full"
+                  />
+                </div>
+
+                <div className="relative w-full sm:w-40 group">
+                  <Clock
+                    size={16}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"
+                  />
+
+                  <input
+                    type="time"
+                    required
+                    value={formData.endTime}
+                    onChange={(e) => updateForm("endTime", e.target.value)}
+                    className="w-full pl-11 pr-4 py-4 bg-white rounded-2xl font-bold outline-none text-sm border-2 border-transparent focus:border-[#FFD700] transition-all appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* MEETING LINK */}
+        <AnimatePresence>
+          {isOnlineOrHybrid && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              className="rounded-[30px] border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-6 md:p-7"
+            >
+              <div className="flex items-start gap-4 mb-5">
+                <div className="w-12 h-12 rounded-2xl bg-[#0052FF] text-white flex items-center justify-center shrink-0">
+                  <Video size={20} />
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-black uppercase text-slate-950">
+                    Meeting Link
+                  </h3>
+
+                  <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                    Add the Zoom, Google Meet, or livestream link attendees will
+                    use to join.
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative">
+                <LinkIcon
+                  size={16}
+                  className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300"
+                />
+
+                <input
+                  type="url"
+                  required
+                  placeholder="https://zoom.us/j/..."
+                  value={formData.meetingLink || ""}
+                  onChange={(e) => updateForm("meetingLink", e.target.value)}
+                  className="w-full h-16 pl-12 pr-5 rounded-[24px] bg-white border-2 border-transparent focus:border-[#FFD700] outline-none font-bold text-sm shadow-sm transition-all"
+                />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      {/* 5. Venue Section (Conditional) */}
-      {formData.eventFormat !== "online" && (
-        <div className="space-y-4 pt-6 border-t border-gray-100">
-          <div className="flex justify-between items-center">
-            <div className="flex flex-col">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                Venue{" "}
-                {formData.eventFormat === "hybrid" && (
-                  <span className="lowercase font-medium italic opacity-70">
-                    (Optional)
-                  </span>
-                )}
-              </label>
+        {/* RECURRING */}
+        <div className="rounded-[32px] border border-gray-100 bg-[#FCFCFC] p-6 md:p-7 space-y-7">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#FFD700] text-black flex items-center justify-center shrink-0">
+                <Repeat size={20} />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-black uppercase text-slate-950">
+                  Recurring Move
+                </h3>
+
+                <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-md">
+                  Turn this into a weekly, monthly, or repeating experience.
+                </p>
+              </div>
             </div>
+
             <button
               type="button"
-              onClick={useCurrentLocation}
-              className="text-[10px] font-black flex items-center gap-1 hover:opacity-70 transition-opacity"
-              style={{ color: SKAUTE_BLUE }}
+              onClick={() => updateForm("isRecurring", !formData.isRecurring)}
+              className={`relative w-16 h-9 rounded-full transition-all ${
+                formData.isRecurring ? "bg-[#FFD700]" : "bg-gray-200"
+              }`}
             >
-              <Navigation
-                size={12}
-                className={isLocating ? "animate-pulse" : ""}
-              />{" "}
-              {isLocating ? "Locating..." : "Use current location"}
+              <motion.div
+                animate={{ x: formData.isRecurring ? 30 : 4 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className="absolute top-1 w-7 h-7 rounded-full bg-white shadow-md"
+              />
             </button>
           </div>
 
-          {/* Mapbox Core Search Integration */}
-          <div className="relative w-full custom-mapbox-container">
-            <SearchBox
-              accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN as string}
-              value={formData.location}
-              onRetrieve={handleRetrieve}
-              onChange={(val: string) => updateForm("location", val)}
-              placeholder="Type location (e.g. Old Gra, Aggrey Road)"
-              theme={{
-                variables: {
-                  borderRadius: "24px",
-                  fontFamily: "inherit",
-                  unit: "14px",
-                  border: "2px solid transparent",
-                },
-              }}
-              options={{
-                country: "ng",
-                proximity: [7.0086, 4.8197], // Highly targeted central Port Harcourt coordinates
-                bbox: [6.85, 4.65, 7.25, 5.05], // Limits queries strictly to the Rivers State metropolitan perimeter
-                types: "poi,address,neighborhood,locality",
-                limit: 10,
-              }}
-            />
-          </div>
-
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight ml-1">
-            💡 Tip: If your specific venue doesn&apos;t pop up, type it manually
-            above and use the pin button below to map it.
-          </p>
-
-          {(formData.location || formData.neighborhood) && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-4 rounded-2xl border space-y-1"
-              style={{
-                backgroundColor: `${SKAUTE_YELLOW}10`,
-                borderColor: `${SKAUTE_YELLOW}40`,
-              }}
-            >
-              <p
-                className="text-[10px] font-black uppercase tracking-tighter opacity-70"
-                style={{ color: "#000" }}
+          <AnimatePresence>
+            {formData.isRecurring && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-6 overflow-hidden"
               >
-                Selected Address
-              </p>
-              <p className="text-sm font-bold text-gray-900 leading-tight">
-                {formData.location || "No address selected"}
-              </p>
-              {formData.neighborhood && (
-                <div className="flex items-center gap-1.5 mt-1">
-                  <MapPin size={10} style={{ color: "#000" }} />
-                  <p
-                    className="text-[10px] font-black uppercase"
-                    style={{ color: "#000" }}
-                  >
-                    Area: {formData.neighborhood}
-                  </p>
-                </div>
-              )}
-            </motion.div>
-          )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-gray-400">
+                      Frequency
+                    </label>
 
-          <button
-            type="button"
-            onClick={() => setShowMapPicker(true)}
-            className="w-full py-5 font-black text-[10px] uppercase rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg"
-            style={{
-              backgroundColor: formData.locationCoords
-                ? SKAUTE_YELLOW
-                : "#000000",
-              color: formData.locationCoords ? "#000" : "#FFFFFF",
-              boxShadow: formData.locationCoords
-                ? `0 10px 15px -3px ${SKAUTE_YELLOW}40`
-                : "",
-            }}
-          >
-            <MapPin size={16} />{" "}
-            {formData.locationCoords ? "Location Pinned ✓" : "Drop Map Pin"}
-          </button>
+                    <select
+                      value={formData.recurrenceFrequency ?? ""}
+                      onChange={(e) =>
+                        updateForm("recurrenceFrequency", e.target.value)
+                      }
+                      className="w-full h-14 px-5 bg-white border border-gray-100 rounded-2xl font-bold outline-none text-sm focus:border-[#FFD700]"
+                    >
+                      <option value="none">Select...</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-gray-400">
+                      Interval
+                    </label>
+
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="1"
+                      value={formData.recurrenceInterval ?? ""}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+
+                        if (val < 1) {
+                          updateForm("recurrenceInterval", 1);
+                        } else {
+                          updateForm("recurrenceInterval", e.target.value);
+                        }
+                      }}
+                      className="w-full h-14 px-5 bg-white border border-gray-100 rounded-2xl font-bold outline-none text-sm focus:border-[#FFD700]"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-gray-400">
+                      Ending On
+                    </label>
+
+                    <div className="relative">
+                      <Calendar
+                        size={14}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                      />
+
+                      <input
+                        type="date"
+                        value={formData.recurrenceEndDate ?? ""}
+                        onChange={(e) =>
+                          updateForm("recurrenceEndDate", e.target.value)
+                        }
+                        className="w-full h-14 pl-11 pr-4 bg-white border border-gray-100 rounded-2xl font-bold outline-none text-sm focus:border-[#FFD700] appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {formData.recurrenceFrequency === "weekly" && (
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-gray-400">
+                      Repeat On
+                    </label>
+
+                    <div className="flex flex-wrap gap-3">
+                      {DAYS_OF_WEEK.map((day) => {
+                        const active = formData.selectedDays?.includes(day);
+
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => toggleDay(day)}
+                            className={`w-14 h-14 rounded-2xl border-2 text-xs font-black uppercase transition-all ${
+                              active
+                                ? "bg-[#FFD700] border-[#FFD700] text-black shadow-lg shadow-yellow-300/30 scale-105"
+                                : "bg-white border-gray-100 text-gray-400 hover:border-gray-300"
+                            }`}
+                          >
+                            {day.slice(0, 1)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      )}
+
+        {/* VENUE */}
+        {formData.eventFormat !== "online" && (
+          <div className="rounded-[34px] border border-gray-100 overflow-hidden">
+            {/* TOP */}
+            <div className="p-6 md:p-7 border-b border-gray-100 bg-gradient-to-r from-[#FFFDF3] to-white">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-black text-white flex items-center justify-center shrink-0">
+                    <MapPin size={20} />
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-black uppercase text-slate-950">
+                      Venue & Address
+                    </h3>
+
+                    <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                      Help people find exactly where the move is happening.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={useCurrentLocation}
+                  className="h-12 px-5 rounded-2xl bg-white border border-gray-200 text-[11px] font-black uppercase tracking-wide flex items-center justify-center gap-2 hover:scale-[1.02] transition-all shadow-sm"
+                  style={{ color: SKAUTE_BLUE }}
+                >
+                  <Navigation
+                    size={14}
+                    className={isLocating ? "animate-pulse" : ""}
+                  />
+
+                  {isLocating ? "Locating..." : "Use Current Location"}
+                </button>
+              </div>
+            </div>
+
+            {/* CONTENT */}
+            <div className="p-6 md:p-7 space-y-5">
+              {/* MAPBOX */}
+              <div className="relative w-full custom-mapbox-container">
+                <SearchBox
+                  accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN as string}
+                  value={formData.location}
+                  onRetrieve={handleRetrieve}
+                  onChange={(val: string) => updateForm("location", val)}
+                  placeholder="Search venue, area, or address..."
+                  theme={{
+                    variables: {
+                      borderRadius: "28px",
+                      fontFamily: "inherit",
+                      unit: "16px",
+                      border: "2px solid transparent",
+                    },
+                  }}
+                  options={{
+                    country: "ng",
+                    proximity: [7.0086, 4.8197],
+                    bbox: [6.85, 4.65, 7.25, 5.05],
+                    types: "poi,address,neighborhood,locality",
+                    limit: 10,
+                  }}
+                />
+              </div>
+
+              {/* TIP */}
+              <div className="rounded-2xl bg-blue-50 border border-blue-100 p-4">
+                <p className="text-[11px] font-bold text-blue-900 leading-relaxed">
+                  💡 If your venue doesn&apos;t appear, type it manually and use
+                  the map pin button below to set the exact location.
+                </p>
+              </div>
+
+              {/* SELECTED ADDRESS */}
+              {(formData.location || formData.neighborhood) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-[26px] border border-yellow-200 bg-[#FFF9D7] p-5"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-[#FFD700] text-black flex items-center justify-center shrink-0">
+                      <MapPin size={16} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-black/60">
+                        Selected Address
+                      </p>
+
+                      <p className="text-sm font-bold text-slate-900 leading-relaxed">
+                        {formData.location || "No address selected"}
+                      </p>
+
+                      {formData.neighborhood && (
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white text-[10px] font-black uppercase">
+                          <MapPin size={10} />
+                          {formData.neighborhood}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* MAP PIN BUTTON */}
+              <button
+                type="button"
+                onClick={() => setShowMapPicker(true)}
+                className={`w-full h-16 rounded-[24px] font-black text-[11px] uppercase tracking-wide flex items-center justify-center gap-3 transition-all ${
+                  formData.locationCoords
+                    ? "bg-[#FFD700] text-black shadow-[0_20px_40px_rgba(255,215,0,0.25)]"
+                    : "bg-black text-white hover:bg-slate-900"
+                }`}
+              >
+                <MapPin size={18} />
+
+                {formData.locationCoords
+                  ? "Location Pinned ✓"
+                  : "Drop Exact Map Pin"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 };

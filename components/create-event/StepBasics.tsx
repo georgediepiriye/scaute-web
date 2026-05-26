@@ -6,10 +6,11 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import axios from "axios";
 
-// BRAND COLOR CONSTANTS
+// BRAND COLORS
 const SKAUTE_BLUE = "#0052FF";
 const SKAUTE_YELLOW = "#FFD700";
 
@@ -40,10 +41,12 @@ export const StepBasics = ({ formData, updateForm, categories }: any) => {
 
     const checkSlug = async () => {
       setIsChecking(true);
+
       try {
         await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/events/slug/${slugValue}`,
         );
+
         setIsAvailable(false);
       } catch (error: any) {
         if (error.response?.status === 404) {
@@ -64,147 +67,266 @@ export const StepBasics = ({ formData, updateForm, categories }: any) => {
   }, [formData.slug]);
 
   return (
-    <div className="bg-white p-6 md:p-10 rounded-[40px] border border-gray-100 shadow-sm space-y-8">
-      <div className="space-y-6">
-        {/* 1. MOVE NAME & AUTO-SLUG */}
+    <div className="bg-white rounded-[40px] border border-slate-200 shadow-[0_8px_40px_rgba(2,6,23,0.04)] overflow-hidden">
+      {/* HEADER */}
+      <div className="relative px-6 md:px-10 py-7 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-blue-50">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-blue-100/20 blur-3xl rounded-full" />
+
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-400 text-slate-950 text-[10px] font-black uppercase mb-4 border border-slate-900 shadow-sm">
+            <Sparkles size={11} fill="currentColor" />
+            Basic Move Details
+          </div>
+
+          <h2 className="text-2xl md:text-3xl font-black tracking-tight text-slate-950">
+            Tell people what the move is about.
+          </h2>
+
+          <p className="mt-2 text-sm text-slate-500 font-medium max-w-xl leading-relaxed">
+            Add a strong title, custom link, vibe description and category so
+            people instantly understand your event.
+          </p>
+        </div>
+      </div>
+
+      <div className="p-6 md:p-10 space-y-10">
+        {/* MOVE NAME */}
         <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <label className="text-[11px] font-black uppercase tracking-wider text-slate-400">
               Move Name
             </label>
+
+            <div className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+              First impressions matter
+            </div>
+          </div>
+
+          <div className="relative group">
             <input
               type="text"
               placeholder="e.g. PH Startup Sunday"
               value={formData.title || ""}
               onChange={(e) => {
                 const newTitle = e.target.value;
+
                 updateForm("title", newTitle);
+
                 if (formData.slugManuallyEdited !== true) {
                   updateForm("slug", generateSlug(newTitle));
                 }
               }}
-              // UPDATED: focus:border-[#FFD700]
-              className="w-full text-xl md:text-2xl p-6 bg-gray-50 rounded-[24px] outline-none font-black border-2 border-transparent focus:border-[#FFD700] transition-all"
+              className="w-full text-2xl md:text-3xl p-6 md:p-7 bg-slate-50 rounded-[30px] outline-none font-black border-2 border-transparent focus:border-[#FFD700] focus:bg-white transition-all placeholder:text-slate-300 text-slate-950"
             />
+
+            <div className="absolute inset-0 rounded-[30px] ring-0 ring-yellow-300/20 group-focus-within:ring-[8px] transition-all pointer-events-none" />
           </div>
 
-          {/* 2. CUSTOM EVENT LINK */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 flex items-center gap-2">
-              <LinkIcon size={12} style={{ color: SKAUTE_BLUE }} /> Custom Event
-              Link
+          <p className="text-[11px] text-slate-400 font-semibold leading-relaxed px-1">
+            Keep it short, memorable and instantly recognizable.
+          </p>
+        </div>
+
+        {/* CUSTOM LINK */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <label className="text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+              <LinkIcon size={13} style={{ color: SKAUTE_BLUE }} />
+              Custom Event Link
             </label>
 
-            <div
-              className={`flex items-center rounded-[24px] border-2 transition-all overflow-hidden ${
-                isAvailable === true
-                  ? "border-green-500 bg-green-50/30"
-                  : isAvailable === false
-                    ? "border-red-400 bg-red-50/30"
-                    : "border-transparent bg-gray-50"
-              } focus-within:border-[#FFD700] focus-within:bg-white`}
-            >
-              {/* Swapped text-sm to text-base to keep scaling in structural alignment with the input */}
-              <span className="pl-6 pr-1 text-gray-400 font-bold text-base select-none whitespace-nowrap">
-                skaute.com/e/
-              </span>
+            <div className="text-[10px] font-black uppercase text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+              Your public invite URL
+            </div>
+          </div>
+
+          <div
+            className={`relative overflow-hidden rounded-[30px] border-2 transition-all duration-300 ${
+              isAvailable === true
+                ? "border-green-400 bg-green-50/40"
+                : isAvailable === false
+                  ? "border-red-400 bg-red-50/40"
+                  : "border-slate-200 bg-slate-50"
+            } focus-within:border-[#FFD700] focus-within:bg-white`}
+          >
+            {/* glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 via-transparent to-yellow-50/20 pointer-events-none" />
+
+            <div className="relative flex items-center">
+              <div className="pl-6 md:pl-7 pr-3 py-5 border-r border-slate-200/60">
+                <span className="text-slate-400 font-black text-sm md:text-base whitespace-nowrap">
+                  skaute.com/e/
+                </span>
+              </div>
 
               <input
                 type="text"
-                placeholder="..."
+                placeholder="your-move-name"
                 value={formData.slug || ""}
                 onChange={(e) => {
                   updateForm("slug", generateSlug(e.target.value));
                   updateForm("slugManuallyEdited", true);
                 }}
-                /* OVERHAUL: Changed from text-sm to text-base (16px) to block iOS auto-zoom */
-                className="w-full p-5 ml-1 bg-transparent font-black text-base outline-none placeholder:text-gray-300"
+                className="w-full px-5 py-5 bg-transparent font-black text-base outline-none placeholder:text-slate-300 text-slate-950"
               />
 
-              <div className="pr-5 flex items-center gap-2">
+              <div className="pr-5 flex items-center">
                 {isChecking && (
-                  <Loader2 size={18} className="text-blue-600 animate-spin" />
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <Loader2 size={18} className="animate-spin" />
+                  </div>
                 )}
+
                 {!isChecking && isAvailable === true && (
-                  <CheckCircle2 size={18} className="text-green-500" />
+                  <div className="flex items-center gap-2 text-green-600">
+                    <CheckCircle2 size={18} />
+                  </div>
                 )}
+
                 {!isChecking && isAvailable === false && (
-                  <AlertCircle size={18} className="text-red-500" />
+                  <div className="flex items-center gap-2 text-red-500">
+                    <AlertCircle size={18} />
+                  </div>
                 )}
               </div>
             </div>
+          </div>
 
-            <div className="flex flex-col gap-1 ml-2">
-              {isAvailable === false && (
-                <p className="text-[10px] text-red-500 font-bold uppercase italic">
-                  This handle is already taken.
+          {/* STATUS */}
+          <div className="space-y-2 px-1">
+            {isAvailable === true && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle2 size={14} />
+                <p className="text-[11px] font-black uppercase tracking-wide">
+                  Link available
                 </p>
-              )}
-              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight">
+              </div>
+            )}
+
+            {isAvailable === false && (
+              <div className="flex items-center gap-2 text-red-500">
+                <AlertCircle size={14} />
+                <p className="text-[11px] font-black uppercase tracking-wide">
+                  This handle is already taken
+                </p>
+              </div>
+            )}
+
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3">
+              <p className="text-[10px] uppercase font-black text-slate-400 mb-1 tracking-wide">
+                Preview
+              </p>
+
+              <p className="text-sm font-black text-slate-700 break-all">
                 {formData.slug
-                  ? `Preview: skaute.com/e/${formData.slug}`
-                  : "The link people will use to join your move."}
+                  ? `skaute.com/e/${formData.slug}`
+                  : "skaute.com/e/your-move"}
               </p>
             </div>
           </div>
         </div>
 
-        {/* 3. DESCRIPTION */}
-        <div className="space-y-2 pt-2">
-          <label className="text-[10px] font-black uppercase text-gray-400">
-            Description
-          </label>
-          <textarea
-            placeholder="The vibe..."
-            value={formData.description || ""}
-            onChange={(e) => updateForm("description", e.target.value)}
-            // UPDATED: focus:border-[#FFD700]
-            className="w-full p-6 bg-gray-50 rounded-[24px] h-40 outline-none font-medium text-lg resize-none border-2 border-transparent focus:border-[#FFD700] transition-all"
-          />
+        {/* DESCRIPTION */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <label className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+              Description
+            </label>
+
+            <div className="text-[10px] font-black uppercase text-slate-500">
+              Set the vibe
+            </div>
+          </div>
+
+          <div className="relative group">
+            <textarea
+              placeholder="Tell people what makes this move worth showing up for..."
+              value={formData.description || ""}
+              onChange={(e) => updateForm("description", e.target.value)}
+              className="w-full p-6 md:p-7 bg-slate-50 rounded-[30px] h-44 outline-none font-medium text-base md:text-lg resize-none border-2 border-transparent focus:border-[#FFD700] focus:bg-white transition-all placeholder:text-slate-300 text-slate-900 leading-relaxed"
+            />
+
+            <div className="absolute inset-0 rounded-[30px] ring-0 ring-yellow-300/20 group-focus-within:ring-[8px] transition-all pointer-events-none" />
+          </div>
+
+          <p className="text-[11px] text-slate-400 font-semibold px-1">
+            Mention the energy, audience, location, dress code or expectations.
+          </p>
         </div>
 
-        {/* 4. TAGS */}
-        <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase text-gray-400">
-            Tags
-          </label>
-          <div className="relative">
+        {/* TAGS */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <label className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+              Tags
+            </label>
+
+            <div className="text-[10px] font-black uppercase text-slate-500">
+              Improve discovery
+            </div>
+          </div>
+
+          <div className="relative group">
             <input
-              placeholder="music, outdoor, networking"
+              placeholder="music, networking, outdoors"
               value={formData.tags || ""}
               onChange={(e) => updateForm("tags", e.target.value)}
-              // UPDATED: focus:border-[#FFD700]
-              className="w-full p-4 pl-12 bg-gray-50 rounded-2xl font-bold outline-none text-base sm:text-sm border border-transparent focus:border-[#FFD700] transition-all"
+              className="w-full p-5 pl-14 bg-slate-50 rounded-[24px] font-bold outline-none text-base border-2 border-transparent focus:border-[#FFD700] focus:bg-white transition-all placeholder:text-slate-300"
             />
+
             <Hash
-              size={16}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"
+              size={18}
+              className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300"
             />
+
+            <div className="absolute inset-0 rounded-[24px] ring-0 ring-yellow-300/20 group-focus-within:ring-[8px] transition-all pointer-events-none" />
           </div>
+
+          <p className="text-[11px] text-slate-400 font-semibold px-1">
+            Separate tags with commas to help nearby people discover your move.
+          </p>
         </div>
 
-        {/* 5. CATEGORY SELECTION */}
-        <div className="space-y-4">
-          <label className="text-[10px] font-black uppercase text-gray-400">
-            Category
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((cat: string) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => updateForm("category", cat)}
-                // UPDATED: border-[#FFD700] and bg-[#FFFBEB] (yellow tint)
-                className={`px-4 py-2 rounded-2xl text-[10px] font-bold border-2 transition-all ${
-                  formData.category === cat
-                    ? "border-[#FFD700] bg-[#FFFBEB] text-[#92400E] shadow-sm"
-                    : "border-gray-50 text-gray-400 hover:border-gray-200"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+        {/* CATEGORY */}
+        <div className="space-y-5">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <label className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+              Category
+            </label>
+
+            <div className="text-[10px] font-black uppercase text-slate-500">
+              Choose one
+            </div>
           </div>
+
+          <div className="flex flex-wrap gap-3">
+            {categories.map((cat: string) => {
+              const active = formData.category === cat;
+
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => updateForm("category", cat)}
+                  className={`relative px-5 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wide border-2 transition-all duration-200 ${
+                    active
+                      ? "border-[#FFD700] bg-[#FFF9DB] text-slate-950 shadow-[0_6px_0_0_#FACC15]"
+                      : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:-translate-y-0.5"
+                  }`}
+                >
+                  {active && (
+                    <div className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#FFD700] border border-slate-900" />
+                  )}
+
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="text-[11px] text-slate-400 font-semibold px-1">
+            This helps skaute recommend your move to the right people.
+          </p>
         </div>
       </div>
     </div>

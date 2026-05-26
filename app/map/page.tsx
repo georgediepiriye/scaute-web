@@ -458,62 +458,186 @@ export default function MapPage() {
               )}
 
               {/* NAV ITEMS */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="space-y-2">
-                  {[
-                    {
-                      href: "/discover",
-                      label: "Discover",
-                      icon: <Compass size={18} />,
-                    },
+              {/* NAVIGATION */}
+              <div className="flex-1 overflow-y-auto pr-1">
+                {/* MAIN NAV */}
+                <div className="mb-8">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-4 px-2">
+                    Explore
+                  </p>
 
-                    {
-                      href: "/create",
-                      label: "Add Event",
-                      icon: <PlusCircle size={18} />,
-                    },
+                  <div className="space-y-2">
+                    {[
+                      {
+                        href: "/map",
+                        label: "Live Map",
+                        icon: <Sparkles size={18} />,
+                      },
 
-                    {
-                      href: "/chat",
-                      label: "Help",
-                      icon: <MessageSquare size={18} />,
-                    },
+                      {
+                        href: "/discover",
+                        label: "Discover",
+                        icon: <Compass size={18} />,
+                      },
 
-                    {
-                      href: "/about",
-                      label: "About",
-                      icon: <Info size={18} />,
-                    },
+                      {
+                        href: "/create",
+                        label: "Host Event",
+                        icon: <PlusCircle size={18} />,
+                      },
 
-                    {
-                      href: "/contact",
-                      label: "Contact Us",
-                      icon: <Phone size={18} />,
-                    },
-                  ].map((item) => (
-                    <button
-                      key={item.href}
-                      onClick={() => {
-                        router.push(item.href);
-                        setMenuOpen(false);
-                      }}
-                      className="group flex items-center justify-between w-full p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-transparent hover:border-white/10 transition-all duration-200"
-                    >
-                      <div className="flex items-center gap-4">
-                        <span className="text-blue-400">{item.icon}</span>
+                      {
+                        href: "/pricing",
+                        label: "Pricing",
+                        icon: <Sparkles size={18} />,
+                      },
+                    ].map((item) => (
+                      <button
+                        key={item.href}
+                        onClick={() => {
+                          router.push(item.href);
+                          setMenuOpen(false);
+                        }}
+                        className="group w-full flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/10 transition-all duration-200 px-4 py-4 active:scale-[0.98]"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                            {item.icon}
+                          </div>
 
-                        <span className="text-xs font-black uppercase tracking-[0.2em] text-white">
-                          {item.label}
-                        </span>
-                      </div>
+                          <div className="text-left">
+                            <p className="text-sm font-black uppercase tracking-[0.18em] text-white">
+                              {item.label}
+                            </p>
+                          </div>
+                        </div>
 
-                      <ChevronRight
-                        size={14}
-                        className="text-white/40 group-hover:text-white"
-                      />
-                    </button>
-                  ))}
+                        <ChevronRight
+                          size={16}
+                          className="text-white/30 group-hover:text-white transition-colors"
+                        />
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* COMPANY */}
+                <div className="mb-8">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-4 px-2">
+                    Company
+                  </p>
+
+                  <div className="space-y-2">
+                    {[
+                      {
+                        href: "/about",
+                        label: "Our Story",
+                        icon: <Info size={18} />,
+                      },
+
+                      {
+                        href: "/contact",
+                        label: "Contact",
+                        icon: <Phone size={18} />,
+                      },
+
+                      {
+                        href: "/chat",
+                        label: "Help",
+                        icon: <MessageSquare size={18} />,
+                      },
+                    ].map((item) => (
+                      <button
+                        key={item.href}
+                        onClick={() => {
+                          router.push(item.href);
+                          setMenuOpen(false);
+                        }}
+                        className="group w-full flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/10 transition-all duration-200 px-4 py-4 active:scale-[0.98]"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/70">
+                            {item.icon}
+                          </div>
+
+                          <div className="text-left">
+                            <p className="text-sm font-black uppercase tracking-[0.18em] text-white">
+                              {item.label}
+                            </p>
+                          </div>
+                        </div>
+
+                        <ChevronRight
+                          size={16}
+                          className="text-white/30 group-hover:text-white transition-colors"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* PROFILE LINKS */}
+                {profile && (
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-4 px-2">
+                      Account
+                    </p>
+
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => {
+                          router.push("/profile");
+                          setMenuOpen(false);
+                        }}
+                        className="group w-full flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/10 transition-all duration-200 px-4 py-4 active:scale-[0.98]"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/70">
+                            <UserIcon size={18} />
+                          </div>
+
+                          <div className="text-left">
+                            <p className="text-sm font-black uppercase tracking-[0.18em] text-white">
+                              Profile
+                            </p>
+                          </div>
+                        </div>
+
+                        <ChevronRight
+                          size={16}
+                          className="text-white/30 group-hover:text-white transition-colors"
+                        />
+                      </button>
+
+                      {profile?.role === "admin" && (
+                        <button
+                          onClick={() => {
+                            router.push("/admin/dashboard");
+                            setMenuOpen(false);
+                          }}
+                          className="group w-full flex items-center justify-between rounded-2xl border border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/20 transition-all duration-200 px-4 py-4 active:scale-[0.98]"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400">
+                              <Sparkles size={18} />
+                            </div>
+
+                            <div className="text-left">
+                              <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-300">
+                                Admin Console
+                              </p>
+                            </div>
+                          </div>
+
+                          <ChevronRight
+                            size={16}
+                            className="text-blue-300/60"
+                          />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* FOOTER BUTTON */}

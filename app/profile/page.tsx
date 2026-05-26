@@ -323,93 +323,255 @@ export default function ProfilePage() {
       >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* --- LEFT SIDEBAR: IDENTITY --- */}
+          {/* --- LEFT SIDEBAR: IDENTITY --- */}
           <aside className="lg:col-span-4">
-            <div className="bg-white rounded-[2.5rem] border border-slate-200/60 p-8 shadow-sm sticky top-32 text-center">
-              <div className="relative group w-32 h-32 mx-auto">
+            <div className="sticky top-32 overflow-hidden rounded-[2.8rem] border border-slate-200/70 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
+              {/* COVER HEADER */}
+              <div className="relative h-40 overflow-hidden">
                 <div
-                  className="absolute -inset-1 rounded-[2.2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"
-                  style={{ backgroundColor: SKAUTE_BLUE }}
-                />
-                <div className="relative w-32 h-32 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl bg-slate-50">
-                  <Image
-                    src={userDisplay.image}
-                    alt="Profile"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <button
-                  className="absolute bottom-1 right-1 p-2 bg-white rounded-full shadow-lg border border-slate-100 transition hover:scale-110"
-                  style={{ color: SKAUTE_BLUE }}
-                >
-                  <Plus size={14} />
-                </button>
-              </div>
-
-              <div className="mt-6">
-                <div className="flex items-center justify-center gap-1.5">
-                  <h2 className="text-xl font-black uppercase tracking-tight italic">
-                    {userDisplay.name}
-                  </h2>
-                  <ShieldCheck
-                    size={16}
-                    style={{ color: SKAUTE_BLUE }}
-                    fill="currentColor"
-                    fillOpacity={0.1}
-                  />
-                </div>
-                <p
-                  className="font-bold text-sm mt-1"
-                  style={{ color: SKAUTE_BLUE }}
-                >
-                  {userDisplay.handle}
-                </p>
-                <div className="inline-flex items-center gap-1.5 mt-4 px-3 py-1 bg-slate-50 rounded-full text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                  <MapPin size={10} style={{ color: SKAUTE_BLUE }} />{" "}
-                  {userDisplay.location}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-1.5 mt-8">
-                <div className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100">
-                  <p className="text-lg font-black">
-                    {userDisplay.ticketsCount}
-                  </p>
-                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider">
-                    Passes
-                  </p>
-                </div>
-                <div className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100">
-                  <p className="text-lg font-black text-blue-600">
-                    {mainHostedCount}
-                  </p>
-                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider">
-                    Hosted
-                  </p>
-                </div>
-                <div className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100">
-                  <p className="text-lg font-black text-slate-800">
-                    {partnerManagedCount}
-                  </p>
-                  <p className="text-[8px] text-slate-400 font-black uppercase tracking-wider">
-                    Partner
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-8 space-y-3">
-                <button
-                  className="w-full py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg"
+                  className="absolute inset-0"
                   style={{
-                    backgroundColor: SKAUTE_BLUE,
-                    boxShadow: `0 10px 15px -3px ${SKAUTE_BLUE}30`,
+                    background: `linear-gradient(135deg, ${SKAUTE_BLUE} 0%, #0F172A 100%)`,
+                  }}
+                />
+
+                {/* ambient blobs */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="absolute -top-16 -right-10 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
+                  <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-yellow-300/20 blur-3xl" />
+                </div>
+
+                {/* top actions */}
+                <div className="relative z-10 flex items-center justify-between p-6">
+                  <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-white/10 bg-white/10 backdrop-blur-md">
+                    <ShieldCheck
+                      size={12}
+                      className="text-yellow-300"
+                      fill="currentColor"
+                    />
+                    <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
+                      Verified
+                    </span>
+                  </div>
+
+                  <button className="w-11 h-11 rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md flex items-center justify-center text-white transition-all hover:bg-white/20 active:scale-95">
+                    <Share2 size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* BODY */}
+              <div className="relative px-7 pb-7">
+                {/* PROFILE IMAGE */}
+                <div className="relative -mt-16 flex justify-center">
+                  <div className="relative w-32 h-32">
+                    {/* glow */}
+                    <div
+                      className="absolute -inset-3 rounded-[2.8rem] blur-3xl opacity-30"
+                      style={{ backgroundColor: SKAUTE_BLUE }}
+                    />
+
+                    {/* image */}
+                    <div className="relative w-full h-full rounded-[2.4rem] overflow-hidden border-[6px] border-white shadow-2xl bg-slate-100">
+                      <Image
+                        src={userDisplay.image}
+                        alt="Profile"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+
+                    {/* camera button */}
+                    <button
+                      className="absolute -bottom-1 -right-1 w-12 h-12 rounded-2xl border-4 border-white flex items-center justify-center shadow-xl transition-all hover:scale-105 active:scale-95"
+                      style={{
+                        background: `linear-gradient(135deg, ${SKAUTE_BLUE} 0%, #2563EB 100%)`,
+                      }}
+                    >
+                      <Camera size={16} className="text-white" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* USER INFO */}
+                <div className="mt-6 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <h2 className="text-[1.7rem] font-black uppercase tracking-tight text-slate-900 leading-none">
+                      {userDisplay.name}
+                    </h2>
+
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${SKAUTE_BLUE}15` }}
+                    >
+                      <ShieldCheck
+                        size={13}
+                        style={{ color: SKAUTE_BLUE }}
+                        fill="currentColor"
+                        fillOpacity={0.15}
+                      />
+                    </div>
+                  </div>
+
+                  <p
+                    className="mt-2 text-sm font-black tracking-wide"
+                    style={{ color: SKAUTE_BLUE }}
+                  >
+                    {userDisplay.handle}
+                  </p>
+
+                  {/* LOCATION + DATE */}
+                  <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                    <div className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-2">
+                      <MapPin size={12} style={{ color: SKAUTE_BLUE }} />
+                      <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-600">
+                        {userDisplay.location}
+                      </span>
+                    </div>
+
+                    <div className="inline-flex items-center gap-1.5 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-2">
+                      <Calendar size={12} className="text-amber-500" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.16em] text-amber-700">
+                        Joined {userDisplay.joined}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* STATS */}
+                <div className="mt-8 grid grid-cols-3 gap-3">
+                  {/* passes */}
+                  <div className="rounded-[1.8rem] border border-slate-100 bg-gradient-to-b from-slate-50 to-white p-4 text-center shadow-sm">
+                    <div className="flex justify-center mb-2">
+                      <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center">
+                        <TicketIcon size={16} className="text-slate-700" />
+                      </div>
+                    </div>
+
+                    <p className="text-2xl font-black leading-none text-slate-900">
+                      {userDisplay.ticketsCount}
+                    </p>
+
+                    <p className="mt-2 text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+                      Passes
+                    </p>
+                  </div>
+
+                  {/* hosted */}
+                  <div className="rounded-[1.8rem] border border-blue-100 bg-blue-50/70 p-4 text-center shadow-sm">
+                    <div className="flex justify-center mb-2">
+                      <div className="w-10 h-10 rounded-2xl bg-blue-100 flex items-center justify-center">
+                        <LayoutGrid size={16} style={{ color: SKAUTE_BLUE }} />
+                      </div>
+                    </div>
+
+                    <p
+                      className="text-2xl font-black leading-none"
+                      style={{ color: SKAUTE_BLUE }}
+                    >
+                      {mainHostedCount}
+                    </p>
+
+                    <p className="mt-2 text-[9px] font-black uppercase tracking-[0.18em] text-blue-600">
+                      Hosted
+                    </p>
+                  </div>
+
+                  {/* partner */}
+                  <div className="rounded-[1.8rem] border border-amber-100 bg-amber-50/70 p-4 text-center shadow-sm">
+                    <div className="flex justify-center mb-2">
+                      <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center">
+                        <Users2 size={16} className="text-amber-700" />
+                      </div>
+                    </div>
+
+                    <p className="text-2xl font-black leading-none text-amber-700">
+                      {partnerManagedCount}
+                    </p>
+
+                    <p className="mt-2 text-[9px] font-black uppercase tracking-[0.18em] text-amber-700">
+                      Partner
+                    </p>
+                  </div>
+                </div>
+
+                {/* MEMBERSHIP CARD */}
+                <div
+                  className="relative mt-8 overflow-hidden rounded-[2.2rem] p-6 text-white"
+                  style={{
+                    background: `linear-gradient(135deg, ${SKAUTE_BLUE} 0%, #0F172A 100%)`,
                   }}
                 >
-                  Edit Profile
-                </button>
-                <button className="w-full py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition">
-                  <Share2 size={14} className="inline mr-2" /> Share
-                </button>
+                  {/* background icon */}
+                  <div className="absolute -right-8 -bottom-8 opacity-10">
+                    <Crown size={140} />
+                  </div>
+
+                  <div className="relative z-10">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 backdrop-blur-md">
+                      <Crown
+                        size={12}
+                        className="text-yellow-300"
+                        fill="currentColor"
+                      />
+
+                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/80">
+                        skaute Pioneer
+                      </span>
+                    </div>
+
+                    <h3 className="mt-5 text-2xl font-black uppercase tracking-tight leading-none">
+                      Elite Access
+                    </h3>
+
+                    <p className="mt-3 text-xs leading-relaxed text-white/75 font-medium">
+                      Unlock priority discovery placement, advanced host tools
+                      and premium community experiences across the Skaute
+                      ecosystem.
+                    </p>
+
+                    {/* progress */}
+                    <div className="mt-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[9px] font-black uppercase tracking-[0.15em] text-white/60">
+                          Membership Progress
+                        </span>
+
+                        <span className="text-[10px] font-black text-yellow-300">
+                          68%
+                        </span>
+                      </div>
+
+                      <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: "68%",
+                            backgroundColor: SKAUTE_YELLOW,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ACTION BUTTONS */}
+                <div className="mt-8 space-y-3">
+                  <button
+                    className="w-full h-16 rounded-[1.8rem] text-white font-black text-[11px] uppercase tracking-[0.24em] transition-all active:scale-[0.98] hover:-translate-y-0.5 shadow-2xl"
+                    style={{
+                      background: `linear-gradient(135deg, ${SKAUTE_BLUE} 0%, #2563EB 100%)`,
+                      boxShadow: `0 20px 35px -12px ${SKAUTE_BLUE}55`,
+                    }}
+                  >
+                    Edit Profile
+                  </button>
+
+                  <button className="w-full h-16 rounded-[1.8rem] border border-slate-200 bg-white font-black text-[11px] uppercase tracking-[0.24em] text-slate-700 hover:bg-slate-50 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                    <Share2 size={15} style={{ color: SKAUTE_BLUE }} />
+                    Share Profile
+                  </button>
+                </div>
               </div>
             </div>
           </aside>
