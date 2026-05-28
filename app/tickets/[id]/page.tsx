@@ -117,9 +117,9 @@ export default function TicketDetailsPage() {
       />
 
       <main className="relative max-w-lg mx-auto px-5 pt-28">
-        {/* BACK NAV */}
+        {/* BACK NAV - ROUTING EXPLICITLY TO PROFILE */}
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push("/profile")}
           className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 mb-8 transition"
         >
           <ChevronLeft size={15} />
@@ -150,7 +150,7 @@ export default function TicketDetailsPage() {
 
               <div className="relative px-6 py-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  {/* SQUARE REMOVED - NATIVE LOGO EMBEDDED & ENLARGED */}
+                  {/* NATIVE LOGO EMBEDDED & ENLARGED */}
                   <div className="relative flex items-center justify-center overflow-hidden">
                     <Image
                       src="/images/skaute_logo.webp"
@@ -162,7 +162,7 @@ export default function TicketDetailsPage() {
                     />
                   </div>
 
-                  {/* HEADER META LABELS - ALIGNED TEXT COLORS FOR DARK THEME */}
+                  {/* HEADER META LABELS */}
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">
                       Premium Access
@@ -258,12 +258,10 @@ export default function TicketDetailsPage() {
 
             {/* STRUCTURAL GEOMETRIC CUT LINE */}
             <div className="relative py-3 bg-white">
-              {/* SIDE SEMI-CIRCLE HOLES */}
               <div className="absolute left-0 top-1/2 w-8 h-8 bg-[#F4F6FA] rounded-full -translate-x-1/2 -translate-y-1/2 z-10 border-r border-slate-200/60" />
 
               <div className="absolute right-0 top-1/2 w-8 h-8 bg-[#F4F6FA] rounded-full translate-x-1/2 -translate-y-1/2 z-10 border-l border-slate-200/60" />
 
-              {/* PERFORATION DASH */}
               <div className="mx-7 border-t border-dashed border-slate-200" />
             </div>
 
@@ -359,7 +357,6 @@ export default function TicketDetailsPage() {
 
             {/* EXCLUSIVE REAR SUMMARY FOOTER */}
             <div className="relative border-t border-slate-100 bg-slate-50/80 overflow-hidden">
-              {/* LOWER ACCENT STRIP */}
               <div
                 className="absolute top-0 left-0 w-full h-[2px]"
                 style={{

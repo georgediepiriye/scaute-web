@@ -9,6 +9,7 @@ import {
   RotateCcw,
   UserPlus,
   Lock,
+  Plus, // Imported for the manual ticket CTA
 } from "lucide-react";
 
 interface AttendeesTabProps {
@@ -19,7 +20,8 @@ interface AttendeesTabProps {
   totalPages: number;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>> | any;
   onRefund: (ticketCode: string) => Promise<void>;
-  canIssueRefunds: boolean; // Receives capability state cleanly from parent workspace
+  canIssueRefunds: boolean;
+  onIssueTicket?: () => void; // Added capability hook for manual entry generation
 }
 
 export const AttendeesTab = ({
@@ -31,10 +33,10 @@ export const AttendeesTab = ({
   setCurrentPage,
   onRefund,
   canIssueRefunds,
+  onIssueTicket,
 }: AttendeesTabProps) => {
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Local filtering based on expanded TICKET_STATUS
   const filteredItems = currentItems.filter((item: any) => {
     if (statusFilter === "all") return true;
     if (statusFilter === "checked-in") return item.status === "used";
@@ -44,7 +46,6 @@ export const AttendeesTab = ({
     return true;
   });
 
-  // Helper to render consistent badges for all statuses
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "used":
@@ -66,11 +67,24 @@ export const AttendeesTab = ({
     <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header & Search/Filters */}
       <div className="p-8 border-b border-slate-50 space-y-4 md:space-y-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Users size={16} className="text-yellow-500" />
-          <h3 className="text-xs font-black uppercase tracking-[0.2em]">
-            Guest List
-          </h3>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Users size={16} className="text-yellow-500" />
+            <h3 className="text-xs font-black uppercase tracking-[0.2em]">
+              Guest List
+            </h3>
+          </div>
+
+          {/* MANUAL GENERATION ACTION TRIGGER */}
+          {onIssueTicket && (
+            <button
+              onClick={onIssueTicket}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all shadow-sm"
+            >
+              <Plus size={10} strokeWidth={3} />
+              Issue Pass
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-3">

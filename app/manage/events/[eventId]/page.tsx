@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
@@ -14,6 +15,12 @@ import {
   Percent,
   CreditCard,
   Landmark,
+  X,
+  UserPlus,
+  Banknote,
+  Smartphone,
+  QrCode,
+  Gift,
 } from "lucide-react";
 
 import toast, { Toaster } from "react-hot-toast";
@@ -62,6 +69,19 @@ export default function ManageEventDashboard() {
 
   const [fetchingPayouts, setFetchingPayouts] = useState(false);
 
+  // MANUAL TICKET ISSUANCE FORM STATE
+  const [showIssueModal, setShowIssueModal] = useState(false);
+  const [issuingTicket, setIssuingTicket] = useState(false);
+
+  // 🆕 Updated form state payload properties to capture payment method contexts
+  const [manualTicketForm, setManualTicketForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    tierId: "",
+    paymentMethod: "cash", // 🆕 Defaults to Cash collection at the gate
+  });
+
   /**
    * USER BOOTSTRAP
    */
@@ -103,6 +123,15 @@ export default function ManageEventDashboard() {
 
       if (response.ok) {
         setData(result.data);
+        // Pre-fill first ticket tier by default in manual ticket tracking form context
+        if (result.data?.event?.ticketTiers?.length > 0) {
+          setManualTicketForm((prev) => ({
+            ...prev,
+            tierId:
+              result.data.event.ticketTiers[0]._id ||
+              result.data.event.ticketTiers[0].id,
+          }));
+        }
       } else {
         router.replace("/auth/signin");
       }
@@ -297,6 +326,71 @@ export default function ManageEventDashboard() {
   };
 
   /**
+   * MANUAL TICKET GENERATION SUBMIT
+   */
+  const handleIssueManualTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      !manualTicketForm.firstName ||
+      !manualTicketForm.lastName ||
+      !manualTicketForm.email ||
+      !manualTicketForm.tierId ||
+      !manualTicketForm.paymentMethod
+    ) {
+      return toast.error("Please fill in all manual pass fields.");
+    }
+
+    setIssuingTicket(true);
+    const toastId = toast.loading("Processing gate ticket issuance...");
+
+    try {
+      const token = localStorage.getItem("skaute_token");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${id}/tickets/issue-manual`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify(manualTicketForm), // 🆕 Delivers updated structure including paymentMethod
+        },
+      );
+
+      const result = await res.json();
+
+      if (res.ok) {
+        // 🆕 Customize feedback toast based on chosen financial parameters
+        const isFree = manualTicketForm.paymentMethod === "complimentary";
+        toast.success(
+          isFree
+            ? "Complimentary pass issued!"
+            : "Gate payment logged & ticket issued!",
+          { id: toastId },
+        );
+
+        setShowIssueModal(false);
+        // Reset customer detail fields but keep current selected tier/paymentMethod context defaults
+        setManualTicketForm((prev) => ({
+          ...prev,
+          firstName: "",
+          lastName: "",
+          email: "",
+        }));
+        fetchDashboardData();
+      } else {
+        toast.error(result.message || "Failed to generate pass.", {
+          id: toastId,
+        });
+      }
+    } catch (err) {
+      toast.error("Network dispatch breakdown error.", { id: toastId });
+    } finally {
+      setIssuingTicket(false);
+    }
+  };
+
+  /**
    * FILTERED ATTENDEES
    */
   const filteredTickets = useMemo(() => {
@@ -467,6 +561,7 @@ export default function ManageEventDashboard() {
                   setCurrentPage={setCurrentPage}
                   onRefund={handleRefund}
                   canIssueRefunds={canIssueRefunds}
+                  onIssueTicket={() => setShowIssueModal(true)}
                 />
               )}
 
@@ -764,6 +859,185 @@ export default function ManageEventDashboard() {
           </div>
         </main>
       </div>
+
+      {/* MANUAL TICKET MANAGEMENT INTERFACES */}
+      {showIssueModal && (
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2.5rem] max-w-md w-full border border-slate-200/80 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="p-8 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <UserPlus size={18} className="text-yellow-500" />
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900">
+                    Issue Gate Ticket
+                  </h3>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    Generate manual guest entry codes
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowIssueModal(false)}
+                className="p-2 text-slate-400 hover:text-slate-950 hover:bg-slate-200/50 rounded-xl transition-all"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleIssueManualTicket} className="p-8 space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={manualTicketForm.firstName}
+                    onChange={(e) =>
+                      setManualTicketForm((p) => ({
+                        ...p,
+                        firstName: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. Tamuno"
+                    className="w-full px-4 py-3 bg-slate-50 border border-transparent focus:border-yellow-500/20 focus:bg-white rounded-xl text-xs font-bold uppercase transition-all outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={manualTicketForm.lastName}
+                    onChange={(e) =>
+                      setManualTicketForm((p) => ({
+                        ...p,
+                        lastName: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. Briggs"
+                    className="w-full px-4 py-3 bg-slate-50 border border-transparent focus:border-yellow-500/20 focus:bg-white rounded-xl text-xs font-bold uppercase transition-all outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={manualTicketForm.email}
+                  onChange={(e) =>
+                    setManualTicketForm((p) => ({
+                      ...p,
+                      email: e.target.value.toLowerCase(),
+                    }))
+                  }
+                  placeholder="guest@example.com"
+                  className="w-full px-4 py-3 bg-slate-50 border border-transparent focus:border-yellow-500/20 focus:bg-white rounded-xl text-xs font-bold transition-all outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
+                  Select Ticket Profile
+                </label>
+                <select
+                  required
+                  value={manualTicketForm.tierId}
+                  onChange={(e) =>
+                    setManualTicketForm((p) => ({
+                      ...p,
+                      tierId: e.target.value,
+                    }))
+                  }
+                  className="w-full px-4 py-3 bg-slate-50 border border-transparent focus:border-yellow-500/20 focus:bg-white rounded-xl text-xs font-bold uppercase tracking-wide transition-all outline-none"
+                >
+                  {data.event.ticketTiers?.map((tier: any) => (
+                    <option
+                      key={tier._id || tier.id}
+                      value={tier._id || tier.id}
+                    >
+                      {tier.name} — ₦{Number(tier.price || 0).toLocaleString()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 🆕 NEW PAYMENT METHOD SELECTION GRID */}
+              <div>
+                <label className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">
+                  Payment Collection Method
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "cash", label: "Cash", icon: Banknote },
+                    { id: "transfer", label: "Transfer", icon: Landmark },
+                    { id: "pos", label: "POS Terminal", icon: Smartphone },
+                    { id: "complimentary", label: "Free Pass", icon: Gift },
+                  ].map((method) => {
+                    const IconComponent = method.icon;
+                    const isSelected =
+                      manualTicketForm.paymentMethod === method.id;
+                    return (
+                      <button
+                        key={method.id}
+                        type="button"
+                        onClick={() =>
+                          setManualTicketForm((p) => ({
+                            ...p,
+                            paymentMethod: method.id,
+                          }))
+                        }
+                        className={`flex items-center gap-2 px-4 py-3 border rounded-xl text-left transition-all ${
+                          isSelected
+                            ? "bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-200"
+                            : "bg-slate-50 border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        }`}
+                      >
+                        <IconComponent
+                          size={14}
+                          className={
+                            isSelected ? "text-yellow-400" : "text-slate-400"
+                          }
+                        />
+                        <span className="text-[10px] font-black uppercase tracking-wider">
+                          {method.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowIssueModal(false)}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200/70 text-slate-700 text-xs font-black uppercase tracking-widest rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={issuingTicket}
+                  className="flex-1 py-3 bg-yellow-400 hover:bg-yellow-500 disabled:bg-yellow-200 text-slate-950 text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-yellow-100"
+                >
+                  {issuingTicket ? "Issuing..." : "Confirm & Issue"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </AuthGuard>
   );
 }
