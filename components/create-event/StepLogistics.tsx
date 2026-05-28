@@ -465,7 +465,6 @@ export const StepLogistics = ({
                     size={14}
                     className={isLocating ? "animate-pulse" : ""}
                   />
-
                   {isLocating ? "Locating..." : "Use Current Location"}
                 </button>
               </div>
@@ -473,25 +472,17 @@ export const StepLogistics = ({
 
             {/* CONTENT */}
             <div className="p-6 md:p-7 space-y-5">
-              {/* MAPBOX */}
-              <div className="relative w-full custom-mapbox-container">
+              {/* 💡 RESTORED: Pure, unstyled SearchBox wrapped in a clean, relative wrapper to support the dropdown */}
+              <div className="relative w-full z-30 searchbox-working-wrapper">
                 <SearchBox
                   accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN as string}
-                  value={formData.location}
+                  value={formData.location || ""}
                   onRetrieve={handleRetrieve}
                   onChange={(val: string) => updateForm("location", val)}
                   placeholder="Search venue, area, or address..."
-                  theme={{
-                    variables: {
-                      borderRadius: "28px",
-                      fontFamily: "inherit",
-                      unit: "16px",
-                      border: "2px solid transparent",
-                    },
-                  }}
                   options={{
                     country: "ng",
-                    proximity: [7.0086, 4.8197],
+                    proximity: [7.0086, 4.8197], // Port Harcourt
                     bbox: [6.85, 4.65, 7.25, 5.05],
                     types: "poi,address,neighborhood,locality",
                     limit: 10,
@@ -550,7 +541,6 @@ export const StepLogistics = ({
                 }`}
               >
                 <MapPin size={18} />
-
                 {formData.locationCoords
                   ? "Location Pinned ✓"
                   : "Drop Exact Map Pin"}

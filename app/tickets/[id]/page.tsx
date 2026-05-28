@@ -9,10 +9,9 @@ import {
   MapPin,
   Calendar,
   Clock,
-  ShieldCheck,
   Download,
   Share2,
-  Info,
+  ShieldCheck,
   XCircle,
   RefreshCcw,
 } from "lucide-react";
@@ -20,85 +19,77 @@ import Navbar from "@/components/layout/NavBar";
 import toast from "react-hot-toast";
 import { TICKET_STATUS } from "@/lib/constants";
 
-// BRAND COLOR CONSTANTS
 const SKAUTE_BLUE = "#0052FF";
 const SKAUTE_YELLOW = "#FFD700";
 
 export default function TicketDetailsPage() {
   const params = useParams();
   const router = useRouter();
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [ticket, setTicket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTicketDetails = async () => {
+    const fetchTicket = async () => {
       try {
         const token = localStorage.getItem("skaute_token");
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
 
-        // Inject the explicit authorization state into headers to align with middleware changes
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
-        }
-
-        const response = await fetch(
+        const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/tickets/${params.id}`,
           {
-            method: "GET",
-            headers: headers,
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
             credentials: "include",
           },
         );
-        const result = await response.json();
 
-        if (response.ok && result.status === "success") {
-          setTicket(result.data);
+        const data = await res.json();
+
+        if (data.status === "success") {
+          setTicket(data.data);
         } else {
-          toast.error(result.message || "Could not load ticket details");
-          // If authorization fails, redirect to home page or general search instead of freezing on /profile
+          toast.error("Unable to load ticket");
           router.push("/");
         }
-      } catch (error) {
-        console.error("Ticket Load Error:", error);
-        toast.error(
-          "A network error occurred while rendering your digital pass.",
-        );
+      } catch (e) {
+        toast.error("Network error");
       } finally {
         setLoading(false);
       }
     };
 
-    if (params.id) fetchTicketDetails();
+    if (params.id) fetchTicket();
   }, [params.id, router]);
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center">
-        <div
-          className="animate-pulse font-black text-[10px] uppercase tracking-widest"
+      <div className="min-h-screen flex items-center justify-center bg-[#F4F6FA]">
+        <p
+          className="text-[10px] font-black uppercase tracking-[0.4em] animate-pulse"
           style={{ color: SKAUTE_BLUE }}
         >
-          Retrieving Digital Pass...
-        </div>
+          Loading Pass...
+        </p>
       </div>
     );
+  }
 
   if (!ticket) return null;
 
-  // Gracefully fallback inside constants formatting if status definitions are missing
   const statusKey = (ticket.status as keyof typeof TICKET_STATUS) || "valid";
-  const statusConfig = TICKET_STATUS[statusKey] || {
+
+  const status = TICKET_STATUS[statusKey] || {
     label: "Valid",
     color: SKAUTE_BLUE,
   };
 
   const eventDate = ticket.event?.startDate
     ? new Date(ticket.event.startDate).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
+        day: "2-digit",
+        month: "short",
         year: "numeric",
       })
     : "TBD";
@@ -111,191 +102,320 @@ export default function TicketDetailsPage() {
     : "TBD";
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-24">
+    <div className="min-h-screen bg-[#F4F6FA] pb-24 overflow-hidden text-slate-800">
       <Navbar />
 
-      <main className="max-w-xl mx-auto px-6 pt-28">
+      {/* BACKGROUND BRAND GLOWS */}
+      <div
+        className="fixed top-[-200px] right-[-120px] w-[400px] h-[400px] rounded-full blur-3xl opacity-10 pointer-events-none"
+        style={{ backgroundColor: SKAUTE_BLUE }}
+      />
+
+      <div
+        className="fixed bottom-[-200px] left-[-120px] w-[400px] h-[400px] rounded-full blur-3xl opacity-10 pointer-events-none"
+        style={{ backgroundColor: SKAUTE_YELLOW }}
+      />
+
+      <main className="relative max-w-lg mx-auto px-5 pt-28">
+        {/* BACK NAV */}
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-black mb-8 transition-colors"
+          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 mb-8 transition"
         >
-          <ChevronLeft size={14} /> Back
+          <ChevronLeft size={15} />
+          Back
         </button>
 
-        <div className="relative group">
-          {/* Subtle Branded Glow */}
+        {/* TICKET CONTAINER WRAPPER */}
+        <div className="relative">
+          {/* OUTER ACCENT SHADOW */}
           <div
-            className="absolute -inset-1 rounded-[3rem] blur opacity-10 transition-all duration-500"
+            className="absolute -inset-[2px] rounded-[2.8rem] opacity-30 blur-xl"
             style={{
-              backgroundImage: `linear-gradient(to bottom, ${SKAUTE_BLUE}, ${SKAUTE_YELLOW})`,
+              background: `linear-gradient(135deg, ${SKAUTE_BLUE}, ${SKAUTE_YELLOW})`,
             }}
           />
 
-          <div className="relative bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/50">
-            {/* Event Banner */}
-            <div className="relative h-48 w-full bg-slate-100">
-              {ticket.event?.image ? (
-                <Image
-                  src={ticket.event.image}
-                  alt={ticket.event.title || "Event Image"}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-[#121212] flex items-center justify-center">
-                  <h2 className="text-white font-black italic uppercase opacity-20 text-4xl">
-                    skaute Move
-                  </h2>
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6">
-                <span
-                  className="px-3 py-1 text-white text-[9px] font-black uppercase tracking-widest rounded-full"
-                  style={{ backgroundColor: SKAUTE_BLUE }}
-                >
-                  {ticket.tierName}
-                </span>
-                <h1 className="text-2xl font-black text-white uppercase mt-2 leading-tight tracking-tighter">
-                  {ticket.event?.title || "Move"}
-                </h1>
-              </div>
-            </div>
-
-            {/* QR Section */}
-            <div className="p-8 flex flex-col items-center text-center">
+          {/* MAIN TICKET ELEMENT */}
+          <div className="relative rounded-[2.8rem] overflow-hidden bg-white border border-slate-200/60 shadow-[0_30px_70px_rgba(0,0,0,0.06)]">
+            {/* TICKET HEADER BAR - SWITCHED TO BLACK THEME */}
+            <div className="relative overflow-hidden bg-slate-950 border-b border-slate-900">
+              {/* TOP ACCENT STRIP */}
               <div
-                className={`p-4 bg-white border-[6px] rounded-[2rem] shadow-sm mb-6 transition-colors duration-500`}
+                className="absolute top-0 left-0 w-full h-[3px]"
                 style={{
-                  borderColor:
-                    statusKey === "valid" ? SKAUTE_BLUE : statusConfig.color,
+                  background: `linear-gradient(90deg, ${SKAUTE_BLUE}, ${SKAUTE_YELLOW})`,
                 }}
-              >
-                <div
-                  className={
-                    statusKey !== "valid" ? "opacity-30 grayscale" : ""
-                  }
-                >
-                  {ticket.checkInCode ? (
-                    <QRCodeSVG
-                      value={ticket.checkInCode}
-                      size={180}
-                      level="H"
-                      includeMargin={false}
+              />
+
+              <div className="relative px-6 py-6 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  {/* SQUARE REMOVED - NATIVE LOGO EMBEDDED & ENLARGED */}
+                  <div className="relative flex items-center justify-center overflow-hidden">
+                    <Image
+                      src="/images/skaute_logo.webp"
+                      alt="Skaute"
+                      width={88}
+                      height={88}
+                      className="object-contain"
+                      priority
                     />
-                  ) : (
-                    <div className="w-[180px] h-[180px] bg-gray-100 rounded-xl flex items-center justify-center text-xs font-bold uppercase text-gray-400">
-                      No Code Available
+                  </div>
+
+                  {/* HEADER META LABELS - ALIGNED TEXT COLORS FOR DARK THEME */}
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">
+                      Premium Access
+                    </p>
+
+                    <h1 className="mt-0.5 text-3xl leading-none font-black uppercase italic tracking-tight text-white">
+                      Event Pass
+                    </h1>
+
+                    <div className="flex items-center gap-2 mt-2">
+                      <div
+                        className="w-1.5 h-1.5 rounded-full animate-pulse"
+                        style={{ backgroundColor: SKAUTE_YELLOW }}
+                      />
+
+                      <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">
+                        Skaute Verified
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ACTIVE STATUS BADGE */}
+                <div
+                  className="px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-[0.2em]"
+                  style={{
+                    backgroundColor: "rgba(255, 255, 255, 0.05)",
+                    borderColor:
+                      statusKey === "valid"
+                        ? "rgba(255, 215, 0, 0.3)"
+                        : "rgba(255, 255, 255, 0.1)",
+                    color: statusKey === "valid" ? SKAUTE_YELLOW : "#fff",
+                  }}
+                >
+                  {statusKey === "valid" && (
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-2 h-2 rounded-full animate-pulse"
+                        style={{ backgroundColor: SKAUTE_YELLOW }}
+                      />
+                      {status.label}
+                    </div>
+                  )}
+
+                  {statusKey === "used" && (
+                    <div className="flex items-center gap-2 text-emerald-400">
+                      <ShieldCheck size={12} />
+                      {status.label}
+                    </div>
+                  )}
+
+                  {statusKey === "cancelled" && (
+                    <div className="flex items-center gap-2 text-rose-400">
+                      <XCircle size={12} />
+                      {status.label}
+                    </div>
+                  )}
+
+                  {statusKey === "refunded" && (
+                    <div className="flex items-center gap-2 text-amber-400">
+                      <RefreshCcw size={12} />
+                      {status.label}
                     </div>
                   )}
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
-                  Entry Code
-                </p>
-                <h3
-                  className="text-xl font-mono font-black"
-                  style={{ color: SKAUTE_BLUE }}
+            {/* EVENT SECTION DESCRIPTION */}
+            <div className="px-7 pt-8 pb-5 bg-white">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+                    Event
+                  </p>
+
+                  <h2 className="mt-3 text-[1.85rem] leading-none font-black uppercase tracking-tight text-slate-900">
+                    {ticket.event?.title}
+                  </h2>
+                </div>
+
+                <div
+                  className="px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-sm flex-shrink-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${SKAUTE_BLUE}, #2563eb)`,
+                    color: "#fff",
+                  }}
                 >
-                  {ticket.checkInCode || "PENDING"}
-                </h3>
+                  {ticket.tierName}
+                </div>
               </div>
+            </div>
 
-              {/* Status Badge */}
+            {/* STRUCTURAL GEOMETRIC CUT LINE */}
+            <div className="relative py-3 bg-white">
+              {/* SIDE SEMI-CIRCLE HOLES */}
+              <div className="absolute left-0 top-1/2 w-8 h-8 bg-[#F4F6FA] rounded-full -translate-x-1/2 -translate-y-1/2 z-10 border-r border-slate-200/60" />
+
+              <div className="absolute right-0 top-1/2 w-8 h-8 bg-[#F4F6FA] rounded-full translate-x-1/2 -translate-y-1/2 z-10 border-l border-slate-200/60" />
+
+              {/* PERFORATION DASH */}
+              <div className="mx-7 border-t border-dashed border-slate-200" />
+            </div>
+
+            {/* SECURE SYSTEM BODY CREDENTIALS */}
+            <div className="px-7 pb-8 bg-white">
+              <div className="grid grid-cols-[165px_1fr] gap-6 items-center">
+                {/* QR ACCESS GRID PORTAL */}
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <div
+                      className="absolute inset-0 rounded-[2rem] blur-xl opacity-20"
+                      style={{
+                        background: `linear-gradient(135deg, ${SKAUTE_BLUE}, ${SKAUTE_YELLOW})`,
+                      }}
+                    />
+
+                    <div className="relative bg-white p-4 rounded-[2rem] border border-slate-100 shadow-[0_15px_35px_rgba(0,0,0,0.05)]">
+                      <QRCodeSVG
+                        value={ticket.checkInCode}
+                        size={140}
+                        level="H"
+                        fgColor="#0e172c"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* ADMITTANCE PARAMETER DETAILED ENTRIES */}
+                <div className="space-y-5">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">
+                      Entry Code
+                    </p>
+
+                    <p
+                      className="mt-1 text-sm font-black font-mono tracking-wider break-all"
+                      style={{ color: SKAUTE_BLUE }}
+                    >
+                      {ticket.checkInCode}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* DATE COLUMN */}
+                    <div>
+                      <div className="flex items-center gap-1 mb-1">
+                        <Calendar size={12} color={SKAUTE_BLUE} />
+
+                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+                          Date
+                        </p>
+                      </div>
+
+                      <p className="text-sm font-black uppercase text-slate-800">
+                        {eventDate}
+                      </p>
+                    </div>
+
+                    {/* TIME COLUMN */}
+                    <div>
+                      <div className="flex items-center gap-1 mb-1">
+                        <Clock size={12} color={SKAUTE_BLUE} />
+
+                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+                          Time
+                        </p>
+                      </div>
+
+                      <p className="text-sm font-black uppercase text-slate-800">
+                        {eventTime}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* VENUE COLUMN */}
+                  <div>
+                    <div className="flex items-center gap-1 mb-1">
+                      <MapPin size={12} color={SKAUTE_BLUE} />
+
+                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+                        Venue
+                      </p>
+                    </div>
+
+                    <p className="text-sm font-black uppercase leading-relaxed text-slate-800">
+                      {ticket.event?.location?.address ||
+                        "Port Harcourt, Nigeria"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* EXCLUSIVE REAR SUMMARY FOOTER */}
+            <div className="relative border-t border-slate-100 bg-slate-50/80 overflow-hidden">
+              {/* LOWER ACCENT STRIP */}
               <div
-                className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all"
+                className="absolute top-0 left-0 w-full h-[2px]"
                 style={{
-                  backgroundColor: `${statusConfig.color}10`,
-                  borderColor: `${statusConfig.color}30`,
-                  color: statusConfig.color,
+                  background: `linear-gradient(90deg, ${SKAUTE_BLUE}, ${SKAUTE_YELLOW})`,
                 }}
-              >
-                {statusKey === "valid" && (
-                  <>
-                    <div className="w-2 h-2 rounded-full bg-current animate-pulse" />{" "}
-                    {statusConfig.label}
-                  </>
-                )}
-                {statusKey === "used" && (
-                  <>
-                    <ShieldCheck size={14} /> {statusConfig.label}
-                  </>
-                )}
-                {statusKey === "refunded" && (
-                  <>
-                    <RefreshCcw size={14} /> {statusConfig.label}
-                  </>
-                )}
-                {statusKey === "cancelled" && (
-                  <>
-                    <XCircle size={14} /> {statusConfig.label}
-                  </>
-                )}
-              </div>
-            </div>
+              />
 
-            {/* Details Grid */}
-            <div className="px-8 pb-8 grid grid-cols-2 gap-6 border-t border-dashed border-slate-200 pt-8 mt-2">
-              <div className="space-y-1">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Calendar size={10} style={{ color: SKAUTE_BLUE }} /> Date
-                </p>
-                <p className="text-sm font-black uppercase">{eventDate}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Clock size={10} style={{ color: SKAUTE_BLUE }} /> Time
-                </p>
-                <p className="text-sm font-black uppercase">{eventTime}</p>
-              </div>
-              <div className="col-span-2 space-y-1">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <MapPin size={10} style={{ color: SKAUTE_BLUE }} /> Venue
-                </p>
-                <p className="text-sm font-black uppercase truncate">
-                  {ticket.event?.location?.address || "Port Harcourt, Nigeria"}
-                </p>
-              </div>
-            </div>
+              <div className="px-7 py-5 flex items-center justify-between">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">
+                    Admit One
+                  </p>
 
-            <div className="bg-slate-50 px-8 py-4 flex justify-between items-center">
-              <div className="flex flex-col">
-                <span className="text-[8px] font-black text-slate-400 uppercase">
-                  Admit One
-                </span>
-                <span className="text-[11px] font-black uppercase">
-                  {ticket.buyerInfo?.firstName || "Guest"}{" "}
-                  {ticket.buyerInfo?.lastName || "User"}
-                </span>
+                  <p className="mt-1 text-sm font-black uppercase text-slate-900">
+                    {ticket.buyerInfo?.firstName} {ticket.buyerInfo?.lastName}
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">
+                    Ticket ID
+                  </p>
+
+                  <p className="mt-1 text-[11px] font-mono font-bold text-slate-500">
+                    #{ticket.ticketCode}
+                  </p>
+                </div>
               </div>
-              <span className="text-[10px] font-mono font-bold text-slate-300">
-                #{ticket.ticketCode || "00000"}
-              </span>
             </div>
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="grid grid-cols-2 gap-4 mt-8">
-          <button className="flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:border-blue-200 transition group">
-            <Download size={14} className="group-hover:text-[#0052FF]" /> Save
-            Image
-          </button>
-          <button className="flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:border-blue-200 transition group">
-            <Share2 size={14} className="group-hover:text-[#0052FF]" /> Send
-            Pass
-          </button>
+        {/* NOTIFICATION FEEDBACK REGISTRY BANNER */}
+        <div className="mt-7 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] leading-relaxed text-slate-600">
+            Your ticket has been sent to your email and is ready for entry
+            verification at the venue.
+          </p>
         </div>
 
-        <div className="mt-8 flex items-start gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
-          <Info size={16} className="text-[#0052FF] flex-shrink-0 mt-0.5" />
-          <p className="text-[10px] font-bold text-[#0052FF] leading-relaxed uppercase">
-            {statusKey === "valid"
-              ? "Do not share this QR code. It will be scanned at the entrance and can only be used once."
-              : `This pass is currently marked as ${statusConfig.label?.toLowerCase() || "invalid"}.`}
-          </p>
+        {/* PRIMARY UTILITY DISPATCH ACTIONS */}
+        <div className="grid grid-cols-2 gap-4 mt-7">
+          <button className="flex items-center justify-center gap-2 py-5 rounded-[1.5rem] border border-slate-200 bg-white text-slate-700 font-black text-[10px] uppercase tracking-[0.2em] transition hover:bg-slate-50 hover:text-black shadow-sm">
+            <Download size={15} />
+            Save Ticket
+          </button>
+
+          <button
+            className="flex items-center justify-center gap-2 py-5 rounded-[1.5rem] text-white font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-blue-600/10 transition hover:scale-[1.02]"
+            style={{
+              background: `linear-gradient(135deg, ${SKAUTE_BLUE}, #003cff)`,
+            }}
+          >
+            <Share2 size={15} />
+            Share Pass
+          </button>
         </div>
       </main>
     </div>

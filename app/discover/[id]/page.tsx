@@ -129,7 +129,25 @@ export default function EventDetailsPage() {
   const displayPrice = useMemo(() => {
     if (!event) return "";
     if (isSoldOut) return "Sold Out";
-    if (event.ticketingType === "none" || event.isFree) return "Free";
+    const hasFreeTiers = event.ticketTiers?.some(
+      (tier: any) => tier.price === 0,
+    );
+
+    const hasPaidTiers = event.ticketTiers?.some((tier: any) => tier.price > 0);
+
+    // Only fully free events should display "Free"
+    if (event.ticketingType === "none" && !hasPaidTiers) {
+      return "Free";
+    }
+
+    // Mixed free + paid tiers
+    if (hasFreeTiers && hasPaidTiers) {
+      const paidPrices = event.ticketTiers
+        .filter((tier: any) => tier.price > 0)
+        .map((tier: any) => tier.price);
+
+      return `From ₦${Math.min(...paidPrices).toLocaleString()}`;
+    }
 
     if (event.ticketTiers && event.ticketTiers.length > 0) {
       const availableTiers = event.ticketTiers.filter((t: any) => {
@@ -145,9 +163,17 @@ export default function EventDetailsPage() {
       const min = Math.min(...prices);
       const max = Math.max(...prices);
 
-      if (min === 0 && max > 0) return "Free +";
+      const hasFreeTier = prices.some((p: number) => p === 0);
+      const hasPaidTier = prices.some((p: number) => p > 0);
+
+      if (hasFreeTier && hasPaidTier) {
+        const lowestPaid = Math.min(...prices.filter((p: number) => p > 0));
+        return `From ₦${lowestPaid.toLocaleString()}`;
+      }
+
       if (min === 0 && max === 0) return "Free";
       if (min === max) return `₦${min.toLocaleString()}`;
+
       return `From ₦${min.toLocaleString()}`;
     }
 
@@ -158,16 +184,37 @@ export default function EventDetailsPage() {
     if (event.isCancelled) return "Event Cancelled";
     if (isSoldOut) return "Sold Out";
     if (hasReserved) return "Spot Reserved";
-    if (event.externalTicketLink) return "Get External Tickets";
-    if (event.isOnline) return "Join Event Online";
+
+    if (event.externalTicketLink) {
+      return "Get External Tickets";
+    }
+
+    if (event.isOnline) {
+      return "Join Event Online";
+    }
+
+    const hasFreeTiers = event.ticketTiers?.some(
+      (tier: any) => tier.price === 0,
+    );
 
     const hasPaidTiers = event.ticketTiers?.some((tier: any) => tier.price > 0);
+
+    // Mixed free + paid tiers
+    if (hasFreeTiers && hasPaidTiers) {
+      return "Choose Ticket";
+    }
+
+    // Fully paid
+    if (hasPaidTiers) {
+      return "Get Tickets";
+    }
+
+    // Fully free
     if (event.isFree || (event.ticketingType === "none" && !hasPaidTiers)) {
       return "Register for Free";
     }
-    if (hasPaidTiers) return "Get Tickets";
 
-    return "Register for Free";
+    return "Reserve Spot";
   };
 
   const handleCTA = () => {

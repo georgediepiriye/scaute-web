@@ -132,32 +132,6 @@ export function GateControlTab({ eventId }: GateControlProps) {
             {summary.activeDevicesCount}
           </h4>
         </div>
-
-        <div
-          className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm border-l-2"
-          style={{
-            borderColor: summary.fraudAlertsCount > 0 ? "#EF4444" : "#E5E7EB",
-          }}
-        >
-          <div className="flex items-center justify-between text-gray-400 mb-2">
-            <span className="text-[9px] font-black uppercase tracking-widest">
-              Fraud Incidents
-            </span>
-            <ShieldAlert
-              size={14}
-              className={
-                summary.fraudAlertsCount > 0
-                  ? "text-red-500 animate-bounce"
-                  : "text-gray-300"
-              }
-            />
-          </div>
-          <h4
-            className={`text-xl font-black ${summary.fraudAlertsCount > 0 ? "text-red-500" : "text-slate-900"}`}
-          >
-            {summary.fraudAlertsCount}
-          </h4>
-        </div>
       </div>
 
       {/* Critical Security Incidents Alert Section */}

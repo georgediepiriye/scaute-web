@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
-  MapPin,
   Calendar,
   Clock,
   ArrowLeft,
@@ -20,10 +19,57 @@ import {
   AlertTriangle,
   X,
   TrendingUp,
+  ExternalLink,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
-// MAP COMPONENT
+type TicketTier = {
+  name: string;
+  capacity: number;
+  price: number;
+};
+
+type Organizer = {
+  name: string;
+  email: string;
+  image?: string;
+  createdAt: string;
+};
+
+type Recurrence = {
+  frequency: string;
+  interval: number;
+};
+
+type LocationData = {
+  neighborhood?: string;
+  coordinates?: [number, number];
+};
+
+type EventData = {
+  _id: string;
+  title: string;
+  description: string;
+  image: string;
+  type: string;
+  category: string;
+  attendees: number;
+  participantImages?: string[];
+  startDate: string;
+  endDate: string;
+  organizer: Organizer;
+  organizerType: string;
+  recurrence?: Recurrence;
+  approvalStatus: "pending" | "approved" | "rejected";
+  eventFormat: "online" | "physical" | "hybrid";
+  meetingLink?: string;
+  location?: LocationData;
+  ticketingType: string;
+  ticketTiers?: TicketTier[];
+  totalCapacity?: number;
+  ticketsSold?: number;
+};
+
 function EventMap({
   latitude,
   longitude,
@@ -32,8 +78,9 @@ function EventMap({
   longitude: number;
 }) {
   return (
-    <div className="w-full h-full rounded-[40px] overflow-hidden border border-white/10 shadow-2xl">
+    <div className="w-full h-full overflow-hidden rounded-[24px] sm:rounded-[32px] lg:rounded-[40px] border border-white/10 shadow-2xl">
       <iframe
+        title="Event Location Map"
         width="100%"
         height="100%"
         className="border-0 w-full h-full"
@@ -46,23 +93,33 @@ function EventMap({
 }
 
 export default function ProfessionalReviewPage() {
-  const { id } = useParams();
+  const params = useParams();
   const router = useRouter();
-  const [event, setEvent] = useState<any>(null);
+
+  const id = useMemo(() => {
+    if (!params?.id) return "";
+    return Array.isArray(params.id) ? params.id[0] : params.id;
+  }, [params]);
+
+  const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<
     "approved" | "rejected" | null
   >(null);
+  const [reason, setRejectionReason] = useState("");
 
   useEffect(() => {
+    if (!id) return;
+
     const fetchEventData = async () => {
       try {
-        // Retrieve explicitly stored auth string token
+        setLoading(true);
         const token = localStorage.getItem("skaute_token");
 
-        const res = await fetch(
+        const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/events/${id}`,
           {
             method: "GET",
@@ -72,35 +129,48 @@ export default function ProfessionalReviewPage() {
             },
           },
         );
-        if (!res.ok) throw new Error("Fetch failed");
-        const result = await res.json();
-        setEvent(result.data.event);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch event");
+        }
+
+        const result = await response.json();
+        setEvent(result?.data?.event || null);
       } catch (error) {
+        console.error(error);
         toast.error("Failed to sync move data");
       } finally {
         setLoading(false);
       }
     };
-    if (id) fetchEventData();
+
+    fetchEventData();
   }, [id]);
 
-  const initiateStatusUpdate = (status: "approved" | "rejected") => {
+  const initiateStatusUpdate = (status: "approved" | "rejected"): void => {
     setPendingStatus(status);
+    setRejectionReason(""); // Ensure state is reset for each individual modal action trigger
     setShowConfirm(true);
   };
 
   const handleStatusUpdate = async () => {
-    if (!pendingStatus) return;
+    if (!pendingStatus || !id) return;
+
+    // Front-end sanity check to prevent execution if rejection details are missing
+    if (pendingStatus === "rejected" && reason.trim().length < 5) {
+      toast.error("Please provide a descriptive reason (minimum 5 characters)");
+      return;
+    }
 
     setShowConfirm(false);
     setSubmitting(true);
-    const loadingToast = toast.loading(`Processing decision...`);
+
+    const loadingToast = toast.loading("Processing decision...");
 
     try {
-      // Retrieve explicitly stored auth string token
       const token = localStorage.getItem("skaute_token");
 
-      const res = await fetch(
+      const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/events/${id}/status`,
         {
           method: "PATCH",
@@ -108,30 +178,37 @@ export default function ProfessionalReviewPage() {
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          body: JSON.stringify({ status: pendingStatus }),
+          body: JSON.stringify({
+            status: pendingStatus,
+            ...(pendingStatus === "rejected" ? { reason: reason.trim() } : {}),
+          }),
         },
       );
 
-      if (!res.ok) throw new Error("Failed to update status");
+      if (!response.ok) {
+        throw new Error("Failed to update status");
+      }
 
-      toast.success(`Move successfully ${pendingStatus}`, { id: loadingToast });
+      toast.success(`Move successfully ${pendingStatus}`, {
+        id: loadingToast,
+      });
+
       router.push("/admin/dashboard");
     } catch (error) {
+      console.error(error);
       toast.error(`Error: Could not ${pendingStatus} this move`, {
         id: loadingToast,
       });
     } finally {
       setSubmitting(false);
       setPendingStatus(null);
+      setRejectionReason("");
     }
   };
 
-  if (loading) return <ReviewLoader />;
-  if (!event) return <ReviewError />;
+  const formatMoveDate = (dateString?: string) => {
+    if (!dateString) return "N/A";
 
-  const isRecurring = event.recurrence?.frequency !== "none";
-
-  const formatMoveDate = (dateString: string) => {
     const date = new Date(dateString);
     const datePart = date.toLocaleDateString("en-NG", {
       weekday: "short",
@@ -139,155 +216,199 @@ export default function ProfessionalReviewPage() {
       month: "short",
       year: "numeric",
     });
+
     const timePart = date.toLocaleTimeString("en-NG", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
     });
+
     return `${datePart} • ${timePart}`;
   };
 
+  if (loading) {
+    return <ReviewLoader />;
+  }
+
+  if (!event) {
+    return <ReviewError />;
+  }
+
+  const isRecurring =
+    event.recurrence?.frequency && event.recurrence.frequency !== "none";
+  const latitude = event.location?.coordinates?.[1];
+  const longitude = event.location?.coordinates?.[0];
+
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-slate-900 font-sans selection:bg-[#0052FF]/10">
+    <div className="min-h-screen bg-[#FDFDFD] text-slate-900 font-sans overflow-x-hidden">
       <Toaster position="top-center" />
 
-      {/* CONFIRMATION MODAL */}
+      {/* CONFIRMATION MODAL CONTAINER */}
       {showConfirm && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-[40px] p-10 max-w-md w-full shadow-2xl border border-slate-100 space-y-8 animate-in zoom-in-95 duration-300">
-            <div className="flex justify-between items-start">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 sm:p-6">
+          <div className="w-full max-w-md rounded-[24px] sm:rounded-[40px] bg-white p-5 sm:p-8 lg:p-10 shadow-2xl border border-slate-100 space-y-6 sm:space-y-8">
+            <div className="flex items-start justify-between">
               <div
-                className={`p-4 rounded-2xl ${
+                className={`p-3 sm:p-4 rounded-2xl ${
                   pendingStatus === "approved"
                     ? "bg-blue-50 text-[#0052FF]"
                     : "bg-red-50 text-red-600"
                 }`}
               >
-                <AlertTriangle size={32} />
+                <AlertTriangle size={28} />
               </div>
+
               <button
+                type="button"
                 onClick={() => setShowConfirm(false)}
-                className="p-2 hover:bg-slate-50 rounded-full text-slate-300 transition-colors"
+                className="p-2 rounded-full hover:bg-slate-100 transition-colors"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-2">
-              <h3 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">
+            <div className="space-y-3">
+              <h3 className="text-2xl sm:text-3xl font-black uppercase italic tracking-tighter">
                 Confirm Decision?
               </h3>
-              <p className="text-sm font-medium text-slate-500 leading-relaxed">
+
+              <p className="text-sm text-slate-500 leading-relaxed">
                 You are about to{" "}
-                <span className="font-black text-slate-900 underline decoration-yellow-500 underline-offset-4">
-                  {pendingStatus === "approved" ? "approve" : pendingStatus}
+                <span className="font-black text-slate-900 underline underline-offset-4 decoration-yellow-500">
+                  {pendingStatus === "approved" ? "approve" : "reject"}
                 </span>{" "}
-                this move in Port Harcourt. This action is final.
+                this move.
               </p>
             </div>
 
-            <div className="flex gap-4">
+            {pendingStatus === "rejected" && (
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase text-slate-400">
+                  Rejection Reason
+                </label>
+                <textarea
+                  value={reason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="Explain why this move is being rejected for the operational records..."
+                  rows={4}
+                  className="w-full rounded-xl border border-slate-200 p-4 text-sm outline-none resize-none focus:border-[#0052FF] bg-slate-50 font-medium"
+                />
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <button
+                type="button"
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 py-4 bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 rounded-2xl hover:bg-slate-100 transition-colors"
+                className="flex-1 py-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-[10px] font-black uppercase tracking-widest transition-colors"
               >
-                Back Down
+                Cancel
               </button>
+
               <button
+                type="button"
                 onClick={handleStatusUpdate}
-                className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-white rounded-2xl shadow-lg transition-transform active:scale-95 ${
-                  pendingStatus === "approved"
-                    ? "bg-[#0052FF] shadow-blue-100"
-                    : "bg-red-600 shadow-red-100"
+                className={`flex-1 py-4 rounded-2xl text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+                  pendingStatus === "approved" ? "bg-[#0052FF]" : "bg-red-600"
                 }`}
               >
-                Proceed Now
+                Proceed
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* NAV */}
-      <nav className="fixed top-0 w-full z-[100] bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 py-5 flex justify-between items-center">
-        <button
-          onClick={() => router.push("/admin/dashboard")}
-          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-[#0052FF] transition-all group"
-        >
-          <ArrowLeft
-            size={14}
-            className="group-hover:-translate-x-1 transition-transform"
-          />
-          Back to Moderation
-        </button>
+      {/* NAVBAR */}
+      <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/90 backdrop-blur-md border-b border-slate-100">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={() => router.push("/admin/dashboard")}
+            className="group flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-slate-400 hover:text-[#0052FF] transition-all"
+          >
+            <ArrowLeft
+              size={14}
+              className="transition-transform group-hover:-translate-x-1"
+            />
+            <span className="hidden xs:block">Back to Moderation</span>
+            <span className="xs:hidden">Back</span>
+          </button>
 
-        <div className="flex items-center gap-6">
-          <div className="hidden sm:flex flex-col items-end">
-            <span className="text-[9px] font-bold text-slate-300 uppercase tracking-tighter">
-              Event Status
-            </span>
-            <span
-              className={`text-[10px] font-black uppercase italic ${
-                event.approvalStatus === "approved"
-                  ? "text-green-500"
-                  : "text-orange-500"
-              }`}
-            >
-              {event.approvalStatus}
-            </span>
-          </div>
-          <div className="flex items-center gap-3 px-4 py-2 bg-[#0052FF]/5 rounded-full border border-[#0052FF]/10">
-            <ShieldCheck size={14} className="text-[#0052FF]" />
-            <span className="text-[10px] font-black text-[#0052FF] uppercase tracking-widest">
-              Admin Mode
-            </span>
+          <div className="flex items-center gap-2 sm:gap-6">
+            <div className="hidden md:flex flex-col items-end">
+              <span className="text-[9px] font-bold uppercase tracking-tight text-slate-300">
+                Event Status
+              </span>
+              <span
+                className={`text-[10px] font-black uppercase italic ${event.approvalStatus === "approved" ? "text-green-500" : event.approvalStatus === "rejected" ? "text-red-500" : "text-orange-500"}`}
+              >
+                {event.approvalStatus}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 rounded-full border border-[#0052FF]/10 bg-[#0052FF]/5 px-3 sm:px-4 py-2">
+              <ShieldCheck size={14} className="text-[#0052FF]" />
+              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#0052FF]">
+                Admin
+              </span>
+            </div>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-[1400px] mx-auto pt-32 pb-24 px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-          <div className="lg:col-span-8 space-y-12">
-            <header className="space-y-8">
-              <div className="relative w-full aspect-[21/9] rounded-[40px] overflow-hidden shadow-2xl group">
+      {/* MAIN CONTAINER */}
+      <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-16 sm:pb-24">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 xl:gap-16">
+          {/* LEFT SIDE DATA STACK */}
+          <div className="xl:col-span-8 space-y-8 sm:space-y-10 lg:space-y-12">
+            <header className="space-y-6 sm:space-y-8">
+              <div className="relative w-full aspect-[16/10] sm:aspect-[21/9] overflow-hidden rounded-[24px] sm:rounded-[32px] lg:rounded-[40px] shadow-2xl group">
                 <Image
-                  src={event.image}
+                  src={event.image || "/placeholder.jpg"}
                   alt={event.title}
                   fill
+                  priority
                   className="object-cover transition-transform duration-1000 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
-                <div className="absolute bottom-10 left-10 flex flex-wrap gap-3">
-                  <span className="px-5 py-2 bg-[#0052FF] rounded-full text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-                    <Zap size={12} fill="white" /> {event.type}
+                <div className="absolute bottom-4 left-4 sm:bottom-8 sm:left-8 lg:bottom-10 lg:left-10 flex flex-wrap gap-2 sm:gap-3">
+                  <span className="flex items-center gap-2 rounded-full bg-[#0052FF] px-3 sm:px-5 py-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white">
+                    <Zap size={12} fill="white" />
+                    {event.type}
                   </span>
-                  <span className="px-5 py-2 bg-yellow-500 rounded-full text-[10px] font-black text-black uppercase tracking-widest flex items-center gap-2">
-                    <TrendingUp size={12} /> {event.category}
+                  <span className="flex items-center gap-2 rounded-full bg-yellow-500 px-3 sm:px-5 py-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-black">
+                    <TrendingUp size={12} />
+                    {event.category}
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h1 className="text-7xl md:text-9xl font-black text-slate-900 uppercase italic tracking-tighter leading-[0.8] drop-shadow-sm">
+              <div className="space-y-5">
+                <h1 className="text-3xl sm:text-5xl md:text-6xl xl:text-8xl font-black uppercase italic tracking-tighter leading-[0.85] break-words">
                   {event.title}
                 </h1>
-                <div className="flex items-center gap-6 pt-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 flex-wrap">
                   <div className="flex -space-x-3">
-                    {event.participantImages
-                      ?.slice(0, 4)
-                      .map((img: string, i: number) => (
-                        <div
-                          key={i}
-                          className="w-12 h-12 rounded-full border-4 border-white shadow-lg overflow-hidden bg-slate-100"
-                        >
-                          <Image src={img} alt="" width={48} height={48} />
-                        </div>
-                      ))}
-                    <div className="w-12 h-12 rounded-full border-4 border-white bg-slate-950 flex items-center justify-center text-[10px] font-black text-white">
+                    {event.participantImages?.slice(0, 4).map((img, index) => (
+                      <div
+                        key={index}
+                        className="h-10 w-10 sm:h-12 sm:w-12 overflow-hidden rounded-full border-4 border-white shadow-lg bg-slate-100"
+                      >
+                        <Image
+                          src={img}
+                          alt="Participant"
+                          width={48}
+                          height={48}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ))}
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-4 border-white bg-slate-950 flex items-center justify-center text-[9px] sm:text-[10px] font-black text-white">
                       +{event.attendees > 4 ? event.attendees - 4 : 0}
                     </div>
                   </div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-slate-400">
                     Vibe Meter:{" "}
                     <span className="text-[#0052FF]">
                       {event.attendees} confirmed
@@ -297,131 +418,128 @@ export default function ProfessionalReviewPage() {
               </div>
             </header>
 
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-8 rounded-[32px] bg-white border border-slate-100 flex items-center gap-6">
-                <div className="p-4 bg-yellow-50 rounded-2xl text-yellow-600">
-                  <Calendar size={24} />
+            {/* DATE CARDS */}
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="flex items-start sm:items-center gap-4 sm:gap-6 rounded-[24px] sm:rounded-[32px] border border-slate-100 bg-white p-5 sm:p-8">
+                <div className="rounded-2xl bg-yellow-50 p-3 sm:p-4 text-yellow-600 shrink-0">
+                  <Calendar size={22} />
                 </div>
-                <div>
-                  <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] mb-1">
+                <div className="min-w-0">
+                  <p className="mb-1 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-slate-300">
                     Start Schedule
                   </p>
-                  <p className="text-lg font-black text-slate-900 uppercase italic leading-none">
+                  <p className="text-sm sm:text-lg font-black uppercase italic leading-tight break-words">
                     {formatMoveDate(event.startDate)}
                   </p>
                 </div>
               </div>
-              <div className="p-8 rounded-[32px] bg-white border border-slate-100 flex items-center gap-6">
-                <div className="p-4 bg-red-50 rounded-2xl text-red-600">
-                  <Clock size={24} />
+
+              <div className="flex items-start sm:items-center gap-4 sm:gap-6 rounded-[24px] sm:rounded-[32px] border border-slate-100 bg-white p-5 sm:p-8">
+                <div className="rounded-2xl bg-red-50 p-3 sm:p-4 text-red-600 shrink-0">
+                  <Clock size={22} />
                 </div>
-                <div>
-                  <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] mb-1">
+                <div className="min-w-0">
+                  <p className="mb-1 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-slate-300">
                     End Schedule
                   </p>
-                  <p className="text-lg font-black text-slate-900 uppercase italic leading-none">
+                  <p className="text-sm sm:text-lg font-black uppercase italic leading-tight break-words">
                     {formatMoveDate(event.endDate)}
                   </p>
                 </div>
               </div>
             </section>
 
-            {/* ORGANIZER PROFILE */}
-            <section className="p-8 rounded-[40px] bg-slate-50 border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="flex items-center gap-6">
-                <div className="relative w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-white shadow-md">
+            {/* HOST LOGISTICS */}
+            <section className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8 rounded-[24px] sm:rounded-[40px] border border-slate-100 bg-slate-50 p-5 sm:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
+                <div className="relative h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded-2xl ring-4 ring-white shadow-md shrink-0">
                   <Image
-                    src={event.organizer.image || "/placeholder-avatar.png"}
-                    alt={event.organizer.name}
+                    src={event.organizer?.image || "/placeholder-avatar.png"}
+                    alt={event.organizer?.name || "Organizer"}
                     fill
                     className="object-cover"
                   />
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[9px] font-black text-[#0052FF] uppercase tracking-[0.3em]">
+                <div className="space-y-1 min-w-0">
+                  <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[#0052FF]">
                     Verified Host
                   </p>
-                  <h3 className="text-2xl font-black uppercase italic text-slate-900 tracking-tighter leading-none">
-                    {event.organizer.name}
+                  <h3 className="text-xl sm:text-2xl font-black uppercase italic tracking-tighter break-words">
+                    {event.organizer?.name}
                   </h3>
-                  <div className="flex items-center gap-2 pt-1">
-                    <Mail size={12} className="text-slate-400" />
-                    <span className="text-[10px] font-bold text-slate-500 lowercase">
-                      {event.organizer.email}
+                  <div className="flex items-center gap-2 pt-1 min-w-0">
+                    <Mail size={12} className="text-slate-400 shrink-0" />
+                    <span className="text-[10px] font-bold lowercase text-slate-500 truncate">
+                      {event.organizer?.email}
                     </span>
                   </div>
                 </div>
               </div>
-              <div className="flex gap-4 w-full md:w-auto">
-                <div className="flex-1 md:flex-none px-6 py-4 bg-white rounded-2xl border border-slate-100 text-center">
-                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">
+
+              <div className="grid grid-cols-2 sm:flex w-full lg:w-auto gap-4">
+                <div className="rounded-2xl border border-slate-100 bg-white px-4 sm:px-6 py-4 text-center">
+                  <p className="mb-1 text-[8px] font-black uppercase tracking-widest text-slate-300">
                     Status
                   </p>
-                  <p className="text-[10px] font-black text-slate-900 uppercase">
+                  <p className="text-[10px] font-black uppercase break-words">
                     {event.organizerType}
                   </p>
                 </div>
-                <div className="flex-1 md:flex-none px-6 py-4 bg-white rounded-2xl border border-slate-100 text-center">
-                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">
+                <div className="rounded-2xl border border-slate-100 bg-white px-4 sm:px-6 py-4 text-center">
+                  <p className="mb-1 text-[8px] font-black uppercase tracking-widest text-slate-300">
                     Joined
                   </p>
-                  <p className="text-[10px] font-black text-slate-900 uppercase">
-                    {new Date(event.organizer.createdAt).getFullYear()}
+                  <p className="text-[10px] font-black uppercase">
+                    {event.organizer?.createdAt
+                      ? new Date(event.organizer.createdAt).getFullYear()
+                      : "N/A"}
                   </p>
                 </div>
               </div>
             </section>
 
-            {/* DESCRIPTION & RECURRENCE */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <section className="p-10 rounded-[48px] bg-white border border-slate-100 shadow-sm">
-                <h2 className="text-[11px] font-black uppercase text-[#0052FF] tracking-[0.4em] mb-8 flex items-center gap-2">
-                  <span className="p-2 bg-blue-50 rounded-lg">
+            {/* DETAILS CONTAINER */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
+              <section className="rounded-[24px] sm:rounded-[48px] border border-slate-100 bg-white p-6 sm:p-10 shadow-sm">
+                <h2 className="mb-6 sm:mb-8 flex items-center gap-2 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] sm:tracking-[0.4em] text-[#0052FF]">
+                  <span className="rounded-lg bg-blue-50 p-2">
                     <Info size={14} />
-                  </span>{" "}
+                  </span>
                   Description
                 </h2>
-                <p className="text-xl text-slate-600 leading-[1.6] font-medium selection:bg-[#0052FF]/10">
+                <p className="text-base sm:text-lg lg:text-xl leading-[1.7] text-slate-600 font-medium break-words">
                   {event.description}
                 </p>
               </section>
 
               <section
-                className={`p-10 rounded-[48px] border-2 shadow-sm transition-all duration-500 ${
-                  isRecurring
-                    ? "border-[#0052FF]/10 bg-[#0052FF]/5"
-                    : "border-slate-100 bg-white"
-                }`}
+                className={`rounded-[24px] sm:rounded-[48px] border-2 p-6 sm:p-10 shadow-sm transition-all duration-500 ${isRecurring ? "border-[#0052FF]/10 bg-[#0052FF]/5" : "border-slate-100 bg-white"}`}
               >
-                <div className="flex justify-between items-start mb-10">
-                  <h2 className="text-[11px] font-black uppercase text-slate-400 tracking-[0.4em]">
+                <div className="mb-8 sm:mb-10 flex items-start justify-between gap-4">
+                  <h2 className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] sm:tracking-[0.4em] text-slate-400">
                     Recurrence
                   </h2>
                   <div
-                    className={`p-3 rounded-2xl ${
-                      isRecurring
-                        ? "bg-[#0052FF] text-white shadow-xl shadow-blue-200"
-                        : "bg-slate-50 text-slate-300"
-                    }`}
+                    className={`rounded-2xl p-3 shrink-0 ${isRecurring ? "bg-[#0052FF] text-white shadow-xl shadow-blue-200" : "bg-slate-50 text-slate-300"}`}
                   >
-                    <Repeat size={24} />
+                    <Repeat size={22} />
                   </div>
                 </div>
                 {isRecurring ? (
                   <div className="space-y-2">
-                    <p className="text-4xl font-black text-slate-900 uppercase italic leading-none">
-                      {event.recurrence.frequency}
+                    <p className="text-3xl sm:text-4xl font-black uppercase italic leading-none break-words">
+                      {event.recurrence?.frequency}
                     </p>
-                    <p className="text-xs font-bold text-[#0052FF] uppercase tracking-widest">
-                      Every {event.recurrence.interval} Interval
+                    <p className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#0052FF]">
+                      Every {event.recurrence?.interval} Interval
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <p className="text-4xl font-black text-slate-200 uppercase italic leading-none">
+                    <p className="text-3xl sm:text-4xl font-black uppercase italic leading-none text-slate-200">
                       Static Move
                     </p>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                       Non-repeating event
                     </p>
                   </div>
@@ -429,149 +547,144 @@ export default function ProfessionalReviewPage() {
               </section>
             </div>
 
-            {/* LOCATION MAP */}
-            {/* LOCATION OR MEETING LINK */}
-            <section className="p-12 rounded-[48px] bg-slate-950 text-white flex flex-col md:flex-row gap-12 items-center">
-              <div className="flex-1 space-y-8 w-full">
-                <h2 className="text-[11px] font-black uppercase text-yellow-500 tracking-[0.5em] mb-4">
+            {/* ENGINE / METRICS LOCATION */}
+            <section className="flex flex-col xl:flex-row items-stretch gap-8 lg:gap-12 rounded-[24px] sm:rounded-[48px] bg-slate-950 p-5 sm:p-8 lg:p-12 text-white overflow-hidden">
+              <div className="w-full flex-1 space-y-6 sm:space-y-8 min-w-0">
+                <h2 className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] text-yellow-500">
                   {event.eventFormat === "online"
                     ? "Digital Access"
                     : "Location Engine"}
                 </h2>
-
                 <div className="grid grid-cols-1 gap-4">
                   {event.eventFormat === "online" ? (
-                    // ONLINE VIEW
                     <div className="space-y-4">
-                      <div className="p-6 bg-white/5 rounded-3xl border border-white/10 space-y-2">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                      <div className="space-y-2 rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                           Meeting Link
                         </p>
-                        <p className="text-sm font-black text-blue-400 break-all underline underline-offset-4">
-                          {event.meetingLink || "No link provided"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3 px-2">
-                        <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
-                          <Info size={14} />
-                        </div>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase leading-snug">
-                          This is a digital move. Attendees will receive this
-                          link upon ticket confirmation.
-                        </p>
+                        {event.meetingLink ? (
+                          <a
+                            href={event.meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-start gap-2 break-all text-xs sm:text-sm font-black text-blue-400 underline underline-offset-4"
+                          >
+                            <span className="break-all">
+                              {event.meetingLink}
+                            </span>
+                            <ExternalLink
+                              size={14}
+                              className="shrink-0 mt-0.5"
+                            />
+                          </a>
+                        ) : (
+                          <p className="text-sm text-slate-400">
+                            No link provided
+                          </p>
+                        )}
                       </div>
                     </div>
                   ) : (
-                    // PHYSICAL / HYBRID VIEW (With safety checks)
                     <>
-                      <div className="flex justify-between items-center p-5 bg-white/5 rounded-2xl border border-white/5">
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-2xl border border-white/5 bg-white/5 p-4 sm:p-5">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                           Neighborhood
                         </span>
-                        <span className="text-sm font-black uppercase text-white">
+                        <span className="text-xs sm:text-sm font-black uppercase text-white break-words">
                           {event.location?.neighborhood || "Not Specified"}
                         </span>
                       </div>
-                      <CoordRow
-                        label="Lat"
-                        value={event.location?.coordinates?.[1] || "0.00"}
-                      />
-                      <CoordRow
-                        label="Lng"
-                        value={event.location?.coordinates?.[0] || "0.00"}
-                      />
-
-                      {event.eventFormat === "hybrid" && event.meetingLink && (
-                        <div className="mt-4 p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-                          <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest">
-                            + Online Access Available
-                          </p>
-                        </div>
-                      )}
+                      <CoordRow label="Latitude" value={latitude ?? "0.00"} />
+                      <CoordRow label="Longitude" value={longitude ?? "0.00"} />
                     </>
                   )}
                 </div>
               </div>
-
-              {/* Only show map if it's not purely online */}
-              {event.eventFormat !== "online" &&
-                event.location?.coordinates && (
-                  <div className="w-full md:w-[400px] h-[400px]">
-                    <EventMap
-                      latitude={event.location.coordinates[1]}
-                      longitude={event.location.coordinates[0]}
-                    />
-                  </div>
-                )}
+              {event.eventFormat !== "online" && latitude && longitude && (
+                <div className="h-[260px] sm:h-[320px] lg:h-[400px] w-full xl:w-[400px] shrink-0">
+                  <EventMap latitude={latitude} longitude={longitude} />
+                </div>
+              )}
             </section>
           </div>
 
-          {/* RIGHT SIDEBAR - TICKET TIERS */}
-          <div className="lg:col-span-4 space-y-8">
-            <div className="bg-white border border-slate-100 rounded-[56px] p-10 shadow-2xl sticky top-32 space-y-10">
-              <div className="flex justify-between items-center">
-                <div className="px-5 py-2 bg-yellow-500 rounded-full flex items-center gap-2">
+          {/* RIGHT CONTROL SIDEBAR */}
+          <div className="xl:col-span-4">
+            <div className="xl:sticky xl:top-32 space-y-8 sm:space-y-10 rounded-[24px] sm:rounded-[40px] lg:rounded-[56px] border border-slate-100 bg-white p-5 sm:p-8 lg:p-10 shadow-2xl">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-2 rounded-full bg-yellow-500 px-4 sm:px-5 py-2">
                   <Ticket size={14} className="text-black" />
-                  <span className="text-[10px] font-black text-black uppercase tracking-tighter">
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-tight text-black">
                     {event.ticketingType}
                   </span>
                 </div>
-                <CheckCircle2 size={24} className="text-green-500" />
+                <CheckCircle2 size={24} className="text-green-500 shrink-0" />
               </div>
 
-              {/* TICKET TIERS LIST */}
+              {/* TIERS MAP */}
               <div className="space-y-4">
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] sm:tracking-[0.3em] text-slate-300">
                   Available Tiers
                 </p>
                 <div className="space-y-3">
-                  {event.ticketTiers?.map((tier: any, idx: number) => (
-                    <div
-                      key={idx}
-                      className="p-5 rounded-[24px] bg-slate-50 border border-slate-100 flex justify-between items-center group hover:border-[#0052FF]/30 transition-all"
-                    >
-                      <div>
-                        <p className="text-[10px] font-black text-[#0052FF] uppercase mb-1">
-                          {tier.name}
-                        </p>
-                        <p className="text-xs font-bold text-slate-400">
-                          {tier.capacity} Spots
+                  {event.ticketTiers && event.ticketTiers.length > 0 ? (
+                    event.ticketTiers.map((tier, idx) => (
+                      <div
+                        key={idx}
+                        className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-[20px] sm:rounded-[24px] border border-slate-100 bg-slate-50 p-4 sm:p-5 transition-all hover:border-[#0052FF]/30"
+                      >
+                        <div className="min-w-0">
+                          <p className="mb-1 text-[10px] font-black uppercase text-[#0052FF] break-words">
+                            {tier.name}
+                          </p>
+                          <p className="text-xs font-bold text-slate-400">
+                            {tier.capacity} Spots
+                          </p>
+                        </div>
+                        <p className="text-lg sm:text-xl font-black italic text-slate-900 shrink-0">
+                          {tier.price === 0
+                            ? "FREE"
+                            : `₦${tier.price.toLocaleString()}`}
                         </p>
                       </div>
-                      <p className="text-xl font-black italic text-slate-900">
-                        {tier.price === 0
-                          ? "FREE"
-                          : `₦${tier.price.toLocaleString()}`}
+                    ))
+                  ) : (
+                    <div className="rounded-3xl border border-dashed border-slate-200 p-8 text-center">
+                      <p className="text-sm font-bold text-slate-400">
+                        No ticket tiers available
                       </p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50">
-                <div className="text-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">
+              {/* METRICS STACK */}
+              <div className="grid grid-cols-2 gap-4 border-t border-slate-50 pt-6">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-center">
+                  <p className="mb-1 text-[8px] font-black uppercase tracking-widest text-slate-300">
                     Capacity
                   </p>
-                  <p className="text-sm font-black text-slate-900">
+                  <p className="text-sm font-black text-slate-900 break-words">
                     {event.totalCapacity || "∞"}
                   </p>
                 </div>
-                <div className="text-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-center">
+                  <p className="mb-1 text-[8px] font-black uppercase tracking-widest text-slate-300">
                     Sold
                   </p>
                   <p className="text-sm font-black text-[#0052FF]">
-                    {event.ticketsSold}
+                    {event.ticketsSold || 0}
                   </p>
                 </div>
               </div>
 
-              <div className="pt-4 space-y-4">
+              {/* ACTIONS SUBMISSION ENGINE */}
+              <div className="space-y-4 pt-2">
                 <button
+                  type="button"
                   disabled={submitting}
                   onClick={() => initiateStatusUpdate("approved")}
-                  className="w-full py-6 bg-[#0052FF] hover:bg-[#0041CC] disabled:bg-blue-300 text-white rounded-3xl text-[11px] font-black uppercase tracking-[0.4em] transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-3"
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl sm:rounded-3xl bg-[#0052FF] py-5 sm:py-6 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] sm:tracking-[0.4em] text-white shadow-xl shadow-blue-100 transition-all hover:bg-[#0041CC] disabled:bg-blue-300"
                 >
                   {submitting && pendingStatus === "approved" ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -580,10 +693,12 @@ export default function ProfessionalReviewPage() {
                   )}
                   Approve Move
                 </button>
+
                 <button
+                  type="button"
                   disabled={submitting}
                   onClick={() => initiateStatusUpdate("rejected")}
-                  className="w-full py-6 bg-slate-50 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 text-slate-400 rounded-3xl text-[11px] font-black uppercase tracking-[0.4em] transition-all"
+                  className="w-full rounded-2xl sm:rounded-3xl bg-slate-50 py-5 sm:py-6 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] sm:tracking-[0.4em] text-slate-400 transition-all hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                 >
                   Reject Move
                 </button>
@@ -596,13 +711,13 @@ export default function ProfessionalReviewPage() {
   );
 }
 
-function CoordRow({ label, value }: any) {
+function CoordRow({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex justify-between items-center p-5 bg-white/5 rounded-2xl border border-white/5">
-      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-2xl border border-white/5 bg-white/5 p-4 sm:p-5">
+      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
         {label}
       </span>
-      <span className="text-xs font-mono font-black text-yellow-500">
+      <span className="font-mono text-xs font-black text-yellow-500 break-all">
         {value}
       </span>
     </div>
@@ -611,14 +726,11 @@ function CoordRow({ label, value }: any) {
 
 function ReviewLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="flex flex-col items-center gap-10">
-        <div className="relative">
-          <div className="w-24 h-24 border-[12px] border-slate-50 rounded-full" />
-          <div className="w-24 h-24 border-[12px] border-[#0052FF] border-t-transparent rounded-full animate-spin absolute top-0" />
-        </div>
-        <p className="text-[12px] font-black uppercase tracking-[0.5em] text-slate-400 animate-pulse">
-          Syncing Move Core...
+    <div className="min-h-screen bg-white flex items-center justify-center px-6">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 size={40} className="animate-spin text-[#0052FF]" />
+        <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+          Loading Metadata Ledger...
         </p>
       </div>
     </div>
@@ -627,20 +739,16 @@ function ReviewLoader() {
 
 function ReviewError() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-12">
-      <div className="max-w-md text-center space-y-8">
-        <h3 className="text-6xl font-black uppercase italic text-slate-900 tracking-tighter leading-none">
-          Security Fault
+    <div className="min-h-screen bg-white flex items-center justify-center px-6">
+      <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+        <AlertTriangle size={40} className="text-red-500" />
+        <h3 className="text-lg font-black uppercase tracking-tight">
+          Record Unreadable
         </h3>
-        <p className="text-[11px] font-black uppercase text-red-500 tracking-[0.3em] leading-relaxed">
-          The requested Move ID is currently locked or does not exist.
+        <p className="text-xs text-slate-400 font-medium">
+          The requested information is inaccessible or has been purged from
+          active storage logs.
         </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-10 py-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-full"
-        >
-          Re-initialize Session
-        </button>
       </div>
     </div>
   );

@@ -166,45 +166,141 @@ export default function CreateEventPage() {
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
       const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&types=address,neighborhood,poi`,
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&types=address,place,locality,neighborhood,poi`,
       );
+
       const data = await res.json();
 
       if (data.features && data.features.length > 0) {
         const feature = data.features[0];
+
+        const address =
+          feature.place_name ||
+          feature.properties?.full_address ||
+          "Current Location";
+
+        const neighborhood =
+          feature.context?.find((c: any) => c.id.startsWith("neighborhood"))
+            ?.text ||
+          feature.context?.find((c: any) => c.id.startsWith("locality"))
+            ?.text ||
+          "Port Harcourt";
+
+        // 🔥 THIS updates the visible search field immediately
         setFormData((prev) => ({
           ...prev,
-          location: feature.place_name,
-          neighborhood:
-            feature.context?.find((c: any) => c.id.startsWith("neighborhood"))
-              ?.text || prev.neighborhood,
-          locationCoords: { lat, lng },
+          location: address,
+          neighborhood,
+          locationCoords: {
+            lat,
+            lng,
+          },
         }));
+
+        return {
+          address,
+          neighborhood,
+        };
       }
+
+      return null;
     } catch (error) {
       console.error("Geocoding failed", error);
       toast.error("Failed to get address details");
+      return null;
     }
   };
 
-  const useCurrentLocation = () => {
-    if (!navigator.geolocation)
-      return toast.error("Browser doesn't support location");
-    setIsLocating(true);
+  const useCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported");
+      return;
+    }
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        await reverseGeocode(latitude, longitude);
-        setIsLocating(false);
-        toast.success("Location detected");
-      },
-      () => {
-        setIsLocating(false);
-        toast.error("Unable to find you");
-      },
-      { enableHighAccuracy: true },
-    );
+    if (
+      window.location.protocol !== "https:" &&
+      window.location.hostname !== "localhost"
+    ) {
+      toast.error("Location only works on HTTPS");
+      return;
+    }
+
+    try {
+      setIsLocating(true);
+
+      const loadingToast = toast.loading("Detecting location...");
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            console.log("coords:", latitude, longitude);
+
+            // 🔥 Reverse geocode immediately
+            const locationData = await reverseGeocode(latitude, longitude);
+
+            // 🔥 EXTRA fallback in case geocoder returns nothing
+            if (!locationData) {
+              setFormData((prev) => ({
+                ...prev,
+                location: `${latitude}, ${longitude}`,
+                neighborhood: "Current Area",
+                locationCoords: {
+                  lat: latitude,
+                  lng: longitude,
+                },
+              }));
+            }
+
+            toast.dismiss(loadingToast);
+            toast.success("Location detected");
+          } catch (err) {
+            console.error(err);
+            toast.dismiss(loadingToast);
+            toast.error("Failed to process location");
+          } finally {
+            setIsLocating(false);
+          }
+        },
+
+        (error) => {
+          console.error(error);
+
+          toast.dismiss();
+
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              toast.error("Location permission denied");
+              break;
+
+            case error.POSITION_UNAVAILABLE:
+              toast.error("Location unavailable");
+              break;
+
+            case error.TIMEOUT:
+              toast.error("Location request timed out");
+              break;
+
+            default:
+              toast.error("Unable to detect location");
+          }
+
+          setIsLocating(false);
+        },
+
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0,
+        },
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong");
+      setIsLocating(false);
+    }
   };
 
   const nextStep = () => {

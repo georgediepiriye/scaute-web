@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Loader2,
   AlertTriangle,
@@ -8,6 +9,8 @@ import {
   Unlock,
   Users2,
   ShieldAlert,
+  XCircle,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
@@ -18,7 +21,6 @@ export type CoOrganizerPermission =
   | "send_broadcasts"
   | "scan_tickets";
 
-// AVAILABLE PERMISSIONS ON Skaute PLATFORM
 const AVAILABLE_PERMISSIONS: { id: CoOrganizerPermission; label: string }[] = [
   { id: "view_revenue", label: "View Revenue" },
   { id: "issue_refunds", label: "Issue Refunds" },
@@ -27,7 +29,93 @@ const AVAILABLE_PERMISSIONS: { id: CoOrganizerPermission; label: string }[] = [
 ];
 
 export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
+  const router = useRouter();
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+
+  /**
+   * MOVE CANCELLATION ENGINE
+   */
+  const handleCancelEventLocal = async () => {
+    const confirmed = window.confirm(
+      "Are you absolutely sure you want to cancel this move? This will drop it off the discovery engines and alert current ticket holders.",
+    );
+    if (!confirmed) return;
+
+    setIsUpdating("cancel-event");
+    const toastId = toast.loading("Cancelling move on Skaute network...");
+
+    try {
+      const token = localStorage.getItem("skaute_token");
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${event._id}/cancel`;
+
+      const res = await fetch(endpoint, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        toast.success("Move successfully cancelled.", { id: toastId });
+        if (onRefresh) onRefresh();
+      } else {
+        toast.error(
+          result.message || "Could not complete cancellation pipeline.",
+          { id: toastId },
+        );
+      }
+    } catch (err) {
+      toast.error("Network synchronization failed.", { id: toastId });
+    } finally {
+      setIsUpdating(null);
+    }
+  };
+
+  /**
+   * MOVE DATABASE DELETION ENGINE
+   */
+  const handleDeleteEventLocal = async () => {
+    const confirmed = window.confirm(
+      "Danger Zone: Do you want to permanently purge this event registry from Skaute? This cannot be undone.",
+    );
+    if (!confirmed) return;
+
+    setIsUpdating("delete-event");
+    const toastId = toast.loading("Executing database purge routine...");
+
+    try {
+      const token = localStorage.getItem("skaute_token");
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/v1/events/${event._id}`;
+
+      const res = await fetch(endpoint, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        toast.success("Event permanently cleared.", { id: toastId });
+        router.push("/profile");
+      } else {
+        toast.error(result.message || "Purge rejected by data engine.", {
+          id: toastId,
+        });
+      }
+    } catch (err) {
+      toast.error("Network verification error.", { id: toastId });
+    } finally {
+      setIsUpdating(null);
+    }
+  };
 
   const handleToggleSoldOut = async (tierId?: string) => {
     const isGlobal = !tierId;
@@ -75,7 +163,6 @@ export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
     }
   };
 
-  // DYNAMIC PERMISSION UPDATER HANDLER FOR PARTNERS
   const handleTogglePermission = async (
     coOrganizerUserId: string,
     currentPermissions: string[],
@@ -84,7 +171,6 @@ export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
     const loadingKey = `${coOrganizerUserId}-${permissionId}`;
     setIsUpdating(loadingKey);
 
-    // Safeguard configuration to ensure default fallback arrays work correctly on target manipulation
     const basePermissions =
       currentPermissions.length === 0 ? ["scan_tickets"] : currentPermissions;
 
@@ -194,22 +280,28 @@ export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
         </div>
       )}
 
-      {/* GLOBAL EVENT TOGGLE (DANGER ZONE) */}
-      <div className="bg-white p-8 rounded-[2.5rem] border border-red-100 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-10 text-red-500 pointer-events-none">
-          <AlertTriangle size={80} />
+      {/* GLOBAL EVENT TOGGLE & DELETION PIPELINES (DANGER ZONE) */}
+      <div className="bg-white p-8 rounded-[2.5rem] border border-red-100 shadow-sm relative overflow-hidden space-y-8">
+        <div className="absolute top-0 right-0 p-4 opacity-5 text-red-500 pointer-events-none">
+          <AlertTriangle size={140} />
         </div>
 
-        <h3 className="text-xs font-black uppercase tracking-widest text-red-500 mb-4 flex items-center gap-2">
-          Danger Zone
-        </h3>
+        <div>
+          <h3 className="text-xs font-black uppercase tracking-widest text-red-500 flex items-center gap-2">
+            Danger Zone
+          </h3>
+          <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">
+            Actions below are highly destructive or impact live ticker streams
+          </p>
+        </div>
 
-        <div className="flex items-center justify-between relative z-10">
+        {/* Global Ticket Sales Toggle */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50 pb-6 relative z-10">
           <div>
             <p className="text-sm font-black uppercase italic text-slate-900">
               Global Sold Out Toggle
             </p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase">
+            <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">
               {event.isSoldOut
                 ? "All ticket categories are currently paused"
                 : "Stop all ticket sales for this move immediately"}
@@ -219,7 +311,7 @@ export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
           <button
             onClick={() => handleToggleSoldOut()}
             disabled={isUpdating !== null}
-            className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50 ${
+            className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 sm:w-auto w-full ${
               event.isSoldOut
                 ? "bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-100"
                 : "bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-100"
@@ -234,6 +326,81 @@ export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
             )}
           </button>
         </div>
+
+        {/* Administrative State Control (Cancel & Purge) */}
+        {isOrganizer && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+            {/* CANCEL CONTEXT MODULE */}
+            <div className="flex flex-col justify-between p-5 rounded-2xl border border-slate-100 bg-slate-50/40">
+              <div className="mb-4">
+                <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-amber-50 text-amber-600 border border-amber-100 inline-block">
+                  Soft Action
+                </span>
+                <h4 className="text-xs font-black uppercase tracking-tight text-slate-800 mt-3 flex items-center gap-1.5">
+                  Cancel Active Move
+                </h4>
+                <p className="text-[10px] text-slate-400 font-medium leading-relaxed mt-1">
+                  Removes the event pin from maps and discovery instantly.
+                  Reorders status flags to protect existing ticket validation
+                  scans.
+                </p>
+              </div>
+
+              {event.isCancelled ? (
+                <div className="w-full py-3 bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest text-center rounded-xl cursor-not-allowed flex items-center justify-center gap-2">
+                  <XCircle size={14} /> Move Already Cancelled
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleCancelEventLocal}
+                  disabled={isUpdating !== null}
+                  className="w-full py-3 border border-amber-200 text-amber-700 bg-white hover:bg-amber-50/60 transition-all text-[10px] font-black uppercase tracking-widest rounded-xl shadow-sm text-center disabled:opacity-50"
+                >
+                  {isUpdating === "cancel-event" ? (
+                    <Loader2 size={14} className="animate-spin mx-auto" />
+                  ) : (
+                    "Cancel Event"
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* PURGE CONTEXT MODULE */}
+            <div className="flex flex-col justify-between p-5 rounded-2xl border border-rose-100 bg-rose-50/10">
+              <div className="mb-4">
+                <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-rose-50 text-rose-600 border border-rose-100 inline-block">
+                  Hard Purge
+                </span>
+                <h4 className="text-xs font-black uppercase tracking-tight text-slate-800 mt-3 flex items-center gap-1.5">
+                  Permanently Clear Move
+                </h4>
+                <p className="text-[10px] text-slate-400 font-medium leading-relaxed mt-1">
+                  Wipes the event registry cleanly out of the data layers.{" "}
+                  <span className="text-rose-600 font-semibold">
+                    Rejected automatically
+                  </span>{" "}
+                  by the database engine if attendees hold active tickets.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleDeleteEventLocal}
+                disabled={isUpdating !== null}
+                className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white transition-all text-[10px] font-black uppercase tracking-widest rounded-xl shadow-md shadow-rose-100 flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isUpdating === "delete-event" ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 size={13} /> Purge Registry Record
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* PARTNER PERMISSIONS MANAGEMENT */}
@@ -260,7 +427,6 @@ export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
                     key={partnerUserId}
                     className="pt-6 first:pt-0 space-y-4"
                   >
-                    {/* Partner ID Banner */}
                     <div className="flex items-center gap-3 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
                       <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-200 border border-slate-200">
                         <Image
@@ -280,7 +446,6 @@ export const SettingsTab = ({ event, isOrganizer, onRefresh }: any) => {
                       </div>
                     </div>
 
-                    {/* Permissions Grid Matrix */}
                     <div className="grid sm:grid-cols-2 gap-2 pl-1">
                       {AVAILABLE_PERMISSIONS.map((perm) => {
                         const isGranted =
